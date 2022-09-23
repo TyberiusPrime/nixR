@@ -1,0 +1,21 @@
+# predates DESCRIPTION
+leaps_1.0-3
+lme_3.0b8a-2
+lme_3.0-0
+lme_3.1-0
+multilm_0.1
+nls_0.2-1
+nls_0.3-1
+logspline_1.0-2
+ppr_1.1-2
+pspline_1.0-2
+ratetables_1.0-2
+rhosp_1.0
+splines_2.0-3
+splines_2.0-5
+tcltk_0.1-1
+vtcl_1.0-1
+# no file on bioconductor server but in packages
+domainsignatures_1.37.2
+iontree_1.23.1
+
