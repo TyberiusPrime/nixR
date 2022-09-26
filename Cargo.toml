@@ -26,3 +26,4 @@ pathdiff = "0.2.1"
 yaml-rust = { version = "0.5", package = "yaml-rust-davvid" }
 flate2 = "1.0"
 nested_intervals = "0.2.2"
+diligent-date-parser = "0.1.3"
