@@ -1,14 +1,17 @@
+use crate::helpers::{
+    cache_json, create_and_list_dir, fetch_url_to_vec, json_from_file, list_dir, read_gzip,
+    write_gzip,
+};
+use crate::{extract_date_relative_path, BioconductorRelease, Config, PackageInfo, Version};
+use anyhow::{anyhow, bail, Context, Result};
+use flate2::read::GzDecoder;
+use lazy_regex::{lazy_regex, Regex};
 /// fetch the data
 use log::{debug, error, info, trace, warn};
-use anyhow::{anyhow, bail, Context, Result};
+use once_cell::sync::Lazy;
+use rayon::prelude::*;
 use std::io::{Read, Write};
 use std::{collections::HashMap, collections::HashSet, io::BufReader, path::PathBuf};
-use lazy_regex::{lazy_regex, Regex};
-use once_cell::sync::Lazy;
-use flate2::read::{GzDecoder};
-use rayon::prelude::*;
-use crate::helpers::{cache_json, fetch_url_to_vec, write_gzip, read_gzip, create_and_list_dir, list_dir, json_from_file};
-use crate::{PackageInfo, Config, Version, BioconductorRelease, get_prefixed_path, extract_date_relative_path};
 
 pub static PACKAGE_REGEXPS: Lazy<Regex> = lazy_regex!(
     //misnomer, doesn't capture date
@@ -26,8 +29,9 @@ pub static ARCHIVE_AND_DATE_REGEXPS_BIOCONDUCTOR_MIRROR: Lazy<Regex> =
 pub static DESCRIPTION_LINE_REGEXPS: Lazy<Regex> = lazy_regex!("^([A-Za-z/_@-]+):(.*)$");
 
 pub fn update_cran(config: &Config) -> Result<Vec<PackageInfo>> {
+    info!("update cran");
     let base_url = "https://cran.r-project.org/src/contrib/";
-    let out_path = config.cache_date_path().join("cran");
+    let out_path = config.date_path().join("cran");
     ex::fs::create_dir_all(&out_path)?;
     let infos: Vec<PackageInfo> = cache_json(&out_path.join("parsed.json.gz"), || {
         let blacklist = config.get_blacklist()?;
@@ -37,7 +41,9 @@ pub fn update_cran(config: &Config) -> Result<Vec<PackageInfo>> {
 
         info!("entering package fetching");
 
-        let infos = fetch_package_infos(config, &out_path, current, archived, base_url, false)?;
+        let infos = fetch_package_infos(
+            config, &out_path, current, archived, base_url, false, "cran",
+        )?;
         info!("Loaded information on {} packages", infos.len());
         Ok(infos)
     })?;
@@ -120,14 +126,12 @@ pub fn fetch_bioconductor_release(
 
         let mut infos: Vec<PackageInfo> = fetch_package_infos(
             config,
-            &config
-                .cache_date_path()
-                .join("bioconductor")
-                .join(&str_version),
+            &config.date_path().join("bioconductor").join(&str_version),
             current,
             archived,
             &base_url,
             is_finished_release,
+            &format!("bioconductor_{}", version.to_string()),
         )?;
 
         Ok(infos)
@@ -186,13 +190,33 @@ fn fetch_package_infos(
     archived: Vec<String>,
     base_url: &str,
     symlink_previous: bool,
+    repo: &str,
 ) -> Result<Vec<PackageInfo>> {
     if symlink_previous {
         config.find_file_from_earlier_and_symlink(&out_path.join("parsed.json.gz"))?;
     }
 
-    let known_shas = config.known_shas()?;
-    let known_descs = config.known_descs()?;
+    // we store by 'repository'
+    // for bioconductor reuses version numbers in different bioconductor releases
+    // for different packages!
+    // Examples
+    // agilp_3.8.0 ['3.5', '3.0']
+    // ensemblVEP_1.20.1 ['3.5', '3.6']
+    // flowClean_1.16.0 ['3.5', '3.6']
+    // mAPKL_1.6.0 ['3.5', '3.4']
+    // intansv_1.22.0 ['3.8', '3.7']
+    // pathifier_1.20.0 ['3.8', '3.7']
+    // TSRchitect_1.8.9 ['3.8', '3.7']
+    // ABAEnrichment_1.2.2 ['3.2', '3.3']
+    // GOSim_1.8.0 ['3.2', '3.0']
+    // intansv_1.10.0 ['3.2', '3.3']
+    // cfDNAPro_1.0.0 ['3.14', '3.12']
+    // EWCE_1.2.0 ['3.14', '3.4']
+    // ALDEx2_1.0.0 ['3.1', '3.0']
+    // DMRScan_1.10.0 ['3.9', '3.11']
+
+    let known_shas = config.known_shas(repo)?;
+    let known_descs = config.known_descs(repo)?;
     let blacklist = config.get_blacklist()?;
 
     let hash_path = config.hash_path();
@@ -201,7 +225,7 @@ fn fetch_package_infos(
         .par_iter()
         .filter(|&tag| !blacklist.contains(tag))
         .map(|tag| {
-            Ok(download_hash_and_desc(
+            match download_hash_and_desc(
                 base_url,
                 tag,
                 &hash_path,
@@ -209,15 +233,27 @@ fn fetch_package_infos(
                 !known_shas.contains(tag),
                 !known_descs.contains(tag),
                 false,
-            )?)
+                repo,
+            ) {
+                Ok(x) => Some(Ok(x)),
+                Err(e) => {
+                    if e.to_string().contains("parsing version failed") {
+                        warn!("{} - parsing version failed - omitting package", &tag,);
+                        None
+                    } else {
+                        Some(Err(e))
+                    }
+                }
+            }
         })
+        .filter_map(|x| x)
         .collect();
 
     let archived_info: Vec<Result<PackageInfo>> = archived
         .par_iter()
         .filter(|&tag| !blacklist.contains(tag))
         .map(|tag| {
-            Ok(download_hash_and_desc(
+            match download_hash_and_desc(
                 base_url,
                 tag,
                 &hash_path,
@@ -225,8 +261,20 @@ fn fetch_package_infos(
                 !known_shas.contains(tag),
                 !known_descs.contains(tag),
                 true,
-            )?)
+                repo,
+            ) {
+                Ok(x) => Some(Ok(x)),
+                Err(e) => {
+                    if e.to_string().contains("parsing version failed") {
+                        warn!("{} - parsing version failed - omitting package", &tag);
+                        None
+                    } else {
+                        Some(Err(e))
+                    }
+                }
+            }
         })
+        .filter_map(|x| x)
         .collect();
 
     if current_info.iter().any(|x| x.is_err()) || archived_info.iter().any(|x| x.is_err()) {
@@ -305,7 +353,7 @@ pub fn bioconductor_fetch_releases_and_r_versions(
             bioc_release_infos.push(BioconductorRelease {
                 version: ver.clone(),
                 start_date: release_date.clone(),
-                end_date: Some(next_release_date.pred()),
+                end_date: Some(next_release_date.clone()), //right exclusive!
             });
         }
         let last_entry = in_release_dates
@@ -331,6 +379,7 @@ fn download_hash_and_desc(
     build_hash: bool,
     build_desc: bool,
     is_archived: bool,
+    repo: &str,
 ) -> Result<PackageInfo> {
     let url = if !is_archived {
         base_url.to_owned() + tag + ".tar.gz"
@@ -347,7 +396,7 @@ fn download_hash_and_desc(
     };
 
     // we only get called if one of them does not exist
-    let hash_fn = get_prefixed_path(&hash_path, &tag)?;
+    let hash_fn = get_prefixed_path(&hash_path, &tag, repo)?;
     let sha = if build_hash {
         info!("dumping hash for {:?}", &hash_fn);
         let sha = sha256::digest_bytes(&raw);
@@ -360,7 +409,7 @@ fn download_hash_and_desc(
     let name_version: Vec<_> = tag.splitn(2, "_").collect();
     let name = name_version[0];
 
-    let desc_fn = get_prefixed_path(&desc_path, &tag)?;
+    let desc_fn = get_prefixed_path(&desc_path, &tag, repo)?;
     let gzname: String = desc_fn.file_name().unwrap().to_string_lossy().to_string() + ".gz";
     let desc_fn = desc_fn.with_file_name(&gzname);
     let desc = if build_desc {
@@ -395,12 +444,18 @@ fn download_hash_and_desc(
         })
         .collect();
 
-    Ok(PackageInfo {
-        name: name.to_owned(),
-        version: name_version[1].to_owned(),
-        sha256: sha,
+    PackageInfo::new(
+        name.to_owned(),
+        name_version[1].to_owned(),
+        sha,
         desc,
         is_archived,
+    )
+    .with_context(|| {
+        format!(
+            "parsing version failed - omitting package {} {:?}",
+            name, name_version
+        )
     })
 }
 fn parse_desc(raw: &str) -> Result<HashMap<String, Vec<String>>> {
@@ -620,4 +675,14 @@ fn fetch_archive<
     })?;
 
     Ok(result)
+}
+
+fn get_prefixed_path(parent: &PathBuf, name: &str, repo: &str) -> Result<PathBuf> {
+    let mut it = name.chars();
+    let first = it.next().expect("empty string to get_prefixed_path");
+    let second = it.next().expect("one letter string to get_prefixed_path");
+    let prefix = format!("{}{}", first, second).to_lowercase();
+    let dir = parent.join(repo).join(prefix);
+    ex::fs::create_dir_all(&dir).context("Could not create dump directory")?;
+    Ok(dir.join(name))
 }

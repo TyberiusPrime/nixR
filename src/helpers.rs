@@ -1,8 +1,8 @@
 use anyhow::{anyhow, bail, Context, Result};
+use flate2::read::{GzDecoder, GzEncoder};
+use log::{debug, error, info, trace, warn};
 use std::ffi::OsStr;
 use std::io::{Read, Write};
-use log::{debug, error, info, trace, warn};
-use flate2::read::{GzDecoder, GzEncoder};
 use std::{collections::HashMap, collections::HashSet, io::BufReader, path::PathBuf};
 
 pub fn write_gzip(path: &PathBuf, data: &[u8]) -> Result<()> {
@@ -88,7 +88,6 @@ pub fn read_to_bytes(path: &PathBuf) -> Result<Vec<u8>> {
     Ok(out)
 }
 
-
 pub fn fetch_url_to_vec(url: &str) -> Result<Vec<u8>> {
     fetch_url_to_vec_with_retries(url, 2)
 }
@@ -109,5 +108,3 @@ pub fn fetch_url_to_vec_with_retries(url: &str, remaining: u32) -> Result<Vec<u8
         }
     }
 }
-
-
