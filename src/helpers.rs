@@ -45,6 +45,21 @@ pub fn cache_json<T: serde::de::DeserializeOwned, S: serde::ser::Serialize>(
     load_json(&filename, do_gz)
 }
 
+pub fn load_toml<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool) -> Result<T> {
+    info!("Loading {:?} gz: {}", &filename, do_gz);
+    let mut raw = Vec::new();
+    if do_gz {
+        let mut file = BufReader::new(ex::fs::File::open(filename)?);
+        let mut d = GzDecoder::new(&mut file);
+        d.read_to_end(&mut raw)?;
+    } else {
+        let mut file = BufReader::new(ex::fs::File::open(filename)?);
+        file.read_to_end(&mut raw)?;
+    }
+    Ok(toml::from_slice(&raw)?)
+}
+
+
 pub fn load_json<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool) -> Result<T> {
     info!("Loading {:?} gz: {}", &filename, do_gz);
     if do_gz {

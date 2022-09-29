@@ -1,6 +1,5 @@
 use crate::helpers::{
-    cache_json, create_and_list_dir, fetch_url_to_vec, list_dir, load_json, 
-    write_json,
+    cache_json, create_and_list_dir, fetch_url_to_vec, list_dir, load_json, write_json,
 };
 use crate::{
     extract_date_relative_path, BioconductorRelease, Config, PackageInfo, PackageInfoWithSource,
@@ -33,23 +32,29 @@ pub static ARCHIVE_AND_DATE_REGEXPS_BIOCONDUCTOR_MIRROR: Lazy<Regex> =
 
 pub static DESCRIPTION_LINE_REGEXPS: Lazy<Regex> = lazy_regex!("^([A-Za-z/_@-]+):(.*)$");
 
-pub fn update_cran(config: &Config) -> Result<Vec<PackageInfoWithSource>> {
+pub fn update_cran(
+    config: &Config,
+) -> Result<(Vec<PackageInfoWithSource>, HashMap<String, NaiveDate>)> {
     info!("update cran");
     let base_url = "https://cran.r-project.org/src/contrib/";
     let out_path = config.date_path().join("cran");
     ex::fs::create_dir_all(&out_path)?;
     let mut infos: Vec<PackageInfo> = cache_json(&out_path.join("parsed.json.gz"), || {
         let blacklist = config.get_blacklist()?;
-        let current: Vec<String> = cran_fetch_current(config, base_url)?;
+        let current: HashSet<String> = cran_fetch_current(config, base_url)?.into_iter().collect();
 
-        let archived: Vec<String> = cran_fetch_archive(config, base_url)?;
+        let archived: Vec<String> = cran_fetch_archive(config, base_url)?
+            .into_iter()
+            // CRAN sometimes has packages twice, once archived, once not archived...
+            .filter(|x| !current.contains(x))
+            .collect();
 
         info!("entering package fetching");
 
         let infos = fetch_package_infos(
             config,
             &out_path,
-            current,
+            current.into_iter().collect(),
             archived,
             base_url,
             false,
@@ -58,12 +63,21 @@ pub fn update_cran(config: &Config) -> Result<Vec<PackageInfoWithSource>> {
         info!("Loaded information on {} packages", infos.len());
         Ok(infos)
     })?;
-    cran_fetch_final_archival_dates(config, &base_url)?;
+    let final_archive_dates = cran_fetch_final_archival_dates(config, &base_url)?;
     let out: Result<Vec<PackageInfoWithSource>> = infos
         .into_iter()
         .map(|pi| PackageInfoWithSource::new_from_package_info(pi, Repo::Cran))
         .collect();
-    Ok(out?)
+    //trust is ok, paranoia is better...
+    let mut seen = HashSet::new();
+    let out = out?;
+    for pi in out.iter() {
+        if seen.contains(&pi.tag()) {
+            panic!("doublicate entry in cran?! {:#?}", &pi);
+        }
+        seen.insert(pi.tag());
+    }
+    Ok((out, final_archive_dates))
 }
 pub fn update_bioconductor(config: &Config) -> Result<Vec<PackageInfoWithSource>> {
     let base_url = "https://bioconductor.org/";
@@ -562,6 +576,7 @@ fn extract_description_from_tar_gz(name: &str, tar_gz_bytes: &Vec<u8>) -> Result
     Ok(output.stdout)
 }
 
+/// fetch the list of currently avilable packages (tags: 'name_ver')
 fn cran_fetch_current(config: &Config, base_url: &str) -> Result<Vec<String>> {
     download_regexs_and_cache_json(
         base_url,
@@ -595,6 +610,8 @@ fn download_regexs_and_cache_json<
         Ok(hits)
     })
 }
+/// fetch the list of previously avilable packages (tags: 'name_ver')
+/// due to cran being a mess, this might contain entries that are also in the current list
 fn cran_fetch_archive(config: &Config, base_url: &str) -> Result<Vec<String>> {
     let out_path = config.date_path().join("cran");
     fetch_archive(
@@ -772,61 +789,73 @@ fn cran_fetch_final_archival_dates(
     base_url: &str,
 ) -> Result<HashMap<String, NaiveDate>> {
     let out_path = config.date_path().join("cran");
-    cache_json(&out_path.join("final_archive_dates.json"), || {
-        let overrides: HashMap<String, String> = toml::from_str(&ex::fs::read_to_string(
-            "overrides/final_archive_dates.toml",
-        )?)?;
-        let input = fetch_url_to_vec(&(base_url.to_owned() + "PACKAGES.in"))?;
-        let input = std::str::from_utf8(&input)?;
-        let mut package: Option<String> = None;
-        let mut out: HashMap<String, NaiveDate> = HashMap::new();
-        for line in input.split("\n") {
-            if line.starts_with("Package:") {
-                //info!("found package {}", line);
-                package = Some(line.split_once(":").unwrap().1.trim().to_owned());
-            } else if line.starts_with("X-CRAN-Comment:") && line.contains("rchived") {
-                //info!("found cran comment {}", line);
-                let date = DATE_YYYYMMDD_REGEXPS.captures_iter(&line).next();
-                let date = match date {
-                    Some(x) => x.get(0).unwrap().as_str(),
-                    None => match &package {
-                        Some(p) => {
-                            if overrides.contains_key(p) {
-                                overrides.get(p).unwrap()
-                            } else {
-                                Err(anyhow!(
-                                    "No date in Archived on comment {} {:?}",
-                                    &line,
-                                    &package
-                                ))?
+    let overrides: HashMap<String, String> = toml::from_str(&ex::fs::read_to_string(
+        "overrides/final_archive_dates.toml",
+    )?)?;
+
+    let out: Result<HashMap<String, NaiveDate>> =
+        cache_json(&out_path.join("final_archive_dates.json"), || {
+            let input = fetch_url_to_vec(&(base_url.to_owned() + "PACKAGES.in"))?;
+            let input = std::str::from_utf8(&input)?;
+            let mut package: Option<String> = None;
+            let mut out: HashMap<String, NaiveDate> = HashMap::new();
+            for line in input.split("\n") {
+                if line.starts_with("Package:") {
+                    //info!("found package {}", line);
+                    package = Some(line.split_once(":").unwrap().1.trim().to_owned());
+                } else if line.starts_with("X-CRAN-Comment:") && line.contains("rchived") {
+                    //info!("found cran comment {}", line);
+                    let date = DATE_YYYYMMDD_REGEXPS.captures_iter(&line).next();
+                    let date = match date {
+                        Some(x) => x.get(0).unwrap().as_str(),
+                        None => match &package {
+                            Some(p) => {
+                                if overrides.contains_key(p) {
+                                    //we get it later on when appling all overrides
+                                    //even for packages that are missing from the PACKAGES.in...
+                                    continue;
+                                    //overrides.get(p).unwrap()
+                                } else {
+                                    Err(anyhow!(
+                                        "No date in Archived on comment {} {:?}",
+                                        &line,
+                                        &package
+                                    ))?
+                                }
                             }
-                        }
-                        None => Err(anyhow!("No package set, but date found?"))?,
-                    },
-                };
-                let date = NaiveDate::parse_from_str(date, "%Y-%m-%d")
-                    .expect("date was not actually %Y-%m-%d");
-                let p = package
-                    .take()
-                    .ok_or(anyhow!("No package set but archived-date read"))?;
-                if out.contains_key(&p) {
-                    bail!(
-                        "Package occured twice in PACKAGES.in {}",
-                        package.as_ref().unwrap()
-                    )
-                } else {
-                    out.insert(p, date);
+                            None => Err(anyhow!("No package set, but date found?"))?,
+                        },
+                    };
+                    let date = NaiveDate::parse_from_str(date, "%Y-%m-%d")
+                        .expect("date was not actually %Y-%m-%d");
+                    let p = package
+                        .take()
+                        .ok_or(anyhow!("No package set but archived-date read"))?;
+                    if out.contains_key(&p) {
+                        bail!(
+                            "Package occured twice in PACKAGES.in {}",
+                            package.as_ref().unwrap()
+                        )
+                    } else {
+                        out.insert(p, date);
+                    }
                 }
             }
-        }
-        if let Some(p) = package {
-            bail!("package was still set at the end of parsing PACKAGES.in");
-        }
-        Ok(out)
+            if let Some(p) = package {
+                bail!("package was still set at the end of parsing PACKAGES.in");
+            }
+            Ok(out)
 
-        //Package: BayesSummaryStatLM
-        //X-CRAN-Comment: Archived on 2022-09-28 as issues were not corrected in time.
-        //X-CRAN-History: Archived on 2020-08-14 as check problems were not corrected in time.
-        //Unarchived on 2021-07-01.
-    })
+            //Package: BayesSummaryStatLM
+            //X-CRAN-Comment: Archived on 2022-09-28 as issues were not corrected in time.
+            //X-CRAN-History: Archived on 2020-08-14 as check problems were not corrected in time.
+            //Unarchived on 2021-07-01.
+        });
+    let mut out = out?;
+    for (name, date_str) in overrides.into_iter() {
+        let date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")
+            .expect("date was not actually %Y-%m-%d");
+        out.insert(name, date);
+    }
+    Ok(out)
 }

@@ -68,9 +68,7 @@ impl Config {
     }
 
     fn mkdirs(&self) -> Result<()> {
-        ex::fs::create_dir_all(&self.hash_path())?;
         ex::fs::create_dir_all(&self.date_path())?;
-        ex::fs::create_dir_all(&self.desc_path())?;
         Ok(())
     }
 
@@ -135,7 +133,6 @@ impl Config {
     }
 }
 
-
 fn main() -> Result<()> {
     let matches = parse_args();
     configure_logging(&matches);
@@ -177,11 +174,11 @@ fn main() -> Result<()> {
 }
 
 fn test_parsing(config: &Config) -> Result<Vec<PackageInfo>> {
-    let q = "X-CRAN-Comment: Archived on 2022-09-28 as issues were not corrected in time.";
-    for e in DATE_YYYYMMDD_REGEXPS.captures_iter(q) {
-        dbg!(e);
-    }
-    println!("{}", q);
+    let pplus = vec![("a", chrono::NaiveDate::from_ymd(2022, 04, 27))];
+    let last_date = chrono::NaiveDate::from_ymd(2022, 09, 29);
+    dbg!(DateRangePlus::from_elements_and_release_dates(
+        pplus, &last_date
+    ));
     Ok(Vec::new())
 }
 
@@ -292,37 +289,42 @@ impl Display for Version {
     }
 }
 
-static DETERMINISTIC_DATE_REGEPS: Lazy<Vec<(regex::Regex, String)>> = Lazy::new(|| {
+static DETERMINISTIC_DATE_REGEPS: Lazy<Vec<(regex::Regex, String, bool)>> = Lazy::new(|| {
     let mut m = Vec::new();
     m.push((
         (r"^\d\d\d\d-[01]\d-[0123]\d [012]\d:[0-5]\d:[0-5]\d$"),
         "%Y-%m-%d %H:%M:%S",
+        false,
     ));
     m.push((
         (r"^\d\d\d\d/\d\d/\d\d [012]\d:[0-5]\d:[0-5]\d$"),
         "%Y/%m/%d %H:%M:%S",
+        false,
     ));
     m.push((
         (r"^\d\d\d\d-[01]\d-[0123]\d [012]\d:[0-5]\d:[0-5]\d UTC$"),
         "%Y-%m-%d %H:%M:%S UTC",
+        false,
     ));
     m.push(( (r"^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0123 ]?\d [012]\d:[0-5]\d:[0-5]\d \d{4}$"),
 "%a %b %d %H:%M:%S %Y",
+        false,
     ));
     m.push((
 (r"^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0123 ]?\d [012]\d:[0-5]\d:[0-5]\d [A-Z]{3} \d{4}$"),
 "%a %b %d %H:%M:%S %Z %Y",
+        false,
             ));
-    m.push(((r"^[A-Z][a-z]+ \d{2}, \d{4}\.$"), "%B %d, %Y."));
-    m.push(((r"^[A-Z][a-z]+\s+\d{1,2} \d{4}$"), "%B %d %Y"));
-    m.push(((r"^\d{4}-[A-Z][a-z]+-[0123]?\d$"), "%Y-%B-%d"));
-    m.push(((r"^\d{2}-[A-Z][a-z]+-\d+$"), "%d-%b-%y"));
-    m.push((r"^\d{4}-\d{1,2}-\d{1,2}", "%Y-%m-%d")); // if you mess up the iso format, I can't help you.
+    m.push(((r"^[A-Z][a-z]+ \d{2}, \d{4}\.$"), "%B %d, %Y.", false));
+    m.push(((r"^[A-Z][a-z]+\s+\d{1,2} \d{4}$"), "%B %d %Y", false));
+    m.push(((r"^\d{4}-[A-Z][a-z]+-[0123]?\d$"), "%Y-%B-%d", false));
+    m.push(((r"^\d{2}-[A-Z][a-z]+-\d+$"), "%d-%b-%y", false));
+    m.push((r"^\d{4}-\d{1,2}-\d{1,2}", "%Y-%m-%d", true)); // if you mess up the iso format, I can't help you, though I will just throw you in the bin if you're before our YEAR_TO_EARLY...
     m.into_iter()
-        .map(|(regex, a_str)| {
+        .map(|(regex, a_str, apply_cutoff_filter_on_parsing_failure)| {
             let re = regex::Regex::new(regex).expect(&format!("Failed to compile re '{}'", regex));
 
-            (re, a_str.to_owned())
+            (re, a_str.to_owned(), apply_cutoff_filter_on_parsing_failure)
         })
         .collect()
 });
@@ -351,18 +353,24 @@ pub struct BioconductorRelease {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct DateRangePlus<T> {
+struct DateRangePlus<T: Ord> {
     element: T,
     start_date: NaiveDate,
     end_date: NaiveDate,
 }
 
-impl<T> DateRangePlus<T> {
+impl<T: Ord> DateRangePlus<T> {
     fn from_elements_and_release_dates(
         mut input: Vec<(T, NaiveDate)>,
         end_date: &NaiveDate,
     ) -> Vec<DateRangePlus<T>> {
-        input.sort_by(|a, b| a.1.cmp(&b.1));
+        input.sort_by(|a, b| {
+            let first = a.1.cmp(&b.1);
+            match first {
+                core::cmp::Ordering::Less | core::cmp::Ordering::Greater => first,
+                core::cmp::Ordering::Equal => a.0.cmp(&b.0),
+            }
+        });
         let mut end_dates: Vec<NaiveDate> = input.iter().map(|(_, date)| date.clone()).collect();
         end_dates.push(end_date.clone());
         input
@@ -532,7 +540,7 @@ impl PackageInfoWithSource {
         })
     }
 
-    fn parsed_version(&self) -> Result<Version>{
+    fn parsed_version(&self) -> Result<Version> {
         Version::from_str(&self.version)
     }
 
@@ -558,11 +566,11 @@ impl Ord for PackageInfoWithSource {
     fn cmp(&self, other: &Self) -> Ordering {
         (
             &self.name,
-            Version::from_str(&self.version).expect("failed to parse version"),
+            self.parsed_version().expect("failed to parse version"),
         )
             .cmp(&(
                 &other.name,
-                Version::from_str(&other.version).expect("failed to parse version"),
+                other.parsed_version().expect("failed to parse version"),
             ))
     }
 }
@@ -602,9 +610,7 @@ fn assemble(config: &Config) -> Result<()> {
     let (packages, mut interval_set) =
         assemble_packages_during_bioconductor_release(&bioc_release, &config)?;
     let hits: Vec<u32> = interval_set.query(&chrono::NaiveDate::from_ymd(2022, 1, 1))?;
-    for h in hits {
-        info!("hit: {}", packages[h as usize].element.tag());
-    }
+    info!("packages at that date: {}", hits.len());
     /*
     let mut packages = update_cran(config)?;
     for e in update_bioconductor(config).into_iter() {
@@ -654,12 +660,28 @@ fn parse_cursed_date(str_date: &str, options: &DateParsingOption) -> Result<Date
     }
 
     //if we can get an exact date, super
-    for (re, chrono_str) in DETERMINISTIC_DATE_REGEPS.iter() {
+    for (re, chrono_str, apply_cutoff_filter_on_parsing_failure) in DETERMINISTIC_DATE_REGEPS.iter()
+    {
         if re.is_match(str_date) {
-            return Ok(DateParsingResult::Determined(
-                chrono::NaiveDate::parse_from_str(&str_date, chrono_str)
-                    .with_context(|| format!("parsing '{}'", &str_date))?,
-            ));
+            let date = chrono::NaiveDate::parse_from_str(&str_date, chrono_str)
+                .with_context(|| format!("parsing '{}'", &str_date));
+            match date {
+                Ok(date) => return Ok(DateParsingResult::Determined(date)),
+                Err(e) => {
+                    if *apply_cutoff_filter_on_parsing_failure {
+                        for hit in YEAR_REGEXPS.captures_iter(&str_date) {
+                            if &hit[2] <= YEAR_TO_EARLY {
+                                // we start with bioconductor 3.6, which is in 2017
+                                //and the earlie 2000s have a lot of 'unparsable' dates..
+                                //where we can't  easily decide what's month and what's day...
+                                return Ok(DateParsingResult::TooEarly);
+                            }
+                        }
+                    }
+                    return Err(e);
+                    //that's probably an iso date that isn't an actual iso date..
+                }
+            };
         }
     }
 
@@ -749,6 +771,8 @@ fn _parse_package_infos_for_dates(
 /// parse dates in one set of packages (ie. one package name)
 /// and if there are dates that can be either,
 /// look at the others to decide whether it's day first or month first.
+/// and if we can't decide, but the four digit year is before YEAR_TO_EARLY
+/// -> None. Only if it's after YEAR_TO_EARLY it's an Error
 fn parse_dates_in_package_infos(
     package_infos: &Vec<PackageInfoWithSource>,
     manual_overrides: &HashMap<String, chrono::NaiveDate>,
@@ -790,6 +814,7 @@ fn parse_dates_in_package_infos(
                 _ => {}
             },
             Err(e) => {
+                //we filter these dowstream
                 /*if !e.to_string().starts_with("Could not find date field") {
                     bail!(e)
                 }*/
@@ -856,6 +881,7 @@ fn parse_package_dates(
     repo: Repo,
     manual_overrides: &HashMap<String, chrono::NaiveDate>,
     last_date: &NaiveDate,
+    final_archive_dates: HashMap<String, chrono::NaiveDate>, // a name -> final archive date hashmap
 ) -> Result<Vec<DateRangePlus<PackageInfoWithSource>>> {
     let mut result = Vec::new();
     let mut error_return = false;
@@ -864,6 +890,8 @@ fn parse_package_dates(
 
     let mut count_with_date = 0;
     let mut count_without_date = 0;
+    let mut no_final_archive_date_error = false;
+    let mut used_final_dates = HashSet::new();
     for (name, package_infos) in &packages.into_iter().group_by(|x| x.name.clone()) {
         let package_infos: Vec<PackageInfoWithSource> = package_infos.collect();
         //total += package_infos.len();
@@ -876,9 +904,13 @@ fn parse_package_dates(
                 any_error = true;
             }
         }
-        dbg!(&package_infos);
-        dbg!(&dates);
+
         let mut pplus = Vec::new();
+        if name == "FusionLearn" {
+            dbg!(&package_infos);
+            dbg!(&dates);
+            dbg!(&last_date);
+        }
         for (info, date) in package_infos.into_iter().zip(dates) {
             match date {
                 Ok(date) => match date {
@@ -896,19 +928,50 @@ fn parse_package_dates(
                 }
             }
         }
-        info!("with date {}, wo: {}", count_with_date, count_without_date);
 
         if any_error {
-            bail!("Failed to parse all the date");
-        }
-        let pplus = DateRangePlus::from_elements_and_release_dates(pplus, &last_date);
-        let last_is_archived = pplus.iter().last().unwrap().element.is_archived;
-        if last_is_archived {
-            dbg!(pplus);
-            panic!("");
+            bail!("Failed to parse all the dates");
         }
 
-        result.extend(pplus);
+        let mut pplus = DateRangePlus::from_elements_and_release_dates(pplus, &last_date);
+        if !pplus.is_empty() {
+            // all dates before our cut off, and filtered because 'undeceidable', I suppose.?
+            let last = pplus.iter_mut().last().unwrap();
+            let last_is_archived = last.element.is_archived;
+            if last_is_archived {
+                let last_archive_date = match final_archive_dates.get(&name) {
+                    Some(fad) => {
+                        used_final_dates.insert(name.to_owned());
+                        last.end_date = fad.clone()
+                    }
+                    None => {
+                        no_final_archive_date_error = true;
+                        warn!(
+                            "No final archive date for {}, but last version {} is_archived",
+                            name, last.element.version
+                        )
+                    }
+                };
+            }
+
+            result.extend(pplus);
+        } else {
+            info!(
+                "No packages with dates after cutoff and unparsable? {}",
+                name
+            );
+        }
+    }
+    for key in final_archive_dates.keys() {
+        if !used_final_dates.contains(key) {
+            warn!("please remove unused entry from final dates {}", key);
+        }
+    }
+    info!("with date {}, wo: {}", count_with_date, count_without_date);
+    if no_final_archive_date_error {
+        return Err(anyhow!(
+            "at least one final archive date missing - see warnings"
+        ));
     }
     info!(
         "went through {} total entries, {} with date, {} without (or earlier than {})",
@@ -1010,24 +1073,29 @@ fn assemble_packages_during_bioconductor_release(
     config: &Config,
 ) -> Result<(Vec<DateRangePlus<PackageInfoWithSource>>, DateIntervalSet)> {
     let manual_overrides: HashMap<String, chrono::NaiveDate> =
-        helpers::load_json(&PathBuf::from("overrides/dates.json"), false)?;
+        helpers::load_toml(&PathBuf::from("overrides/dates.toml"), false)?;
 
     let earliest_date = bioc_release.start_date.clone();
     let latest_date = match bioc_release.end_date {
         Some(x) => x.clone(),
         None => Utc::today().naive_utc(),
     };
-    info!("earliest date {}", earliest_date);
-    info!("latest date {} {:#?}", latest_date, &bioc_release.end_date);
-    info!("That's {} days", (latest_date - earliest_date).num_days());
+    //info!("earliest date {}", earliest_date);
+    //info!("latest date {} {:#?}", latest_date, &bioc_release.end_date);
+    //info!("That's {} days", (latest_date - earliest_date).num_days());
 
-    let cran_packages = retrieval::update_cran(&config)?;
+    let (cran_packages, cran_final_archive_dates) = retrieval::update_cran(&config)?;
     info!(
         "no of cran packages before date parsing {}",
         cran_packages.len()
     );
-    let cran_packages =
-        parse_package_dates(cran_packages, Repo::Cran, &manual_overrides, &latest_date)?;
+    let cran_packages = parse_package_dates(
+        cran_packages,
+        Repo::Cran,
+        &manual_overrides,
+        &latest_date,
+        cran_final_archive_dates,
+    )?;
 
     let bc_path = config.date_path().join("bioconductor");
     let bioc_packages = retrieval::fetch_bioconductor_release(
@@ -1042,6 +1110,7 @@ fn assemble_packages_during_bioconductor_release(
         Repo::BiocSoftware(bioc_release.version.to_owned()),
         &manual_overrides,
         &latest_date,
+        HashMap::new(), // bioconductor doesn't archive within a release. I hope.
     )?;
 
     info!(
@@ -1061,7 +1130,8 @@ fn assemble_packages_during_bioconductor_release(
         if end_date < &earliest_date {
             continue;
         }
-        if pi.start_date > latest_date {
+        if pi.start_date >= latest_date {
+            // right exclusive...
             continue;
         }
         if end_date < &pi.start_date {
@@ -1069,7 +1139,10 @@ fn assemble_packages_during_bioconductor_release(
         }
         //this case does happen if a package is rereleased in the same day.
         if end_date == &pi.start_date {
-            warn!(
+            if !pi.element.is_archived {
+                bail!("start date == end date, but not archived!? {:#?}", pi);
+            }
+            info!(
                 "Skipping {} - another release later the same day",
                 &pi.element.tag()
             );
