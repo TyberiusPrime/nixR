@@ -34,15 +34,15 @@ pub fn cache_json<T: serde::de::DeserializeOwned, S: serde::ser::Serialize>(
 ) -> Result<T> {
     let do_gz = filename
         .extension()
-        .unwrap_or(OsStr::new(""))
+        .unwrap_or_else(||OsStr::new(""))
         .to_string_lossy()
         == "gz";
 
     if !filename.exists() {
         let v = callback()?;
-        write_json(&filename, &v, do_gz)?;
+        write_json(filename, &v, do_gz)?;
     }
-    load_json(&filename, do_gz)
+    load_json(filename, do_gz)
 }
 
 pub fn load_toml<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool) -> Result<T> {
@@ -95,15 +95,13 @@ pub fn write_json<S: serde::ser::Serialize>(
 /// create a directory, and list its filenames
 pub fn create_and_list_dir(dir: &PathBuf) -> Result<HashSet<String>> {
     ex::fs::create_dir_all(&dir)?;
-    list_dir(&dir)
+    list_dir(dir)
 }
 
 pub fn list_dir(dir: &PathBuf) -> Result<HashSet<String>> {
     let mut found = HashSet::new();
     for fh in ex::fs::read_dir(dir)? {
-        if let Ok(fh) = fh {
-            found.insert(fh.path().file_name().unwrap().to_string_lossy().to_string());
-        }
+        found.insert(fh?.path().file_name().unwrap().to_string_lossy().to_string());
     }
     Ok(found)
 }
@@ -123,7 +121,7 @@ pub fn fetch_url_to_vec(url: &str) -> Result<Vec<u8>> {
 
 pub fn fetch_url_to_vec_with_retries(url: &str, remaining: u32) -> Result<Vec<u8>> {
     let mut raw = Vec::new();
-    let res = ureq::get(&url).call()?.into_reader().read_to_end(&mut raw);
+    let res = ureq::get(url).call()?.into_reader().read_to_end(&mut raw);
     match res {
         Ok(x) => Ok(raw),
         Err(x) => {

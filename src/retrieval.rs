@@ -15,7 +15,12 @@ use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use std::borrow::Cow;
 use std::io::{Read, Write};
-use std::{collections::HashMap, collections::HashSet, io::BufReader, path::PathBuf};
+use std::{
+    collections::HashMap,
+    collections::HashSet,
+    io::BufReader,
+    path::{Path, PathBuf},
+};
 
 pub static PACKAGE_REGEXPS: Lazy<Regex> = lazy_regex!(
     //misnomer, doesn't capture date
@@ -63,7 +68,7 @@ pub fn update_cran(
         info!("Loaded information on {} packages", infos.len());
         Ok(infos)
     })?;
-    let final_archive_dates = cran_fetch_final_archival_dates(config, &base_url)?;
+    let final_archive_dates = cran_fetch_final_archival_dates(config, base_url)?;
     let out: Result<Vec<PackageInfoWithSource>> = infos
         .into_iter()
         .map(|pi| PackageInfoWithSource::new_from_package_info(pi, Repo::Cran))
@@ -89,7 +94,7 @@ pub fn update_bioconductor(config: &Config) -> Result<Vec<PackageInfoWithSource>
     let mut out = Vec::new();
     for ri in release_infos {
         let from_this_release = fetch_bioconductor_release(
-            &config,
+            config,
             &ri.version,
             &ri.start_date,
             &ri.end_date,
@@ -108,13 +113,13 @@ pub fn fetch_bioconductor_release(
     version: &Version,
     version_release_date: &chrono::NaiveDate,
     version_release_end_date: &Option<chrono::NaiveDate>,
-    bc_path: &PathBuf,
+    bc_path: &Path,
 ) -> Result<Vec<PackageInfoWithSource>> {
     let str_version = version.to_string();
     let out_path = bc_path.join(&str_version);
     let blacklist = config.get_blacklist()?;
 
-    let without_source = cache_json(&out_path.join("parsed.json.gz"), || {
+    let without_source: Result<Vec<PackageInfo>> = cache_json(&out_path.join("parsed.json.gz"), || {
         ex::fs::create_dir_all(&out_path)?;
         let key = "bioc";
         let base_url = format!(
@@ -124,13 +129,7 @@ pub fn fetch_bioconductor_release(
         let target_path = out_path.join("packages.json");
         let today = chrono::Utc::today().naive_utc();
         let is_finished_release = match version_release_end_date {
-            Some(vred) => {
-                if vred < &today {
-                    true
-                } else {
-                    false
-                }
-            }
+            Some(vred) => vred < &today,
             None => false,
         };
         if is_finished_release {
@@ -147,7 +146,7 @@ pub fn fetch_bioconductor_release(
         })?;
         let min_version_with_archive = Version(vec![3, 6]);
         let archived: Vec<String> = if version >= &min_version_with_archive {
-            fetch_bioconductor_archived(&config, &str_version, &out_path)?
+            fetch_bioconductor_archived(config, &str_version, &out_path)?
         } else {
             Vec::new()
         };
@@ -164,6 +163,8 @@ pub fn fetch_bioconductor_release(
 
         Ok(infos)
     });
+    let without_source = without_source?;
+    info!("debug {}", without_source.len());
     without_source
         .into_iter()
         .map(|e| {
@@ -219,7 +220,7 @@ fn parse_packages_gz(input: &str) -> Result<Vec<String>> {
 
 fn fetch_package_infos(
     config: &Config,
-    out_path: &PathBuf,
+    out_path: &Path,
     current: Vec<String>,
     archived: Vec<String>,
     base_url: &str,
@@ -250,13 +251,11 @@ fn fetch_package_infos(
     // DMRScan_1.10.0 ['3.9', '3.11']
 
     // can't use cache_json here, because we want to extend
-    let known_shas: HashMap<String, String> = load_hashes(&config, &repo.to_string())?;
-    let known_descs: HashMap<String, String> = load_descs(&config, &repo.to_string())?;
+    let known_shas: HashMap<String, String> = load_hashes(config, &repo.to_string())?;
+    let known_descs: HashMap<String, String> = load_descs(config, &repo.to_string())?;
 
     let blacklist = config.get_blacklist()?;
 
-    let hash_path = config.hash_path();
-    let desc_path = config.desc_path();
     let current_info: Vec<Result<PackageInfo>> = current
         .par_iter()
         .filter(|&tag| !blacklist.contains(tag))
@@ -264,8 +263,6 @@ fn fetch_package_infos(
             match download_hash_and_desc(
                 base_url,
                 tag,
-                &hash_path,
-                &desc_path,
                 known_shas.get(tag),
                 known_descs.get(tag),
                 false,
@@ -292,8 +289,6 @@ fn fetch_package_infos(
             match download_hash_and_desc(
                 base_url,
                 tag,
-                &hash_path,
-                &desc_path,
                 known_shas.get(tag),
                 known_descs.get(tag),
                 true,
@@ -352,7 +347,7 @@ fn load_descs(config: &Config, repo: &str) -> Result<HashMap<String, String>> {
     }
 }
 
-fn save_hashes(config: &Config, repo: &str, packages: &Vec<PackageInfo>) -> Result<()> {
+fn save_hashes(config: &Config, repo: &str, packages: &[PackageInfo]) -> Result<()> {
     let filename = config.output_path.join(repo).join("sha256.json.gz");
     let lookup: HashMap<String, String> = packages
         .iter()
@@ -362,7 +357,7 @@ fn save_hashes(config: &Config, repo: &str, packages: &Vec<PackageInfo>) -> Resu
     Ok(())
 }
 
-fn save_descs(config: &Config, repo: &str, packages: &Vec<PackageInfo>) -> Result<()> {
+fn save_descs(config: &Config, repo: &str, packages: &[PackageInfo]) -> Result<()> {
     let filename = config.output_path.join(repo).join("desc.json.gz");
     let lookup: HashMap<String, _> = packages.iter().map(|x| (x.tag(), &x.raw_desc)).collect();
     write_json(&filename, &lookup, true)?;
@@ -370,7 +365,7 @@ fn save_descs(config: &Config, repo: &str, packages: &Vec<PackageInfo>) -> Resul
 }
 
 pub fn bioconductor_fetch_releases(
-    bc_path: &PathBuf,
+    bc_path: &Path,
     base_url: &str,
 ) -> Result<Vec<BioconductorRelease>> {
     let bioc_release_infos: Vec<BioconductorRelease> =
@@ -431,8 +426,8 @@ pub fn bioconductor_fetch_releases(
                     .context("no r version found for bc version")?;
                 bioc_release_infos.push(BioconductorRelease {
                     version: ver.clone(),
-                    start_date: release_date.clone(),
-                    end_date: Some(next_release_date.clone()), //right exclusive!
+                    start_date: *release_date,
+                    end_date: Some(*next_release_date), //right exclusive!
                     r_major_version: Version::from_str(r_version)?,
                 });
             }
@@ -441,12 +436,12 @@ pub fn bioconductor_fetch_releases(
                 .last()
                 .context("no release dates found?")?;
             let r_version = r_ver_for_bioc_ver
-                .get(&last_entry.0.to_string().to_string())
+                .get(&last_entry.0.to_string())
                 .context("no r version found for bc version")?;
 
             bioc_release_infos.push(BioconductorRelease {
                 version: last_entry.0.clone(),
-                start_date: last_entry.1.clone(),
+                start_date: last_entry.1,
                 end_date: None,
                 r_major_version: Version::from_str(r_version)?,
             });
@@ -459,8 +454,6 @@ pub fn bioconductor_fetch_releases(
 fn download_hash_and_desc(
     base_url: &str,
     tag: &str,
-    hash_path: &PathBuf,
-    desc_path: &PathBuf,
     known_hash: Option<&String>,
     known_desc: Option<&String>,
     is_archived: bool,
@@ -469,7 +462,7 @@ fn download_hash_and_desc(
     let url = if !is_archived {
         base_url.to_owned() + tag + ".tar.gz"
     } else {
-        let (name, _) = tag.split_once("_").unwrap();
+        let (name, _) = tag.split_once('_').unwrap();
         base_url.to_owned() + "Archive/" + name + "/" + tag + ".tar.gz"
     };
 
@@ -481,30 +474,24 @@ fn download_hash_and_desc(
     };
 
     // we only get called if one of them does not exist
-    let hash_fn = get_prefixed_path(&hash_path, &tag, &repo.to_string())?;
     let sha = match known_hash {
         Some(x) => Cow::from(x),
         None => {
-            info!("dumping hash for {:?}", &hash_fn);
             let sha = sha256::digest_bytes(&raw);
             Cow::from(sha)
         }
     };
 
-    let name_version: Vec<_> = tag.splitn(2, "_").collect();
+    let name_version: Vec<_> = tag.splitn(2, '_').collect();
     let name = name_version[0];
 
-    let desc_fn = get_prefixed_path(&desc_path, &tag, &repo.to_string())?;
-    let gzname: String = desc_fn.file_name().unwrap().to_string_lossy().to_string() + ".gz";
-    let desc_fn = desc_fn.with_file_name(&gzname);
     let str_desc = match known_desc {
         Some(x) => Cow::from(x),
         None => {
-            info!("dumping desc for {:?}", &desc_fn);
             let desc: Vec<u8> = extract_description_from_tar_gz(name, &raw)
                 .with_context(|| format!("extracting description for {}", tag))?;
             let desc = Cow::from(String::from_utf8_lossy(&desc).to_string());
-            Cow::from(desc)
+            desc
         }
     };
 
@@ -521,7 +508,7 @@ pub fn parse_desc(raw: &str) -> Result<HashMap<String, Vec<String>>> {
     let mut out: HashMap<String, String> = HashMap::new();
 
     let mut last_key = None;
-    for line in raw.split("\n") {
+    for line in raw.split('\n') {
         match DESCRIPTION_LINE_REGEXPS.captures(line) {
             Some(matches) => {
                 last_key = Some((&matches[1]).to_owned());
@@ -549,7 +536,7 @@ pub fn parse_desc(raw: &str) -> Result<HashMap<String, Vec<String>>> {
         .collect())
 }
 
-fn extract_description_from_tar_gz(name: &str, tar_gz_bytes: &Vec<u8>) -> Result<Vec<u8>> {
+fn extract_description_from_tar_gz(name: &str, tar_gz_bytes: &[u8]) -> Result<Vec<u8>> {
     let mut child = std::process::Command::new("tar")
         .args(&[
             "xzf",
@@ -599,7 +586,7 @@ fn download_regexs_and_cache_json<
         let input_html = ureq::get(url).call()?.into_string()?;
         let hits: Result<Vec<T>> = search_re
             .captures_iter(&input_html)
-            .map(|x| group_extract(x))
+            .map(&group_extract)
             .collect();
         let hits = hits?;
         if hits.is_empty() {
@@ -647,7 +634,7 @@ fn fetch_archive<
         // not the list of currently available packages,but everything archived...
         // and with a 'last changed on date'
 
-        let (_, post_date_path) = extract_date_relative_path(&out_path)?;
+        let (_, post_date_path) = extract_date_relative_path(out_path)?;
         let archive_dir = out_path.join("archive");
         let already_fetched_today = create_and_list_dir(&archive_dir)?;
 
@@ -739,16 +726,6 @@ fn fetch_archive<
     Ok(result)
 }
 
-fn get_prefixed_path(parent: &PathBuf, name: &str, repo: &str) -> Result<PathBuf> {
-    let mut it = name.chars();
-    let first = it.next().expect("empty string to get_prefixed_path");
-    let second = it.next().expect("one letter string to get_prefixed_path");
-    let prefix = format!("{}{}", first, second).to_lowercase();
-    let dir = parent.join(repo).join(prefix);
-    ex::fs::create_dir_all(&dir).context("Could not create dump directory")?;
-    Ok(dir.join(name))
-}
-
 pub static REGEXPS_R_VERSION_SEARCH: Lazy<Regex> =
     lazy_regex!("R-([0-9.]+)\\.tar\\.gz</a></td><td align=\"right\">(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
 
@@ -799,13 +776,13 @@ fn cran_fetch_final_archival_dates(
             let input = std::str::from_utf8(&input)?;
             let mut package: Option<String> = None;
             let mut out: HashMap<String, NaiveDate> = HashMap::new();
-            for line in input.split("\n") {
+            for line in input.split('\n') {
                 if line.starts_with("Package:") {
                     //info!("found package {}", line);
-                    package = Some(line.split_once(":").unwrap().1.trim().to_owned());
+                    package = Some(line.split_once(':').unwrap().1.trim().to_owned());
                 } else if line.starts_with("X-CRAN-Comment:") && line.contains("rchived") {
                     //info!("found cran comment {}", line);
-                    let date = DATE_YYYYMMDD_REGEXPS.captures_iter(&line).next();
+                    let date = DATE_YYYYMMDD_REGEXPS.captures_iter(line).next();
                     let date = match date {
                         Some(x) => x.get(0).unwrap().as_str(),
                         None => match &package {
@@ -830,14 +807,14 @@ fn cran_fetch_final_archival_dates(
                         .expect("date was not actually %Y-%m-%d");
                     let p = package
                         .take()
-                        .ok_or(anyhow!("No package set but archived-date read"))?;
-                    if out.contains_key(&p) {
+                        .ok_or_else(|| anyhow!("No package set but archived-date read"))?;
+                    if let std::collections::hash_map::Entry::Vacant(e) = out.entry(p) {
+                        e.insert(date);
+                    } else {
                         bail!(
                             "Package occured twice in PACKAGES.in {}",
                             package.as_ref().unwrap()
                         )
-                    } else {
-                        out.insert(p, date);
                     }
                 }
             }

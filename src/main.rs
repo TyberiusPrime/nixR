@@ -55,13 +55,6 @@ pub struct Config {
 }
 
 impl Config {
-    fn hash_path(&self) -> PathBuf {
-        self.output_path.join("sha256")
-    }
-    fn desc_path(&self) -> PathBuf {
-        self.output_path.join("desc")
-    }
-
     fn date_path(&self) -> PathBuf {
         self.output_path
             .join(&self.date.format("%Y-%m-%d").to_string())
@@ -123,9 +116,9 @@ impl Config {
     fn get_blacklist(&self) -> Result<HashSet<String>> {
         let r = ex::fs::read_to_string(self.override_path.join("blacklist.txt"))?;
         let mut res = HashSet::new();
-        for line in r.split("\n") {
+        for line in r.split('\n') {
             let line = line.trim();
-            if !line.is_empty() && !line.starts_with("#") {
+            if !line.is_empty() && !line.starts_with('#') {
                 res.insert(line.to_owned());
             }
         }
@@ -174,8 +167,8 @@ fn main() -> Result<()> {
 }
 
 fn test_parsing(config: &Config) -> Result<Vec<PackageInfo>> {
-    let pplus = vec![("a", chrono::NaiveDate::from_ymd(2022, 04, 27))];
-    let last_date = chrono::NaiveDate::from_ymd(2022, 09, 29);
+    let pplus = vec![("a", chrono::NaiveDate::from_ymd(2022, 4, 27))];
+    let last_date = chrono::NaiveDate::from_ymd(2022, 9, 29);
     dbg!(DateRangePlus::from_elements_and_release_dates(
         pplus, &last_date
     ));
@@ -233,18 +226,16 @@ fn extract_date_relative_path(path: &PathBuf) -> Result<(PathBuf, String)> {
                 bail!("Multiple dates in path {:?}", path);
             }
             inside = true;
-        } else {
-            if inside {
-                if !after_date.is_empty() {
-                    after_date += "/";
-                }
-                after_date += &element.to_string_lossy();
-            } else {
-                if !before_date.is_empty() {
-                    before_date += "/";
-                }
-                before_date += &element.to_string_lossy();
+        } else if inside {
+            if !after_date.is_empty() {
+                after_date += "/";
             }
+            after_date += &element.to_string_lossy();
+        } else {
+            if !before_date.is_empty() {
+                before_date += "/";
+            }
+            before_date += &element.to_string_lossy();
         }
     }
     if inside {
@@ -268,11 +259,6 @@ impl Version {
         Ok(Version(parts?))
     }
 
-    fn to_string(&self) -> String {
-        let as_strings = self.0.iter().map(|x| x.to_string());
-        itertools::Itertools::intersperse(as_strings, ".".to_owned()).collect()
-    }
-
     fn is_prefix(&self, other: &Version) -> bool {
         for (a, b) in self.0.iter().zip(other.0.iter()) {
             if a != b {
@@ -285,7 +271,9 @@ impl Version {
 
 impl Display for Version {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        formatter.write_str(&self.to_string())
+        let as_strings = self.0.iter().map(|x| x.to_string());
+        let out: String = itertools::Itertools::intersperse(as_strings, ".".to_owned()).collect();
+        formatter.write_str(&out)
     }
 }
 
@@ -322,7 +310,8 @@ static DETERMINISTIC_DATE_REGEPS: Lazy<Vec<(regex::Regex, String, bool)>> = Lazy
     m.push((r"^\d{4}-\d{1,2}-\d{1,2}", "%Y-%m-%d", true)); // if you mess up the iso format, I can't help you, though I will just throw you in the bin if you're before our YEAR_TO_EARLY...
     m.into_iter()
         .map(|(regex, a_str, apply_cutoff_filter_on_parsing_failure)| {
-            let re = regex::Regex::new(regex).expect(&format!("Failed to compile re '{}'", regex));
+            let re = regex::Regex::new(regex)
+                .unwrap_or_else(|_| panic!("Failed to compile re '{}'", regex));
 
             (re, a_str.to_owned(), apply_cutoff_filter_on_parsing_failure)
         })
@@ -337,7 +326,8 @@ static NONDETERMINISTIC_DATE_REGEPS: Lazy<Vec<(regex::Regex, String, String)>> =
 
     m.into_iter()
         .map(|(regex, a_str, b_str)| {
-            let re = regex::Regex::new(regex).expect(&format!("Failed to compile re '{}'", regex));
+            let re = regex::Regex::new(regex)
+                .unwrap_or_else(|_| panic!("Failed to compile re '{}'", regex));
 
             (re, a_str.to_owned(), b_str.to_owned())
         })
@@ -371,8 +361,8 @@ impl<T: Ord> DateRangePlus<T> {
                 core::cmp::Ordering::Equal => a.0.cmp(&b.0),
             }
         });
-        let mut end_dates: Vec<NaiveDate> = input.iter().map(|(_, date)| date.clone()).collect();
-        end_dates.push(end_date.clone());
+        let mut end_dates: Vec<NaiveDate> = input.iter().map(|(_, date)| *date).collect();
+        end_dates.push(*end_date);
         input
             .into_iter()
             .zip(end_dates.into_iter().skip(1))
@@ -410,7 +400,7 @@ impl BioconductorRelease {
         let r_releases = DateRangePlus::from_elements_and_release_dates(
             r_release_dates.into_iter().collect(),
             &match self.end_date {
-                Some(ed) => ed.clone(),
+                Some(ed) => ed,
                 None => today(),
             },
         );
@@ -423,30 +413,6 @@ impl BioconductorRelease {
             })
             .collect();
         filtered
-        /*
-                .iter()
-                .filter(|(r_version, release_date)| {
-                    self.r_major_version.is_prefix(r_version)
-                        && date_in_range(release_date, &self.start_date, self.end_date.as_ref())
-                })
-                .map(|(r_version, release_date)| (r_version.clone(), release_date.clone()))
-                .collect();
-            let mut start_dates: Vec<&NaiveDate> = filtered
-                .iter()
-                .map(|(_, release_date)| release_date)
-                .collect();
-            let final_date = (&self.end_date).unwrap_or(today);
-            start_dates.push(&final_date);
-            filtered
-                .iter()
-                .zip(start_dates.iter().skip(1))
-                .map(|((version, start_date), end_date)| VersionDateRange {
-                    version: version.to_owned(),
-                    start_date: start_date.clone(),
-                    end_date: *end_date.to_owned(),
-                })
-                .collect()
-        */
     }
 }
 
@@ -456,11 +422,11 @@ enum Repo {
     BiocSoftware(Version),
 }
 
-impl Repo {
-    fn to_string(&self) -> String {
+impl Display for Repo {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
-            Repo::Cran => "cran".to_string(),
-            Repo::BiocSoftware(ver) => format!("bioconductor_{}", ver.to_string()),
+            Repo::Cran => formatter.write_str("cran"),
+            Repo::BiocSoftware(ver) => formatter.write_str(&format!("bioconductor_{}", ver)),
         }
     }
 }
@@ -499,9 +465,11 @@ pub struct PackageInfoWithSource {
     name: String,
     version: String,
     //parsed_version: Version,
+    #[allow(dead_code)]
     sha256: String,
     desc: HashMap<String, Vec<String>>,
     is_archived: bool,
+    #[allow(dead_code)]
     source: Repo, //todo: optimize the memory & cloning on this
 }
 
@@ -580,7 +548,7 @@ fn list_r_versions(config: &Config) -> Result<()> {
         BIOCONDUCTOR_URL,
     )?;
     let min_ver = Version::from_str(MINIMUM_BIOCONDUCTOR_VERSION).unwrap();
-    let r_releases = retrieval::fetch_r_release_dates(&config)?;
+    let r_releases = retrieval::fetch_r_release_dates(config)?;
 
     for bc in bioc_info.iter() {
         if bc.version >= min_ver {
@@ -592,7 +560,7 @@ fn list_r_versions(config: &Config) -> Result<()> {
             for version_date_range in bc.r_minor_versions(r_releases.clone()) {
                 println!(
                     "\t {} {}..{}",
-                    version_date_range.element.to_string(),
+                    version_date_range.element,
                     version_date_range.start_date,
                     version_date_range.end_date
                 )
@@ -605,10 +573,10 @@ fn list_r_versions(config: &Config) -> Result<()> {
 
 fn assemble(config: &Config) -> Result<()> {
     let date_str = "2022-01-01";
-    let date = chrono::NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")?;
+    let date = chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d")?;
     let bioc_release = date_to_bioc_release(date, config)?;
     let (packages, mut interval_set) =
-        assemble_packages_during_bioconductor_release(&bioc_release, &config)?;
+        assemble_packages_during_bioconductor_release(&bioc_release, config)?;
     let hits: Vec<u32> = interval_set.query(&chrono::NaiveDate::from_ymd(2022, 1, 1))?;
     info!("packages at that date: {}", hits.len());
     /*
@@ -645,15 +613,15 @@ enum DateParsingResult {
 }
 
 fn parse_cursed_date(str_date: &str, options: &DateParsingOption) -> Result<DateParsingResult> {
-    if str_date.contains(";") {
-        let trunc_date = &str_date.split_once(";").unwrap().0;
+    if str_date.contains(';') {
+        let trunc_date = &str_date.split_once(';').unwrap().0;
         return parse_cursed_date(trunc_date, options)
             .with_context(|| format!("original str_date: '{}'", &str_date));
-    } else if str_date.starts_with("$Date:") && str_date.ends_with("$") {
+    } else if str_date.starts_with("$Date:") && str_date.ends_with('$') {
         let trunc_date = str_date
             .strip_prefix("$Date:")
             .unwrap()
-            .strip_suffix("$")
+            .strip_suffix('$')
             .unwrap()
             .trim();
         return parse_cursed_date(trunc_date, options);
@@ -663,13 +631,13 @@ fn parse_cursed_date(str_date: &str, options: &DateParsingOption) -> Result<Date
     for (re, chrono_str, apply_cutoff_filter_on_parsing_failure) in DETERMINISTIC_DATE_REGEPS.iter()
     {
         if re.is_match(str_date) {
-            let date = chrono::NaiveDate::parse_from_str(&str_date, chrono_str)
+            let date = chrono::NaiveDate::parse_from_str(str_date, chrono_str)
                 .with_context(|| format!("parsing '{}'", &str_date));
             match date {
                 Ok(date) => return Ok(DateParsingResult::Determined(date)),
                 Err(e) => {
                     if *apply_cutoff_filter_on_parsing_failure {
-                        for hit in YEAR_REGEXPS.captures_iter(&str_date) {
+                        for hit in YEAR_REGEXPS.captures_iter(str_date) {
                             if &hit[2] <= YEAR_TO_EARLY {
                                 // we start with bioconductor 3.6, which is in 2017
                                 //and the earlie 2000s have a lot of 'unparsable' dates..
@@ -685,7 +653,7 @@ fn parse_cursed_date(str_date: &str, options: &DateParsingOption) -> Result<Date
         }
     }
 
-    for hit in YEAR_REGEXPS.captures_iter(&str_date) {
+    for hit in YEAR_REGEXPS.captures_iter(str_date) {
         if &hit[2] <= YEAR_TO_EARLY {
             // we start with bioconductor 3.6, which is in 2017
             //and the earlie 2000s have a lot of 'unparsable' dates..
@@ -705,12 +673,12 @@ fn parse_cursed_date(str_date: &str, options: &DateParsingOption) -> Result<Date
                         .expect("no preference for re number in date parsing")
                     {
                         WhichFirst::MonthFirst => Ok(DateParsingResult::MonthFirst(
-                            chrono::NaiveDate::parse_from_str(&str_date, chrono_month_first)
+                            chrono::NaiveDate::parse_from_str(str_date, chrono_month_first)
                                 .with_context(|| format!("parsing '{}', monthFirst", &str_date))?,
                             re_number,
                         )),
                         WhichFirst::DayFirst => Ok(DateParsingResult::DayFirst(
-                            chrono::NaiveDate::parse_from_str(&str_date, chrono_day_first)
+                            chrono::NaiveDate::parse_from_str(str_date, chrono_day_first)
                                 .with_context(|| format!("parsing '{}', dayFirst", &str_date))?,
                             re_number,
                         )),
@@ -718,8 +686,8 @@ fn parse_cursed_date(str_date: &str, options: &DateParsingOption) -> Result<Date
                 }
                 DateParsingOption::Undeceided => {
                     let month_first =
-                        chrono::NaiveDate::parse_from_str(&str_date, chrono_month_first);
-                    let day_first = chrono::NaiveDate::parse_from_str(&str_date, chrono_day_first);
+                        chrono::NaiveDate::parse_from_str(str_date, chrono_month_first);
+                    let day_first = chrono::NaiveDate::parse_from_str(str_date, chrono_day_first);
                     match (month_first, day_first) {
                         (Ok(mf), Ok(df)) => Ok(DateParsingResult::EitherFirst()),
                         (Ok(mf), Err(_)) => Ok(DateParsingResult::MonthFirst(mf, re_number)),
@@ -731,11 +699,11 @@ fn parse_cursed_date(str_date: &str, options: &DateParsingOption) -> Result<Date
         }
     }
 
-    return Err(anyhow!(format!("Could not parse date '{}'", str_date)));
+    Err(anyhow!(format!("Could not parse date '{}'", str_date)))
 }
 
 fn _parse_package_infos_for_dates(
-    package_infos: &Vec<PackageInfoWithSource>,
+    package_infos: &[PackageInfoWithSource],
     parse_option: &DateParsingOption,
     manual_overrides: &HashMap<String, chrono::NaiveDate>,
 ) -> Vec<Result<DateParsingResult>> {
@@ -749,7 +717,7 @@ fn _parse_package_infos_for_dates(
                         &package_info.tag(),
                         &overriden_date
                     );
-                    Ok(DateParsingResult::Determined(overriden_date.clone()))
+                    Ok(DateParsingResult::Determined(*overriden_date))
                 }
                 None => {
                     let str_date = package_info.desc.get("Date/Publication").or_else(|| {
@@ -933,16 +901,16 @@ fn parse_package_dates(
             bail!("Failed to parse all the dates");
         }
 
-        let mut pplus = DateRangePlus::from_elements_and_release_dates(pplus, &last_date);
+        let mut pplus = DateRangePlus::from_elements_and_release_dates(pplus, last_date);
         if !pplus.is_empty() {
             // all dates before our cut off, and filtered because 'undeceidable', I suppose.?
             let last = pplus.iter_mut().last().unwrap();
             let last_is_archived = last.element.is_archived;
             if last_is_archived {
-                let last_archive_date = match final_archive_dates.get(&name) {
+                match final_archive_dates.get(&name) {
                     Some(fad) => {
                         used_final_dates.insert(name.to_owned());
-                        last.end_date = fad.clone()
+                        last.end_date = *fad
                     }
                     None => {
                         no_final_archive_date_error = true;
@@ -997,14 +965,13 @@ fn date_to_bioc_release(date: chrono::NaiveDate, config: &Config) -> Result<Bioc
 
     let bioc_release = bioc_release_infos
         .into_iter()
-        .filter(|release| {
+        .find(|release| {
             (release.start_date <= date)
                 && (match release.end_date {
                     Some(ed) => (date < ed),
                     None => true,
                 })
         })
-        .next()
         .context("could not find bioc release for that date")?;
     info!("bc release {:?}", bioc_release.version);
 
@@ -1031,17 +998,21 @@ impl DateIntervalSet {
                 continue;
             }
             let start_iv = start_iv.max(0);
-            if start_iv > end_iv {
-                panic!("end date before start date {} {}", &start_date, &end_date);
-            } else if start_iv == end_iv {
-                if start_iv == 0 {
-                    //this happens when the end date is the start date of the interval,
-                    //but there should be another one starting at 0 then...
-                    continue;
-                } else {
-                    panic!("end date == start date, empty interval?");
+            match start_iv.cmp(&end_iv) {
+                core::cmp::Ordering::Greater => {
+                    panic!("end date before start date {} {}", &start_date, &end_date)
                 }
-            }
+                core::cmp::Ordering::Equal => {
+                    if start_iv == 0 {
+                        //this happens when the end date is the start date of the interval,
+                        //but there should be another one starting at 0 then...
+                        continue;
+                    } else {
+                        panic!("end date == start date, empty interval?");
+                    }
+                }
+                core::cmp::Ordering::Less => {}
+            };
             let start_iv = start_iv
                 .try_into()
                 .expect("Could not convert start_iv to u32");
@@ -1063,8 +1034,7 @@ impl DateIntervalSet {
             .context("Before offset_date")?;
         let query = iv..(iv + 1);
         let hit_set = self.interval_set.query_overlapping(&query);
-        let hits: Vec<(&std::ops::Range<u32>, &Vec<u32>)> = hit_set.iter().collect();
-        Ok(hits.into_iter().map(|x| x.1[0]).collect())
+        Ok(hit_set.iter().map(|x| x.1[0]).collect())
     }
 }
 
@@ -1075,16 +1045,16 @@ fn assemble_packages_during_bioconductor_release(
     let manual_overrides: HashMap<String, chrono::NaiveDate> =
         helpers::load_toml(&PathBuf::from("overrides/dates.toml"), false)?;
 
-    let earliest_date = bioc_release.start_date.clone();
+    let earliest_date = bioc_release.start_date;
     let latest_date = match bioc_release.end_date {
-        Some(x) => x.clone(),
+        Some(x) => x,
         None => Utc::today().naive_utc(),
     };
     //info!("earliest date {}", earliest_date);
     //info!("latest date {} {:#?}", latest_date, &bioc_release.end_date);
     //info!("That's {} days", (latest_date - earliest_date).num_days());
 
-    let (cran_packages, cran_final_archive_dates) = retrieval::update_cran(&config)?;
+    let (cran_packages, cran_final_archive_dates) = retrieval::update_cran(config)?;
     info!(
         "no of cran packages before date parsing {}",
         cran_packages.len()
@@ -1105,6 +1075,11 @@ fn assemble_packages_during_bioconductor_release(
         &bioc_release.end_date,
         &bc_path,
     )?;
+info!(
+        "no of bioc packages before date parsing {}",
+        bioc_packages.len()
+    );
+
     let bioc_packages = parse_package_dates(
         bioc_packages,
         Repo::BiocSoftware(bioc_release.version.to_owned()),
