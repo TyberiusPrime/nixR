@@ -133,52 +133,8 @@ impl Config {
         }
         Ok(res)
     }
-
-    fn known_shas(&self, repo: &str) -> Result<HashSet<String>> {
-        list_prefixed_subdir(&self.output_path.join("sha256").join(repo))
-    }
-    fn known_descs(&self, repo: &str) -> Result<HashSet<String>> {
-        Ok(
-            list_prefixed_subdir(&self.output_path.join("desc").join(repo))?
-                .into_iter()
-                .map(|x| x.strip_suffix(".gz").unwrap().to_string())
-                .collect(),
-        )
-    }
 }
-fn list_prefixed_subdir(dir: &PathBuf) -> Result<HashSet<String>> {
-    let toplevel = ex::fs::read_dir(dir)?;
-    let toplevel_dirs: Vec<String> = toplevel
-        .filter_map(|p| p.ok())
-        .filter(|p| match p.file_type() {
-            Ok(p) => p.is_dir(),
-            Err(_) => false,
-        })
-        .map(|p| p.path().file_name().unwrap().to_string_lossy().to_string())
-        .collect();
 
-    let entries: Result<Vec<Vec<String>>> = toplevel_dirs
-        .par_iter()
-        .map(|dir_name| -> Result<Vec<String>> {
-            ex::fs::read_dir(&dir.join(dir_name))?
-                .filter_map(|p| p.ok())
-                .filter(|p| match p.file_type() {
-                    Ok(p) => p.is_file(),
-                    Err(_) => false,
-                })
-                .map(|p| Ok(p.path().file_name().unwrap().to_string_lossy().to_string()))
-                .collect()
-        })
-        .collect();
-    let entries: Vec<Vec<String>> = entries?;
-    let mut out = HashSet::new();
-    for found_names in entries.into_iter() {
-        for name in found_names.into_iter() {
-            out.insert(name);
-        }
-    }
-    Ok(out)
-}
 
 fn main() -> Result<()> {
     let matches = parse_args();
@@ -221,7 +177,6 @@ fn main() -> Result<()> {
 }
 
 fn test_parsing(config: &Config) -> Result<Vec<PackageInfo>> {
-
     let q = "X-CRAN-Comment: Archived on 2022-09-28 as issues were not corrected in time.";
     for e in DATE_YYYYMMDD_REGEXPS.captures_iter(q) {
         dbg!(e);
@@ -507,7 +462,7 @@ pub struct PackageInfo {
     name: String,
     version: String,
     sha256: String,
-    desc: HashMap<String, Vec<String>>,
+    raw_desc: String,
     is_archived: bool,
 }
 
@@ -516,23 +471,26 @@ impl PackageInfo {
         name: String,
         version: String,
         sha256: String,
-        desc: HashMap<String, Vec<String>>,
+        raw_desc: String,
         is_archived: bool,
     ) -> PackageInfo {
         PackageInfo {
             name,
             version,
             sha256,
-            desc,
+            raw_desc,
             is_archived,
         }
+    }
+    fn tag(&self) -> String {
+        format!("{}_{}", &self.name, &self.version)
     }
 }
 #[derive(Debug, Clone)]
 pub struct PackageInfoWithSource {
     name: String,
     version: String,
-    parsed_version: Version,
+    //parsed_version: Version,
     sha256: String,
     desc: HashMap<String, Vec<String>>,
     is_archived: bool,
@@ -541,15 +499,41 @@ pub struct PackageInfoWithSource {
 
 impl PackageInfoWithSource {
     fn new_from_package_info(pi: PackageInfo, repo: Repo) -> Result<PackageInfoWithSource> {
+        let desc = retrieval::parse_desc(&pi.raw_desc).with_context(|| {
+            format!(
+                "Parsing description for {} failed.\nDesc was {}",
+                &pi.tag(),
+                &pi.raw_desc
+            )
+        })?;
+        let desc = desc
+            .into_iter()
+            .filter(|(k, v)| {
+                (k == "Depends")
+                    || (k == "Imports")
+                    || (k == "LinkingTo")
+                    || (k == "Suggests")
+                    || (k == "NeedsCompilation")
+                    || (k == "OS_type")
+                    || (k == "Date/Publication")
+                    || (k == "Packaged")
+                    || (k == "Date")
+            })
+            .collect();
+
         Ok(PackageInfoWithSource {
             name: pi.name,
-            parsed_version: Version::from_str(&pi.version)?,
+            //parsed_version: Version::from_str(&pi.version)?,
             version: pi.version,
             sha256: pi.sha256,
-            desc: pi.desc,
+            desc,
             is_archived: pi.is_archived,
             source: repo,
         })
+    }
+
+    fn parsed_version(&self) -> Result<Version>{
+        Version::from_str(&self.version)
     }
 
     fn tag(&self) -> String {
@@ -1026,7 +1010,7 @@ fn assemble_packages_during_bioconductor_release(
     config: &Config,
 ) -> Result<(Vec<DateRangePlus<PackageInfoWithSource>>, DateIntervalSet)> {
     let manual_overrides: HashMap<String, chrono::NaiveDate> =
-        helpers::json_from_file(&PathBuf::from("overrides/dates.json"))?;
+        helpers::load_json(&PathBuf::from("overrides/dates.json"), false)?;
 
     let earliest_date = bioc_release.start_date.clone();
     let latest_date = match bioc_release.end_date {

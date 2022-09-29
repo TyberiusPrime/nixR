@@ -5,7 +5,8 @@ use std::ffi::OsStr;
 use std::io::{Read, Write};
 use std::{collections::HashMap, collections::HashSet, io::BufReader, path::PathBuf};
 
-pub fn write_gzip(path: &PathBuf, data: &[u8]) -> Result<()> {
+/*
+ * pub fn write_gzip(path: &PathBuf, data: &[u8]) -> Result<()> {
     let tmp_file = path.with_extension("tmp");
     {
         let fh = ex::fs::File::create(&tmp_file)?;
@@ -16,14 +17,16 @@ pub fn write_gzip(path: &PathBuf, data: &[u8]) -> Result<()> {
     ex::fs::rename(tmp_file, path)?;
     Ok(())
 }
+*/
 
-pub fn read_gzip(path: &PathBuf) -> Result<Vec<u8>> {
+/*pub fn read_gzip(path: &PathBuf) -> Result<Vec<u8>> {
     let gz = read_to_bytes(&path)?;
     let mut d = GzDecoder::new(&gz[..]);
     let mut s = Vec::new();
     d.read_to_end(&mut s)?;
     Ok(s)
 }
+*/
 
 pub fn cache_json<T: serde::de::DeserializeOwned, S: serde::ser::Serialize>(
     filename: &PathBuf,
@@ -36,33 +39,42 @@ pub fn cache_json<T: serde::de::DeserializeOwned, S: serde::ser::Serialize>(
         == "gz";
 
     if !filename.exists() {
-        info!("Building {:?}", &filename);
         let v = callback()?;
-        let tmp_file = filename.with_extension("tmp");
-        let file = ex::fs::File::create(&tmp_file)?;
-        if do_gz {
-            let mut encoder = flate2::write::GzEncoder::new(file, flate2::Compression::default());
-            serde_json::to_writer(&mut encoder, &v)?;
-            encoder.finish()?;
-        } else {
-            serde_json::to_writer(file, &v)?;
-        }
-
-        ex::fs::rename(tmp_file, filename)?;
+        write_json(&filename, &v, do_gz)?;
     }
+    load_json(&filename, do_gz)
+}
+
+pub fn load_json<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool) -> Result<T> {
     info!("Loading {:?} gz: {}", &filename, do_gz);
     if do_gz {
         let mut file = BufReader::new(ex::fs::File::open(filename)?);
         let mut d = GzDecoder::new(&mut file);
         Ok(serde_json::from_reader(d)?)
     } else {
-        json_from_file(filename)
+        let file = BufReader::new(ex::fs::File::open(filename)?);
+        Ok(serde_json::from_reader(file)?)
     }
 }
 
-pub fn json_from_file<T: serde::de::DeserializeOwned>(filename: &PathBuf) -> Result<T> {
-    let file = BufReader::new(ex::fs::File::open(filename)?);
-    Ok(serde_json::from_reader(file)?)
+pub fn write_json<S: serde::ser::Serialize>(
+    filename: &PathBuf,
+    data: &S,
+    do_gz: bool,
+) -> Result<()> {
+    info!("Building {:?}", &filename);
+    let tmp_file = filename.with_extension("tmp");
+    let file = ex::fs::File::create(&tmp_file)?;
+    if do_gz {
+        let mut encoder = flate2::write::GzEncoder::new(file, flate2::Compression::default());
+        serde_json::to_writer(&mut encoder, data)?;
+        encoder.finish()?;
+    } else {
+        serde_json::to_writer(file, data)?;
+    }
+
+    ex::fs::rename(tmp_file, filename)?;
+    Ok(())
 }
 
 /// create a directory, and list its filenames
@@ -81,12 +93,14 @@ pub fn list_dir(dir: &PathBuf) -> Result<HashSet<String>> {
     Ok(found)
 }
 
-pub fn read_to_bytes(path: &PathBuf) -> Result<Vec<u8>> {
+/*
+ * pub fn read_to_bytes(path: &PathBuf) -> Result<Vec<u8>> {
     let mut reader = BufReader::new(ex::fs::File::open(path)?);
     let mut out = Vec::new();
     reader.read_to_end(&mut out)?;
     Ok(out)
 }
+*/
 
 pub fn fetch_url_to_vec(url: &str) -> Result<Vec<u8>> {
     fetch_url_to_vec_with_retries(url, 2)

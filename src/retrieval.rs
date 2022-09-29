@@ -1,6 +1,6 @@
 use crate::helpers::{
-    cache_json, create_and_list_dir, fetch_url_to_vec, json_from_file, list_dir, read_gzip,
-    write_gzip,
+    cache_json, create_and_list_dir, fetch_url_to_vec, list_dir, load_json, 
+    write_json,
 };
 use crate::{
     extract_date_relative_path, BioconductorRelease, Config, PackageInfo, PackageInfoWithSource,
@@ -14,6 +14,7 @@ use lazy_regex::{lazy_regex, Regex};
 use log::{debug, error, info, trace, warn};
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
+use std::borrow::Cow;
 use std::io::{Read, Write};
 use std::{collections::HashMap, collections::HashSet, io::BufReader, path::PathBuf};
 
@@ -234,8 +235,10 @@ fn fetch_package_infos(
     // ALDEx2_1.0.0 ['3.1', '3.0']
     // DMRScan_1.10.0 ['3.9', '3.11']
 
-    let known_shas = config.known_shas(&repo.to_string())?;
-    let known_descs = config.known_descs(&repo.to_string())?;
+    // can't use cache_json here, because we want to extend
+    let known_shas: HashMap<String, String> = load_hashes(&config, &repo.to_string())?;
+    let known_descs: HashMap<String, String> = load_descs(&config, &repo.to_string())?;
+
     let blacklist = config.get_blacklist()?;
 
     let hash_path = config.hash_path();
@@ -249,8 +252,8 @@ fn fetch_package_infos(
                 tag,
                 &hash_path,
                 &desc_path,
-                !known_shas.contains(tag),
-                !known_descs.contains(tag),
+                known_shas.get(tag),
+                known_descs.get(tag),
                 false,
                 &repo,
             ) {
@@ -277,8 +280,8 @@ fn fetch_package_infos(
                 tag,
                 &hash_path,
                 &desc_path,
-                !known_shas.contains(tag),
-                !known_descs.contains(tag),
+                known_shas.get(tag),
+                known_descs.get(tag),
                 true,
                 &repo,
             ) {
@@ -308,7 +311,48 @@ fn fetch_package_infos(
 
     let mut out: Vec<PackageInfo> = current_info.into_iter().filter_map(|x| x.ok()).collect();
     out.extend(archived_info.into_iter().filter_map(|x| x.ok()));
+
+    ex::fs::create_dir_all(config.output_path.join(repo.to_string()))?;
+    if out.len() != known_shas.len() || out.len() != known_descs.len() {
+        // only export if anything changed
+        save_hashes(config, &repo.to_string(), &out)?;
+        save_descs(config, &repo.to_string(), &out)?;
+    }
     Ok(out)
+}
+
+fn load_hashes(config: &Config, repo: &str) -> Result<HashMap<String, String>> {
+    let filename = config.output_path.join(repo).join("sha256.json.gz");
+    if filename.exists() {
+        Ok(load_json(&filename, true)?)
+    } else {
+        Ok(HashMap::new())
+    }
+}
+fn load_descs(config: &Config, repo: &str) -> Result<HashMap<String, String>> {
+    let filename = config.output_path.join(repo).join("desc.json.gz");
+    if filename.exists() {
+        Ok(load_json(&filename, true)?)
+    } else {
+        Ok(HashMap::new())
+    }
+}
+
+fn save_hashes(config: &Config, repo: &str, packages: &Vec<PackageInfo>) -> Result<()> {
+    let filename = config.output_path.join(repo).join("sha256.json.gz");
+    let lookup: HashMap<String, String> = packages
+        .iter()
+        .map(|x| (x.tag(), x.sha256.clone()))
+        .collect();
+    write_json(&filename, &lookup, true)?;
+    Ok(())
+}
+
+fn save_descs(config: &Config, repo: &str, packages: &Vec<PackageInfo>) -> Result<()> {
+    let filename = config.output_path.join(repo).join("desc.json.gz");
+    let lookup: HashMap<String, _> = packages.iter().map(|x| (x.tag(), &x.raw_desc)).collect();
+    write_json(&filename, &lookup, true)?;
+    Ok(())
 }
 
 pub fn bioconductor_fetch_releases(
@@ -403,8 +447,8 @@ fn download_hash_and_desc(
     tag: &str,
     hash_path: &PathBuf,
     desc_path: &PathBuf,
-    build_hash: bool,
-    build_desc: bool,
+    known_hash: Option<&String>,
+    known_desc: Option<&String>,
     is_archived: bool,
     repo: &Repo,
 ) -> Result<PackageInfo> {
@@ -415,7 +459,7 @@ fn download_hash_and_desc(
         base_url.to_owned() + "Archive/" + name + "/" + tag + ".tar.gz"
     };
 
-    let mut raw: Vec<u8> = if build_hash || build_desc {
+    let mut raw: Vec<u8> = if known_hash.is_none() || known_desc.is_none() {
         info!("downloading {}", &url);
         fetch_url_to_vec(&url)?
     } else {
@@ -424,13 +468,13 @@ fn download_hash_and_desc(
 
     // we only get called if one of them does not exist
     let hash_fn = get_prefixed_path(&hash_path, &tag, &repo.to_string())?;
-    let sha = if build_hash {
-        info!("dumping hash for {:?}", &hash_fn);
-        let sha = sha256::digest_bytes(&raw);
-        std::fs::write(hash_fn, &sha)?;
-        sha
-    } else {
-        ex::fs::read_to_string(hash_fn)?
+    let sha = match known_hash {
+        Some(x) => Cow::from(x),
+        None => {
+            info!("dumping hash for {:?}", &hash_fn);
+            let sha = sha256::digest_bytes(&raw);
+            Cow::from(sha)
+        }
     };
 
     let name_version: Vec<_> = tag.splitn(2, "_").collect();
@@ -439,47 +483,27 @@ fn download_hash_and_desc(
     let desc_fn = get_prefixed_path(&desc_path, &tag, &repo.to_string())?;
     let gzname: String = desc_fn.file_name().unwrap().to_string_lossy().to_string() + ".gz";
     let desc_fn = desc_fn.with_file_name(&gzname);
-    let desc = if build_desc {
-        info!("dumping desc for {:?}", &desc_fn);
-        let desc: Vec<u8> = extract_description_from_tar_gz(name, &raw)
-            .with_context(|| format!("extracting description for {}", tag))?;
-        write_gzip(&desc_fn, &desc)?;
-        desc
-    } else {
-        read_gzip(&desc_fn)?
+    let str_desc = match known_desc {
+        Some(x) => Cow::from(x),
+        None => {
+            info!("dumping desc for {:?}", &desc_fn);
+            let desc: Vec<u8> = extract_description_from_tar_gz(name, &raw)
+                .with_context(|| format!("extracting description for {}", tag))?;
+            let desc = Cow::from(String::from_utf8_lossy(&desc).to_string());
+            Cow::from(desc)
+        }
     };
-
-    let str_desc = &String::from_utf8_lossy(&desc);
-    let desc = parse_desc(str_desc).with_context(|| {
-        format!(
-            "Parsing description for {} failed.\nUrl: {} Desc was {}",
-            &tag, &url, str_desc
-        )
-    })?;
-    let desc = desc
-        .into_iter()
-        .filter(|(k, v)| {
-            (k == "Depends")
-                || (k == "Imports")
-                || (k == "LinkingTo")
-                || (k == "Suggests")
-                || (k == "NeedsCompilation")
-                || (k == "OS_type")
-                || (k == "Date/Publication")
-                || (k == "Packaged")
-                || (k == "Date")
-        })
-        .collect();
 
     Ok(PackageInfo::new(
         name.to_owned(),
         name_version[1].to_owned(),
-        sha,
-        desc,
+        sha.into_owned(),
+        str_desc.into_owned(),
         is_archived,
     ))
 }
-fn parse_desc(raw: &str) -> Result<HashMap<String, Vec<String>>> {
+
+pub fn parse_desc(raw: &str) -> Result<HashMap<String, Vec<String>>> {
     let mut out: HashMap<String, String> = HashMap::new();
 
     let mut last_key = None;
@@ -689,7 +713,7 @@ fn fetch_archive<
         info!("downloaded archive");
         let mut result: Vec<String> = Vec::new();
         for package_name in archive_entries.iter().map(|x| &x.0) {
-            let entries: Vec<String> = json_from_file(&archive_dir.join(package_name))?;
+            let entries: Vec<String> = load_json(&archive_dir.join(package_name), false)?;
             result.extend(entries.into_iter())
         }
         Ok(result)
@@ -749,7 +773,9 @@ fn cran_fetch_final_archival_dates(
 ) -> Result<HashMap<String, NaiveDate>> {
     let out_path = config.date_path().join("cran");
     cache_json(&out_path.join("final_archive_dates.json"), || {
-        let overrides:HashMap<String, String> = toml::from_str(&ex::fs::read_to_string("overrides/final_archive_dates.toml")?)?;
+        let overrides: HashMap<String, String> = toml::from_str(&ex::fs::read_to_string(
+            "overrides/final_archive_dates.toml",
+        )?)?;
         let input = fetch_url_to_vec(&(base_url.to_owned() + "PACKAGES.in"))?;
         let input = std::str::from_utf8(&input)?;
         let mut package: Option<String> = None;
@@ -763,22 +789,23 @@ fn cran_fetch_final_archival_dates(
                 let date = DATE_YYYYMMDD_REGEXPS.captures_iter(&line).next();
                 let date = match date {
                     Some(x) => x.get(0).unwrap().as_str(),
-                    None => {
-                        match &package {
+                    None => match &package {
                         Some(p) => {
                             if overrides.contains_key(p) {
                                 overrides.get(p).unwrap()
                             } else {
-                                Err(anyhow!("No date in Archived on comment {} {:?}", &line, &package))?
+                                Err(anyhow!(
+                                    "No date in Archived on comment {} {:?}",
+                                    &line,
+                                    &package
+                                ))?
                             }
                         }
-                        None => {
-                            Err(anyhow!("No package set, but date found?"))?
-                        }
-                        }
-                    }
+                        None => Err(anyhow!("No package set, but date found?"))?,
+                    },
                 };
-                let date = NaiveDate::parse_from_str(date,"%Y-%m-%d").expect("date was not actually %Y-%m-%d");
+                let date = NaiveDate::parse_from_str(date, "%Y-%m-%d")
+                    .expect("date was not actually %Y-%m-%d");
                 let p = package
                     .take()
                     .ok_or(anyhow!("No package set but archived-date read"))?;
