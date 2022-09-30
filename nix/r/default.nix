@@ -1,17 +1,45 @@
-{pkgs}:
-with pkgs; {
-  "3.4" = {};
-  "3.5" = {};
-  "3.6" = {};
-  "4.0" = {};
-  "4.1.1" = callPackage ./4.1.1/default.nix {
-    # TODO: split docs into a separate output
-    texLive = texlive.combine {
-      inherit (texlive) scheme-small inconsolata helvetic texinfo fancyvrb cm-super;
+{}: let
+  defaultArgs = pkgs:
+    with pkgs; {
+      # TODO: split docs into a separate output
+      texLive = texlive.combine {
+        inherit (texlive) scheme-small inconsolata helvetic texinfo fancyvrb cm-super;
+      };
+      withRecommendedPackages = false;
+      inherit (darwin.apple_sdk.frameworks) Cocoa Foundation;
+      inherit (darwin) libobjc;
     };
-    withRecommendedPackages = false;
-    inherit (darwin.apple_sdk.frameworks) Cocoa Foundation;
-    inherit (darwin) libobjc;
-  };
-  "4.2" = {};
-}
+
+  versions = [
+    "3.4.2"
+    "3.4.3"
+    "3.4.4"
+    "3.5.0"
+    "3.5.1"
+    "3.5.2"
+    "3.5.3"
+    "3.6.0"
+    "3.6.1"
+    "3.6.2"
+    "3.6.3"
+    "4.0.0"
+    "4.0.1"
+    "4.0.2"
+    "4.0.3"
+    "4.0.4"
+    "4.0.5"
+    "4.1.0"
+    "4.1.1"
+    "4.2.0"
+    "4.2.1"
+  ];
+in
+  builtins.listToAttrs (
+    map (
+      k: {
+        name = k;
+        value = pkgs: with pkgs; callPackage ./${k}/default.nix (defaultArgs pkgs);
+      }
+    )
+    versions
+  )

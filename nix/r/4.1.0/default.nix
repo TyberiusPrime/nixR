@@ -14,11 +14,11 @@ assert (!blas.isILP64) && (!lapack.isILP64);
 
 stdenv.mkDerivation rec {
   pname = "R";
-  version = "4.1.1";
+  version = "4.1.0";
 
   src = fetchurl {
     url = "https://cran.r-project.org/src/base/R-${lib.versions.major version}/${pname}-${version}.tar.gz";
-    sha256 = "sha256-UV4DJldSJX0LcDbzgPguQrRu2Ec/VPJce2ftJbu902Q=";
+    sha256 = "sha256-6OaJWdcoLKFHNg/JZEram9FhureBurFNM7iZmpUYJ4E=";
   };
 
   dontUseImakeConfigure = true;
@@ -31,7 +31,6 @@ stdenv.mkDerivation rec {
 
   patches = [
     ./no-usr-local-search-paths.patch
-    ./test-reg-packages.patch
   ];
 
   # Test of the examples for package 'tcltk' fails in Darwin sandbox. See:

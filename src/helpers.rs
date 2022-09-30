@@ -1,9 +1,10 @@
-use anyhow::{anyhow, bail, Context, Result};
-use flate2::read::{GzDecoder, GzEncoder};
-use log::{debug, error, info, trace, warn};
+use anyhow::Result;
+use chrono::{NaiveDate, Utc};
+use flate2::read::GzDecoder;
+use log::{info, warn};
 use std::ffi::OsStr;
-use std::io::{Read, Write};
-use std::{collections::HashMap, collections::HashSet, io::BufReader, path::PathBuf};
+use std::io::Read;
+use std::{collections::HashSet, io::BufReader, path::PathBuf};
 
 /*
  * pub fn write_gzip(path: &PathBuf, data: &[u8]) -> Result<()> {
@@ -34,7 +35,7 @@ pub fn cache_json<T: serde::de::DeserializeOwned, S: serde::ser::Serialize>(
 ) -> Result<T> {
     let do_gz = filename
         .extension()
-        .unwrap_or_else(||OsStr::new(""))
+        .unwrap_or_else(|| OsStr::new(""))
         .to_string_lossy()
         == "gz";
 
@@ -45,6 +46,55 @@ pub fn cache_json<T: serde::de::DeserializeOwned, S: serde::ser::Serialize>(
     load_json(filename, do_gz)
 }
 
+pub fn cache_bincode<T: serde::de::DeserializeOwned, S: serde::ser::Serialize>(
+    filename: &PathBuf,
+    callback: impl Fn() -> Result<S>,
+) -> Result<T> {
+    let do_gz = filename
+        .extension()
+        .unwrap_or_else(|| OsStr::new(""))
+        .to_string_lossy()
+        == "gz";
+
+    if !filename.exists() {
+        let v = callback()?;
+        write_bincode(filename, &v, do_gz)?;
+    }
+    load_bincode(filename, do_gz)
+}
+
+pub fn write_bincode<S: serde::ser::Serialize>(
+    filename: &PathBuf,
+    data: &S,
+    do_gz: bool,
+) -> Result<()> {
+    info!("Building {:?}", &filename);
+    let tmp_file = filename.with_extension("tmp");
+    let mut file = ex::fs::File::create(&tmp_file)?;
+    if do_gz {
+        let mut encoder = flate2::write::GzEncoder::new(file, flate2::Compression::default());
+        bincode::serialize_into(&mut encoder, &data).unwrap();
+    } else {
+        bincode::serialize_into(&mut file, &data).unwrap();
+    }
+
+    ex::fs::rename(tmp_file, filename)?;
+    Ok(())
+}
+
+pub fn load_bincode<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool) -> Result<T> {
+    info!("Loading {:?} gz: {}", &filename, do_gz);
+    let res = if do_gz {
+        let mut file = BufReader::new(ex::fs::File::open(filename)?);
+        let d = GzDecoder::new(&mut file);
+        Ok(bincode::deserialize_from(d)?)
+    } else {
+        let file = BufReader::new(ex::fs::File::open(filename)?);
+        Ok(bincode::deserialize_from(file)?)
+    };
+    info!("done loading");
+    res
+}
 pub fn load_toml<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool) -> Result<T> {
     info!("Loading {:?} gz: {}", &filename, do_gz);
     let mut raw = Vec::new();
@@ -56,20 +106,22 @@ pub fn load_toml<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool
         let mut file = BufReader::new(ex::fs::File::open(filename)?);
         file.read_to_end(&mut raw)?;
     }
+    info!("done loading");
     Ok(toml::from_slice(&raw)?)
 }
 
-
 pub fn load_json<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool) -> Result<T> {
     info!("Loading {:?} gz: {}", &filename, do_gz);
-    if do_gz {
+    let res = if do_gz {
         let mut file = BufReader::new(ex::fs::File::open(filename)?);
-        let mut d = GzDecoder::new(&mut file);
+        let d = GzDecoder::new(&mut file);
         Ok(serde_json::from_reader(d)?)
     } else {
         let file = BufReader::new(ex::fs::File::open(filename)?);
         Ok(serde_json::from_reader(file)?)
-    }
+    };
+    info!("done loading");
+    res
 }
 
 pub fn write_json<S: serde::ser::Serialize>(
@@ -101,7 +153,13 @@ pub fn create_and_list_dir(dir: &PathBuf) -> Result<HashSet<String>> {
 pub fn list_dir(dir: &PathBuf) -> Result<HashSet<String>> {
     let mut found = HashSet::new();
     for fh in ex::fs::read_dir(dir)? {
-        found.insert(fh?.path().file_name().unwrap().to_string_lossy().to_string());
+        found.insert(
+            fh?.path()
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .to_string(),
+        );
     }
     Ok(found)
 }
@@ -123,7 +181,7 @@ pub fn fetch_url_to_vec_with_retries(url: &str, remaining: u32) -> Result<Vec<u8
     let mut raw = Vec::new();
     let res = ureq::get(url).call()?.into_reader().read_to_end(&mut raw);
     match res {
-        Ok(x) => Ok(raw),
+        Ok(_) => Ok(raw),
         Err(x) => {
             if remaining > 0 {
                 warn!("Retrying {}", &url);
@@ -134,4 +192,8 @@ pub fn fetch_url_to_vec_with_retries(url: &str, remaining: u32) -> Result<Vec<u8
             }
         }
     }
+}
+
+pub fn today() -> NaiveDate {
+    Utc::today().naive_utc()
 }

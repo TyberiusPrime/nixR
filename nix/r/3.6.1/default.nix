@@ -1,58 +1,44 @@
-{ lib, stdenv, fetchurl, bzip2, gfortran, libX11, libXmu, libXt, libjpeg, libpng
-, libtiff, ncurses, pango, pcre2, perl, readline, tcl, texLive, tk, xz, zlib
-, less, texinfo, graphviz, icu, pkg-config, bison, imake, which, jdk, blas, lapack
-, curl, Cocoa, Foundation, libobjc, libcxx, tzdata
+{ stdenv, fetchurl, bzip2, gfortran, libX11, libXmu, libXt, libjpeg, libpng
+, libtiff, ncurses, pango, pcre, perl, readline, tcl, texLive, tk, xz, zlib
+, less, texinfo, graphviz, icu, pkgconfig, bison, imake, which, jdk, openblas
+, curl, Cocoa, Foundation, libobjc, libcxx, tzdata, fetchpatch
 , withRecommendedPackages ? true
 , enableStrictBarrier ? false
-, enableMemoryProfiling ? false
-# R as of writing does not support outputting both .so and .a files; it outputs:
-#     --enable-R-static-lib conflicts with --enable-R-shlib and will be ignored
-, static ? false
+, javaSupport ? (!stdenv.hostPlatform.isAarch32 && !stdenv.hostPlatform.isAarch64)
 }:
 
-assert (!blas.isILP64) && (!lapack.isILP64);
-
 stdenv.mkDerivation rec {
-  pname = "R";
-  version = "4.1.1";
+  name = "R-3.6.1";
 
   src = fetchurl {
-    url = "https://cran.r-project.org/src/base/R-${lib.versions.major version}/${pname}-${version}.tar.gz";
-    sha256 = "sha256-UV4DJldSJX0LcDbzgPguQrRu2Ec/VPJce2ftJbu902Q=";
+    url = "https://cran.r-project.org/src/base/R-3/${name}.tar.gz";
+    sha256 = "128kifbq0w25y8aq77w289ddax5i5w2djcfsqgffrb3i7syrxajv";
   };
 
   dontUseImakeConfigure = true;
 
   buildInputs = [
     bzip2 gfortran libX11 libXmu libXt libXt libjpeg libpng libtiff ncurses
-    pango pcre2 perl readline texLive xz zlib less texinfo graphviz icu
-    pkg-config bison imake which blas lapack curl tcl tk jdk
-  ] ++ lib.optionals stdenv.isDarwin [ Cocoa Foundation libobjc libcxx ];
+    pango pcre perl readline texLive xz zlib less texinfo graphviz icu
+    pkgconfig bison imake which openblas curl
+  ] ++ stdenv.lib.optionals (!stdenv.isDarwin) [ tcl tk ]
+    ++ stdenv.lib.optionals stdenv.isDarwin [ Cocoa Foundation libobjc libcxx ]
+    ++ stdenv.lib.optional javaSupport jdk;
 
   patches = [
     ./no-usr-local-search-paths.patch
-    ./test-reg-packages.patch
   ];
 
-  # Test of the examples for package 'tcltk' fails in Darwin sandbox. See:
-  # https://github.com/NixOS/nixpkgs/issues/146131
-  postPatch = lib.optionalString stdenv.isDarwin ''
-    substituteInPlace configure \
-      --replace "-install_name libRblas.dylib" "-install_name $out/lib/R/lib/libRblas.dylib" \
-      --replace "-install_name libRlapack.dylib" "-install_name $out/lib/R/lib/libRlapack.dylib" \
-      --replace "-install_name libR.dylib" "-install_name $out/lib/R/lib/libR.dylib"
-    substituteInPlace tests/Examples/Makefile.in \
-      --replace "test-Examples: test-Examples-Base" "test-Examples:" # do not test the examples
+  prePatch = stdenv.lib.optionalString stdenv.isDarwin ''
+    substituteInPlace configure --replace "-install_name libR.dylib" "-install_name $out/lib/R/lib/libR.dylib"
   '';
-
-  dontDisableStatic = static;
 
   preConfigure = ''
     configureFlagsArray=(
       --disable-lto
-      --with${lib.optionalString (!withRecommendedPackages) "out"}-recommended-packages
-      --with-blas="-L${blas}/lib -lblas"
-      --with-lapack="-L${lapack}/lib -llapack"
+      --with${stdenv.lib.optionalString (!withRecommendedPackages) "out"}-recommended-packages
+      --with-blas="-L${openblas}/lib -lopenblas"
+      --with-lapack="-L${openblas}/lib -lopenblas"
       --with-readline
       --with-tcltk --with-tcl-config="${tcl}/lib/tclConfig.sh" --with-tk-config="${tk}/lib/tkConfig.sh"
       --with-cairo
@@ -60,23 +46,23 @@ stdenv.mkDerivation rec {
       --with-jpeglib
       --with-libtiff
       --with-ICU
-      ${lib.optionalString enableStrictBarrier "--enable-strict-barrier"}
-      ${lib.optionalString enableMemoryProfiling "--enable-memory-profiling"}
-      ${if static then "--enable-R-static-lib" else "--enable-R-shlib"}
+      ${stdenv.lib.optionalString enableStrictBarrier "--enable-strict-barrier"}
+      --enable-R-shlib
       AR=$(type -p ar)
       AWK=$(type -p gawk)
       CC=$(type -p cc)
       CXX=$(type -p c++)
       FC="${gfortran}/bin/gfortran" F77="${gfortran}/bin/gfortran"
-      JAVA_HOME="${jdk}"
+      ${stdenv.lib.optionalString javaSupport "JAVA_HOME=\"${jdk}\""}
       RANLIB=$(type -p ranlib)
       R_SHELL="${stdenv.shell}"
-  '' + lib.optionalString stdenv.isDarwin ''
+  '' + stdenv.lib.optionalString stdenv.isDarwin ''
+      --without-tcltk
+      --without-aqua
       --disable-R-framework
-      --without-x
       OBJC="clang"
-      CPPFLAGS="-isystem ${lib.getDev libcxx}/include/c++/v1"
-      LDFLAGS="-L${lib.getLib libcxx}/lib"
+      CPPFLAGS="-isystem ${libcxx}/include/c++/v1"
+      LDFLAGS="-L${libcxx}/lib"
   '' + ''
     )
     echo >>etc/Renviron.in "TCLLIBPATH=${tk}/lib"
@@ -97,8 +83,8 @@ stdenv.mkDerivation rec {
 
   setupHook = ./setup-hook.sh;
 
-  meta = with lib; {
-    homepage = "http://www.r-project.org/";
+  meta = with stdenv.lib; {
+    homepage = http://www.r-project.org/;
     description = "Free software environment for statistical computing and graphics";
     license = licenses.gpl2Plus;
 
@@ -122,7 +108,8 @@ stdenv.mkDerivation rec {
     '';
 
     platforms = platforms.all;
+    hydraPlatforms = platforms.linux;
 
-    maintainers = with maintainers; [ jbedo ] ++ teams.sage.members;
+    maintainers = with maintainers; [ peti timokau ];
   };
 }

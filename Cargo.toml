@@ -27,3 +27,24 @@ yaml-rust = { version = "0.5", package = "yaml-rust-davvid" }
 flate2 = "1.0"
 nested_intervals = "0.2.2"
 toml = "0.5.9"
+bincode = "1.3.3"
+ctrlc = "3.2.3"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "my_benchmark"
+path = "benches/my_benchmark.rs"
+harness = false
+
+
+[[bin]]
+name = "nixR"
+test = false
+bench = false
+
+
+[lib]
+name = "nixr"
+bench = false
