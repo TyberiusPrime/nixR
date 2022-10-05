@@ -16,7 +16,7 @@ pub fn parse_desc(raw: &str, fields_to_keep: &HashSet<&str>) -> Result<HashMap<S
     for (ii, c) in rb.iter().enumerate() {
         match c {
             b':' => {
-                let prefix = &rb[last_newline + 1..ii];
+                let prefix = &rb[last_newline..ii];
                 if is_valid_key(prefix) {
                     match last_key.take() {
                         Some(lk) => {
@@ -33,7 +33,7 @@ pub fn parse_desc(raw: &str, fields_to_keep: &HashSet<&str>) -> Result<HashMap<S
                 }
             }
             b'\n' => {
-                last_newline = ii;
+                last_newline = ii + 1;
             }
             _ => {}
         }

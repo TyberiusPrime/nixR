@@ -42,17 +42,12 @@ pub fn update_cran(
     config: &Config,
 ) -> Result<(Vec<PackageInfoWithSource>, HashMap<String, NaiveDate>)> {
     info!("update cran");
-    let base_url = "https://cran.r-project.org/src/contrib/";
+    let base_url = Repo::download_url(&Repo::Cran);
     let out_path = config.date_path().join("cran");
     ex::fs::create_dir_all(&out_path)?;
     let infos: Vec<PackageInfo> = cache_bincode(&out_path.join("parsed.bincode.gz"), || {
-        let current: HashSet<String> = cran_fetch_current(config, base_url)?.into_iter().collect();
-
-        let archived: Vec<String> = cran_fetch_archive(config, base_url)?
-            .into_iter()
-            // CRAN sometimes has packages twice, once archived, once not archived...
-            .filter(|x| !current.contains(x))
-            .collect();
+        let current: HashSet<String> = cran_fetch_current(config, &base_url)?.into_iter().collect();
+        let archived: Vec<String> = cran_fetch_archive(config, &base_url)?;
 
         info!("entering package fetching");
 
@@ -61,20 +56,24 @@ pub fn update_cran(
             &out_path,
             current.into_iter().collect(),
             archived,
-            base_url,
+            &base_url,
             false,
             Repo::Cran,
         )?;
         info!("Loaded information on {} packages", infos.len());
         Ok(infos)
     })?;
-    let final_archive_dates = cran_fetch_final_archival_dates(config, base_url)?;
-    info!("step 0");
+    let final_archive_dates = cran_fetch_final_archival_dates(config, &base_url)?;
+
+    let blacklist = config.get_blacklist()?;
     let out: Result<Vec<PackageInfoWithSource>> = infos
         .into_iter()
+        // blacklist had been filtered
+        // but changes  would require rebuilding
+        // so we do it agian
+        .filter(|pi| !blacklist.contains(&pi.tag()))
         .map(|pi| PackageInfoWithSource::new_from_package_info(pi, Repo::Cran))
         .collect();
-    info!("step 1");
     //trust is ok, paranoia is better...
     let mut seen = HashSet::new();
     let out = out?;
@@ -84,7 +83,6 @@ pub fn update_cran(
         }
         seen.insert(pi.tag());
     }
-    info!("step 2");
     Ok((out, final_archive_dates))
 }
 pub fn update_bioconductor(config: &Config) -> Result<Vec<PackageInfoWithSource>> {
@@ -117,10 +115,13 @@ pub fn fetch_bioconductor_release(
     bc_path: &Path,
 ) -> Result<Vec<PackageInfoWithSource>> {
     let str_version = version.to_string();
-    let out_path = bc_path.join(&str_version);
+    let out_path = bc_path.join(&str_version); // that's a dated path...
+    let non_dated_out_path = config
+        .data_output_path
+        .join(format!("bioconductor_{}", &str_version));
 
     let without_source: Result<Vec<PackageInfo>> =
-        cache_json(&out_path.join("parsed.json.gz"), || {
+        cache_bincode(&out_path.join("parsed.bincode.gz"), || {
             ex::fs::create_dir_all(&out_path)?;
             let key = "bioc";
             let base_url = format!(
@@ -140,12 +141,25 @@ pub fn fetch_bioconductor_release(
                 d.read_to_end(&mut s)?;
                 parse_packages_gz(&String::from_utf8_lossy(&s))
             })?;
+            let current: HashSet<String> = current.into_iter().collect();
             let min_version_with_archive = Version(vec![3, 6]);
             let archived: Vec<String> = if version >= &min_version_with_archive {
-                fetch_bioconductor_archived(config, &str_version, &out_path)?
+                fetch_bioconductor_archived(
+                    config,
+                    &str_version,
+                    if is_finished_release {
+                        &non_dated_out_path
+                    } else {
+                        &out_path
+                    },
+                )?
             } else {
                 Vec::new()
             };
+            let archived: Vec<String> = archived
+                .into_iter()
+                .filter(|x| !current.contains(x))
+                .collect();
 
             let infos: Vec<PackageInfo> = fetch_package_infos(
                 config,
@@ -178,10 +192,21 @@ fn fetch_bioconductor_archived(
     // but this mirror still has them apperantly.
     // note that we can download the files just fine from bioconductor?
     // See https://support.bioconductor.org/p/9146648/
-    let base_url_with_archives = format!(
-        "https://bioconductor.statistik.tu-dortmund.de/packages/{}/bioc/src/contrib/",
-        str_version
-    );
+    let base_url_with_archives = if Version::from_str(str_version)
+        .expect("bioconductor version parsing failed")
+        < Version::from_str("3.15").unwrap()
+    {
+        format!(
+            "https://bioconductor.statistik.tu-dortmund.de/packages/{}/bioc/src/contrib/",
+            str_version
+        )
+    } else {
+        format!(
+            "https://bioconductor.org/packages/{}/bioc/src/contrib/",
+            str_version
+        )
+    };
+
     fetch_archive(
         config,
         &base_url_with_archives,
@@ -202,13 +227,29 @@ fn parse_packages_gz(input: &str) -> Result<Vec<String>> {
     input
         .trim()
         .split("\n\n")
-        .map(|x| parse_desc(x, &(["Package", "Version"].into_iter().collect())))
+        .map(|x| {
+            let r = parse_desc(x, &(["Package", "Version"].into_iter().collect()));
+            match r {
+                Ok(dm) => {
+                    if !dm.contains_key("Package") {
+                        Err(anyhow!("No package entry after parsing {}", x))
+                    } else {
+                        Ok(dm)
+                    }
+                }
+                Err(e) => Err(e),
+            }
+        })
         .map(|desc_map| -> Result<String> {
             let dm = desc_map?;
             Ok(format!(
                 "{}_{}",
-                (dm.get("Package").context("missing package entry")?[0]).to_owned(),
-                (dm.get("Version").context("missing version entry")?[0]).to_owned(),
+                (dm.get("Package")
+                    .with_context(|| format!("missing package entry {:#?}", &dm))?[0])
+                    .to_owned(),
+                (dm.get("Version")
+                    .with_context(|| format!("missing version entry {:#?}", &dm))?[0])
+                    .to_owned(),
             ))
         })
         .collect()
@@ -217,7 +258,7 @@ fn parse_packages_gz(input: &str) -> Result<Vec<String>> {
 fn fetch_package_infos(
     config: &Config,
     out_path: &Path,
-    current: Vec<String>,
+    current: HashSet<String>,
     archived: Vec<String>,
     base_url: &str,
     symlink_previous: bool,
@@ -280,6 +321,7 @@ fn fetch_package_infos(
     let archived_info: Vec<Result<PackageInfo>> = archived
         .par_iter()
         .filter(|&tag| !blacklist.contains(tag))
+        .filter(|&tag| !current.contains(tag))
         .map(|tag| {
             match download_hash_and_desc(
                 base_url,
@@ -315,7 +357,7 @@ fn fetch_package_infos(
     let mut out: Vec<PackageInfo> = current_info.into_iter().filter_map(|x| x.ok()).collect();
     out.extend(archived_info.into_iter().filter_map(|x| x.ok()));
 
-    ex::fs::create_dir_all(config.output_path.join(repo.to_string()))?;
+    ex::fs::create_dir_all(config.data_output_path.join(repo.to_string()))?;
     if out.len() != known_shas.len() || out.len() != known_descs.len() {
         // only export if anything changed
         save_hashes(config, &repo.to_string(), &out)?;
@@ -325,7 +367,7 @@ fn fetch_package_infos(
 }
 
 fn load_hashes(config: &Config, repo: &str) -> Result<HashMap<String, String>> {
-    let filename = config.output_path.join(repo).join("sha256.json.gz");
+    let filename = config.data_output_path.join(repo).join("sha256.json.gz");
     if filename.exists() {
         Ok(load_json(&filename, true)?)
     } else {
@@ -333,7 +375,7 @@ fn load_hashes(config: &Config, repo: &str) -> Result<HashMap<String, String>> {
     }
 }
 fn load_descs(config: &Config, repo: &str) -> Result<HashMap<String, String>> {
-    let filename = config.output_path.join(repo).join("desc.json.gz");
+    let filename = config.data_output_path.join(repo).join("desc.json.gz");
     if filename.exists() {
         Ok(load_json(&filename, true)?)
     } else {
@@ -342,7 +384,7 @@ fn load_descs(config: &Config, repo: &str) -> Result<HashMap<String, String>> {
 }
 
 fn save_hashes(config: &Config, repo: &str, packages: &[PackageInfo]) -> Result<()> {
-    let filename = config.output_path.join(repo).join("sha256.json.gz");
+    let filename = config.data_output_path.join(repo).join("sha256.json.gz");
     let lookup: HashMap<String, String> = packages
         .iter()
         .map(|x| (x.tag(), x.sha256.clone()))
@@ -352,7 +394,7 @@ fn save_hashes(config: &Config, repo: &str, packages: &[PackageInfo]) -> Result<
 }
 
 fn save_descs(config: &Config, repo: &str, packages: &[PackageInfo]) -> Result<()> {
-    let filename = config.output_path.join(repo).join("desc.json.gz");
+    let filename = config.data_output_path.join(repo).join("desc.json.gz");
     let lookup: HashMap<String, _> = packages.iter().map(|x| (x.tag(), &x.raw_desc)).collect();
     write_json(&filename, &lookup, true)?;
     Ok(())
@@ -627,9 +669,9 @@ fn fetch_archive<
             // we symlink our selves here to only scan the folder once, there are a lot of these
             // and more importantly, we also only do it if the date is right!
             //things... 
-            match config.find_file_from_earlier(&format!("{}/archives", post_date_path)) {
+            match config.find_file_from_earlier(&format!("{}/archive", post_date_path)) {
                 Some(yesterday_archive_path) => {
-                    info!("found old acrhives in {:?}", &yesterday_archive_path);
+                    info!("found old archives in {:?}", &yesterday_archive_path);
                     let yesterday_str = yesterday_archive_path.parent().unwrap().parent().unwrap().file_name().unwrap().to_string_lossy().to_string();
                     info!("looking for data from {}", &yesterday_str);
                     if yesterday_archive_path.exists() {
@@ -642,7 +684,9 @@ fn fetch_archive<
                         (HashSet::new(), None, None)
                     }
                 }
-                None => (HashSet::new(), None, None),
+                None => {
+                    info!("could not find old archives {}", post_date_path);
+                    (HashSet::new(), None, None)},
             };
         let to_symlink: HashSet<String> = match yesterday_str {
             Some(yesterday_str) => {

@@ -19,3 +19,5 @@ vtcl_1.0-1
 domainsignatures_1.37.2
 iontree_1.23.1
 
+#rxode2 2.0.7 is up on cran, but 2.0.8 is in the archive?!
+rxode2_2.0.8

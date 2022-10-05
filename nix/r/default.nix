@@ -7,7 +7,7 @@
       };
       withRecommendedPackages = false;
       inherit (darwin.apple_sdk.frameworks) Cocoa Foundation;
-      inherit (darwin) libobjc;
+      inherit (darwin) libobjc cf-private;
     };
 
   versions = [

@@ -4,7 +4,11 @@ use flate2::read::GzDecoder;
 use log::{info, warn};
 use std::ffi::OsStr;
 use std::io::Read;
-use std::{collections::HashSet, io::BufReader, path::PathBuf};
+use std::{
+    collections::HashSet,
+    io::{BufReader, BufWriter, Write},
+    path::{Path, PathBuf},
+};
 
 /*
  * pub fn write_gzip(path: &PathBuf, data: &[u8]) -> Result<()> {
@@ -164,14 +168,39 @@ pub fn list_dir(dir: &PathBuf) -> Result<HashSet<String>> {
     Ok(found)
 }
 
-/*
- * pub fn read_to_bytes(path: &PathBuf) -> Result<Vec<u8>> {
+pub fn read_to_bytes(path: &Path) -> Result<Vec<u8>> {
     let mut reader = BufReader::new(ex::fs::File::open(path)?);
     let mut out = Vec::new();
     reader.read_to_end(&mut out)?;
     Ok(out)
 }
-*/
+
+pub fn write_from_bytes(path: &Path, bytes: &[u8]) -> Result<()> {
+    let tmp_file = path.with_extension("tmp");
+    {
+        let file = ex::fs::File::create(&tmp_file)?;
+        let mut buf = BufWriter::new(file);
+        buf.write_all(bytes)?;
+    }
+    ex::fs::rename(tmp_file, path)?;
+    Ok(())
+}
+pub fn write_from_bytes_iter<'a, I>(path: &Path, bytes: I) -> Result<()>
+where
+    I: Iterator<Item = &'a[u8]>,
+{
+    let tmp_file = path.with_extension("tmp");
+    {
+        let file = ex::fs::File::create(&tmp_file)?;
+        let mut buf = BufWriter::new(file);
+        for some_bytes in bytes {
+            buf.write_all(some_bytes)?;
+        }
+    }
+    ex::fs::rename(tmp_file, path)?;
+    Ok(())
+}
+
 
 pub fn fetch_url_to_vec(url: &str) -> Result<Vec<u8>> {
     fetch_url_to_vec_with_retries(url, 2)

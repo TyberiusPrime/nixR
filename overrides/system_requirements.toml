@@ -1,0 +1,4 @@
+# a lookup from the strings that appear in SystemRequirements
+# to the actual nix package pkgs.${name}
+libcurl = "pkgconfig curl"
+"OpenSSL >= 1.0.1" = "openssl openssl.out"

@@ -1,0 +1,13 @@
+# we strip surrounding whitespace in the strings.
+# otherwise, they get copied literally into an attrset on the packages
+# so valid nixlang  for the values please
+
+# unlike other intervals, these are right inclusive!
+# first 'version matching' entry wins, so be mindfull of the order
+#["curl_3.0.."] 
+#preConfigure = "export CURL_INCLUDES=${pkgs.curl}/include"
+
+["openssl_1.0.1.."]
+OPENSSL_INCLUDES = "${pkgs.openssl}/include"
+LD_LIBRARY_PATH = "${pkgs.openssl.out}/lib"
+

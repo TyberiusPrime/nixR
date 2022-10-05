@@ -8,23 +8,28 @@ use ex::fs::FileType;
 use itertools::Itertools;
 use lazy_regex::{lazy_regex, Regex};
 use log::{debug, error, info, trace, warn};
+use nixr::helpers::write_from_bytes_iter;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use regex::CaptureMatches;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::fmt::Display;
+use std::intrinsics::write_bytes;
+use std::process::Command;
 use std::{
-    io::{Read, Write},
+    io::{BufWriter, Read, Write},
     process::Stdio,
 };
 
-use std::{collections::HashMap, collections::HashSet, io::BufReader, path::PathBuf};
+use std::{collections::HashMap, collections::HashSet, io::BufReader, path::Path, path::PathBuf};
 
 use nixr::{
     dates, helpers,
-    helpers::{list_dir, today},
+    helpers::{list_dir, read_to_bytes, today, write_from_bytes},
+    nix_output::{nix_pretty_print, NixValue},
     retrieval,
     retrieval::bioconductor_fetch_releases,
     BioconductorRelease, Config, DateRangePlus, FindHit, PackageInfo, PackageInfoWithSource, Repo,
@@ -64,14 +69,13 @@ fn main() -> Result<()> {
     };
     let date = Utc::today().naive_utc();
 
-    let od = PathBuf::from("generated/");
-    let config = Config {
-        output_path: od,
+    let od = PathBuf::from("data/");
+    let config = Config::new(
+        od,
+        PathBuf::from("nix_output"),
+        PathBuf::from("overrides"),
         date,
-        override_path: PathBuf::from("overrides"),
-    };
-
-    config.mkdirs()?;
+    )?;
 
     match cmd {
         "cran" => {
@@ -95,9 +99,17 @@ fn main() -> Result<()> {
 }
 
 fn test_parsing(config: &Config) -> Result<Vec<PackageInfo>> {
-    let desc = "Package: SPIA\nVersion: 2.46.0\nDate: 2013-2-20\nTitle: Signaling Pathway Impact Analysis (SPIA) using combined evidence\n        of pathway over-representation and unusual signaling\n        perturbations\nAuthor: Adi Laurentiu Tarca <atarca@med.wayne.edu>, Purvesh Kathri\n        <purvesh@cs.wayne.edu> and Sorin Draghici <sorin@wayne.edu>\nDepends: R (>= 2.14.0), graphics, KEGGgraph\nSuggests: graph, Rgraphviz, hgu133plus2.db\nMaintainer: Adi Laurentiu Tarca <atarca@med.wayne.edu>\nDescription: This package implements the Signaling Pathway Impact\n        Analysis (SPIA) which uses the information form a list of\n        differentially expressed genes and their log fold changes\n        together with signaling pathways topology, in order to identify\n        the pathways most relevant to the condition under the study.\nLicense: file LICENSE\nLicense_restricts_use: yes\nURL: http://bioinformatics.oxfordjournals.org/cgi/reprint/btn577v1\nCollate: spia.R plotP.R combfunc.R getP2.R makeSPIAdata.R\nImports: graphics\nLazyLoad: yes\nPackaged: 2021-10-26 22:57:13 UTC; biocbuild\nbiocViews: Microarray, GraphAndNetwork\ngit_url: https://git.bioconductor.org/packages/SPIA\ngit_branch: RELEASE_3_14
-        andsomemore bullishit: sham\nDate/Publication: 2021-10-26\nNeedsCompilation: no\n";
-    let should = nixr::desc_parser::parse_desc(&desc, &nixr::DEFAULT_DESC_FIELDS_TO_PARSE)?;
+    let desc = "Package: a4
+Version: 1.44.0
+Depends: a4Base, a4Preproc, a4Classif, a4Core, a4Reporting
+Suggests: MLP, nlcv, ALL, Cairo, Rgraphviz, GOstats
+License: GPL-3
+MD5sum: cc696d3373a9f258d293f2d966da11d5
+NeedsCompilation: no
+";
+    let should =
+        nixr::desc_parser::parse_desc(&desc, &(["Package", "Version"].into_iter().collect()));
+
     dbg!(&should);
     Ok(Vec::new())
 }
@@ -169,78 +181,6 @@ fn list_r_versions(config: &Config) -> Result<()> {
     Ok(())
 }
 
-fn assemble(config: &Config) -> Result<()> {
-    let r_releases = retrieval::fetch_r_release_dates(config)?;
-    let bioc_releases = retrieval::bioconductor_fetch_releases(config, BIOCONDUCTOR_URL)?;
-    let nixpkgs = retrieval::get_nixpkgs_releases()?;
-    let manual_date_overrides: HashMap<String, chrono::NaiveDate> =
-        helpers::load_toml(&PathBuf::from("overrides/dates.toml"), false)?;
-
-    let (cran_packages, cran_final_archive_dates) = retrieval::update_cran(config)?;
-    info!(
-        "no of cran packages before date parsing {}",
-        cran_packages.len()
-    );
-    let cran_packages = dates::parse_package_dates(
-        cran_packages,
-        //Repo::Cran,
-        &manual_date_overrides,
-        &today(),
-        cran_final_archive_dates,
-    )?;
-
-    for bioc_release in bioc_releases.iter() {
-        let bioc_packages = bioc_release.get_packages(config, &manual_date_overrides)?;
-
-        let (packages, mut interval_set) = assemble_packages_during_bioconductor_release(
-            &bioc_release,
-            config,
-            &manual_date_overrides,
-            &cran_packages,
-            &bioc_packages,
-        )?;
-
-        let dates = vec![bioc_release.start_date, bioc_release.end_date]; // for now... full on later
-        for date in dates {
-            info!("Date {}", date);
-            info!("\tBioconductor release {}", bioc_release.element.version);
-            let r_version = bioc_release
-                .r_minor_versions(&r_releases)
-                .find_hit(&date)
-                .with_context(|| {
-                    format!(
-                        "No R version for that date in that bioc release?: {:#?}",
-                        bioc_release.r_minor_versions(&r_releases)
-                    )
-                })?;
-            info!("\tR version (from bc): {}", r_version.element);
-            let nixpks_version = nixpkgs
-                .find_hit(&r_version.start_date)
-                .context("No nixpkgs for that date found")?
-                .element;
-            info!("\tnixpkgs version: {}", nixpks_version);
-            let hits: Vec<u32> = interval_set.query(&chrono::NaiveDate::from_ymd(2022, 1, 1))?;
-            info!("\tpkg count: {}", hits.len());
-        }
-    }
-
-    panic!("temp");
-
-    //let hits: Vec<u32> = interval_set.query(&chrono::NaiveDate::from_ymd(2022, 1, 1))?;
-    //info!("packages at that date: {}", hits.len());
-
-    /*
-    let mut packages = update_cran(config)?;
-    for e in update_bioconductor(config).into_iter() {
-        packages.push(e);
-    }
-    let earliest_date = packages.iter().map(|x| x.start_date).min().clone();
-    //let interval = nested_intervals::IntervalSet
-    */
-
-    Ok(())
-}
-
 struct DateIntervalSet {
     offset_date: chrono::NaiveDate,
     interval_set: nested_intervals::IntervalSet,
@@ -294,13 +234,193 @@ impl DateIntervalSet {
         let iv: u32 = (*query - self.offset_date)
             .num_days()
             .try_into()
-            .context("Before offset_date")?;
+            .with_context(|| {
+                format!(
+                    "Before offset_date: {:?} (offset date was: {:?}",
+                    query, self.offset_date
+                )
+            })?;
         let query = iv..(iv + 1);
         let hit_set = self.interval_set.query_overlapping(&query);
         Ok(hit_set.iter().map(|x| x.1[0]).collect())
     }
 }
 
+fn assemble(config: &Config) -> Result<()> {
+    let r_releases = retrieval::fetch_r_release_dates(config)?;
+    let bioc_releases = retrieval::bioconductor_fetch_releases(config, BIOCONDUCTOR_URL)?;
+    let nixpkgs = retrieval::get_nixpkgs_releases()?;
+    let manual_date_overrides: HashMap<String, chrono::NaiveDate> =
+        helpers::load_toml(&PathBuf::from("overrides/dates.toml"), false)?;
+
+    let (cran_packages, cran_final_archive_dates) = retrieval::update_cran(config)?;
+    info!(
+        "no of cran packages before date parsing {}",
+        cran_packages.len()
+    );
+
+    let cran_packages = dates::parse_package_dates(
+        cran_packages,
+        //Repo::Cran,
+        &manual_date_overrides,
+        &today(),
+        cran_final_archive_dates,
+    )?;
+
+    let min_version = Version::from_str("3.6")?;
+
+    let mut all_the_packages: HashMap<String, PackageInfoWithSource> = HashMap::new();
+    let nix_r_by_date_path = config.nix_output_path.join("r_by_date.nix");
+    let mut r_by_date: HashMap<String, NixValue> = HashMap::new();
+    for bioc_release in bioc_releases.iter() {
+        if bioc_release.element.version < min_version {
+            continue;
+        }
+
+        let bioc_packages = bioc_release.get_packages(config, &manual_date_overrides)?;
+
+        let (packages, mut interval_set) = assemble_packages_during_bioconductor_release(
+            &bioc_release,
+            config,
+            &manual_date_overrides,
+            &cran_packages,
+            &bioc_packages,
+        )?;
+
+        let dates = vec![bioc_release.start_date, bioc_release.end_date.pred()]; // for now... full on later
+                                                                                 //note that the dates are right exclusive, so we want to query the one before...
+        for date in dates {
+            info!("Date {}", date);
+            info!(
+                "\tBioconductor release {} {}..{}",
+                bioc_release.element.version, bioc_release.start_date, bioc_release.end_date,
+            );
+            let r_version = bioc_release
+                .r_minor_versions(&r_releases)
+                .find_hit(&date)
+                .with_context(|| {
+                    format!(
+                        "No R version for that date in that bioc release?: {:#?}",
+                        bioc_release.r_minor_versions(&r_releases)
+                    )
+                })?;
+            info!("\tR version (from bc): {}", r_version.element);
+            let nixpks_version = nixpkgs
+                .find_hit(&r_version.start_date)
+                .context("No nixpkgs for that date found")?
+                .element;
+            info!("\tnixpkgs version: {}", nixpks_version);
+            let hits: Vec<u32> = interval_set.query(&date)?;
+            info!("\tpkg count: {}", hits.len());
+            let mut days_packages = HashMap::new();
+            for ii in hits {
+                let p = &packages[ii as usize];
+                all_the_packages.insert(p.element.tag(), p.element.clone());
+                days_packages.insert(
+                    p.element.name.to_string(),
+                    NixValue::Str(p.element.version.to_string()),
+                );
+            }
+            let mut r_by_date_entry: HashMap<String, NixValue> = HashMap::new();
+            r_by_date_entry.insert(
+                "R".to_string(),
+                NixValue::Literal(format!("Rs.\"{}\"", r_version.element.to_string())),
+            );
+            r_by_date_entry.insert(
+                "bioconductor_version".to_string(),
+                bioc_release.element.version.to_string().into(),
+            );
+            r_by_date_entry.insert(
+                "nixpkgs".to_string(),
+                NixValue::Literal(format!("nix-pkgs.\"{}\"", nixpks_version)),
+            );
+            r_by_date_entry.insert("pkgs".to_string(), days_packages.into());
+
+            r_by_date.insert(date.to_string(), r_by_date_entry.into());
+        }
+
+        break; // todo remove
+    }
+    let nix_packages_cran_path = config.nix_output_path.join("cran.nix");
+    let nix_packages_biocsoftware_path = config.nix_output_path.join("bioc_software.nix");
+
+    let mut out_packages_cran: HashMap<String, NixValue> = HashMap::new();
+    let mut out_packages_bioc_software: HashMap<String, NixValue> = HashMap::new();
+
+    for (tag, package) in all_the_packages.iter() {
+        let r_deps = package.r_deps(&config.build_in_packages())?;
+        let non_r_deps = package.system_deps(&config.system_requirement_lookups())?;
+        let mut this_out: HashMap<_, NixValue> = HashMap::new();
+        this_out.insert("sha256", package.sha256.clone().into());
+        if !r_deps.is_empty() {
+            this_out.insert("rbI", r_deps.into());
+        }
+        if !non_r_deps.is_empty() {
+            this_out.insert(
+                "bI",
+                non_r_deps
+                    .into_iter()
+                    .map(|x| NixValue::Literal(x))
+                    .collect(),
+            );
+        }
+        if package.desc.get("NeedsCompilation").map(|x| (&**x)) == Some("yes") {
+            this_out.insert("compile", NixValue::Bool(true));
+        }
+        let derivation_args = config.get_derivation_args(&package.name, &package.parsed_version()?);
+
+        if let Some(derivation_args) = derivation_args {
+            this_out.insert("dv", derivation_args);
+        }
+
+        out_packages_cran.insert(tag.to_string(), this_out.into());
+    }
+    write_from_bytes_iter(
+        &nix_packages_cran_path,
+        [
+            "{pkgs}:\nwith pkgs;\n".as_bytes(),
+            NixValue::AttrSet(out_packages_cran).to_string().as_bytes(),
+        ]
+        .into_iter(),
+    )?;
+    write_from_bytes_iter(
+        &nix_packages_biocsoftware_path,
+        [
+            "{pkgs}:\nwith pkgs;\n".as_bytes(),
+            NixValue::AttrSet(out_packages_bioc_software)
+                .to_string()
+                .as_bytes(),
+        ]
+        .into_iter(),
+    )?;
+    let r_by_date_out = write_from_bytes_iter(
+        &nix_r_by_date_path,
+        [
+            "{Rs, nix-pkgs}: ".as_bytes(),
+            &NixValue::AttrSet(r_by_date).to_string().as_bytes(),
+        ]
+        .into_iter(),
+    );
+
+    nix_pretty_print(&nix_packages_cran_path)?;
+    nix_pretty_print(&nix_packages_biocsoftware_path)?;
+
+    panic!("temp");
+
+    //let hits: Vec<u32> = interval_set.query(&chrono::NaiveDate::from_ymd(2022, 1, 1))?;
+    //info!("packages at that date: {}", hits.len());
+
+    /*
+    let mut packages = update_cran(config)?;
+    for e in update_bioconductor(config).into_iter() {
+        packages.push(e);
+    }
+    let earliest_date = packages.iter().map(|x| x.start_date).min().clone();
+    //let interval = nested_intervals::IntervalSet
+    */
+
+    Ok(())
+}
 fn assemble_packages_during_bioconductor_release(
     bioc_release: &BioconductorRelease,
     config: &Config,
@@ -310,9 +430,9 @@ fn assemble_packages_during_bioconductor_release(
 ) -> Result<(Vec<DateRangePlus<PackageInfoWithSource>>, DateIntervalSet)> {
     let earliest_date = bioc_release.start_date;
     let latest_date = bioc_release.end_date;
-    //info!("earliest date {}", earliest_date);
-    //info!("latest date {} {:#?}", latest_date, &bioc_release.end_date);
-    //info!("That's {} days", (latest_date - earliest_date).num_days());
+    info!("earliest date {}", earliest_date);
+    info!("latest date {} {:#?}", latest_date, &bioc_release.end_date);
+    info!("That's {} days", (latest_date - earliest_date).num_days());
 
     let bioc_packages = bioc_packages_in_this_release;
 

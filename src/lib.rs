@@ -6,13 +6,19 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt::Display;
-use std::{collections::HashMap, collections::HashSet, path::PathBuf};
+use std::{
+    collections::HashMap,
+    collections::HashSet,
+    path::{Path, PathBuf},
+};
 
 pub mod dates;
 pub mod desc_parser;
 pub mod helpers;
+pub mod nix_output;
 pub mod retrieval;
-use helpers::list_dir;
+use helpers::{list_dir, load_toml};
+use nix_output::NixValue;
 
 pub static DATE_YYYYMMDD_REGEXPS: Lazy<Regex> = lazy_regex!(r"\d\d\d\d-[01]?\d-[0123]?\d");
 
@@ -44,27 +50,105 @@ fn extract_date_relative_path(path: &PathBuf) -> Result<(PathBuf, String)> {
         Err(anyhow!("No date component present in path {:?}", path))
     }
 }
+type DerivationArgs =
+    HashMap<String, Vec<(Option<Version>, Option<Version>, HashMap<String, String>)>>;
 
 pub struct Config {
-    pub output_path: PathBuf,
+    pub data_output_path: PathBuf,
+    pub nix_output_path: PathBuf,
     pub override_path: PathBuf,
     pub date: NaiveDate,
+    build_in_packages_: HashSet<String>,
+    system_requirement_lookups_: Vec<(String, String)>,
+    derivation_args_: DerivationArgs,
+}
+
+pub static PKG_AND_VERSION_RANGE_REGEXPS: Lazy<Regex> = lazy_regex!(r"^(.+)_(.+)?\.\.(.+)?$");
+
+fn load_derivation_args(override_path: &Path) -> Result<DerivationArgs> {
+    let input: HashMap<String, HashMap<String, String>> =
+        load_toml(&override_path.join("derivation_args.toml"), false).context("parsing overrides/derivation_args.toml")?;
+
+    let mut out = HashMap::new();
+
+    for (k, v) in input.into_iter() {
+        let parsed = PKG_AND_VERSION_RANGE_REGEXPS.captures_iter(&k).next();
+        let parsed = parsed.with_context(||format!("Could not parse derivation_args version target statement '{}'. Syntax is pkg_<start_version>..<stop_version>. Versions can be empty, so ff you want to match all version, use 'pkgs_..'", k))?;
+        dbg!(&parsed);
+        let pkg = &parsed[1];
+        let start: Option<Version> = match parsed.get(2) {
+            Some(x) => Some(Version::from_str(x.as_str())?),
+            None => None,
+        };
+        let stop: Option<Version> = match parsed.get(3) {
+            Some(x) => Some(Version::from_str(x.as_str())?),
+            None => None,
+        };
+        let entry = out.entry(pkg.to_string()).or_insert_with(|| Vec::new());
+        entry.push((start, stop, v));
+    }
+
+    Ok(out)
 }
 
 impl Config {
+    pub fn new(
+        data_output_path: PathBuf,
+        nix_output_path: PathBuf,
+        override_path: PathBuf,
+        date: NaiveDate,
+    ) -> Result<Self> {
+        let build_in_packages: HashMap<String, Vec<String>> =
+            load_toml(&override_path.join("build_in_packages.toml"), false).context(
+                "failed to parse overrides/build_in_packages.toml. Expected built_in = ['R', ...]",
+            )?;
+        let build_in_packages = build_in_packages
+            .get("built_in")
+            .context("Mussing built_in key in overrides/build_in_packages.toml")?
+            .iter()
+            .map(|x| x.to_owned())
+            .collect();
+
+        let system_requirement_lookups: HashMap<String, String> =
+            load_toml(&override_path.join("system_requirements.toml"), false)
+                .context("Failed parsing overrides/system_requirements.toml")?;
+        let system_requirement_lookups: Vec<(String, String)> =
+            system_requirement_lookups.into_iter().collect();
+        let res = Config {
+            data_output_path,
+            nix_output_path,
+            date,
+            build_in_packages_: build_in_packages,
+            system_requirement_lookups_: system_requirement_lookups,
+            derivation_args_: load_derivation_args(&override_path)?,
+            override_path,
+        };
+        res.mkdirs()?;
+
+        Ok(res)
+    }
+
     pub fn date_path(&self) -> PathBuf {
-        self.output_path
+        self.data_output_path
             .join(&self.date.format("%Y-%m-%d").to_string())
     }
 
     pub fn mkdirs(&self) -> Result<()> {
         ex::fs::create_dir_all(&self.date_path())?;
+        ex::fs::create_dir_all(&self.nix_output_path)?;
         Ok(())
+    }
+
+    pub fn build_in_packages(&self) -> &HashSet<String> {
+        &self.build_in_packages_
+    }
+    pub fn system_requirement_lookups(&self) -> &Vec<(String, String)> {
+        &self.system_requirement_lookups_
     }
 
     fn find_file_from_earlier(&self, path_below_date: &str) -> Option<PathBuf> {
         for ep in self.yesterday_or_earlier_path() {
-            let fep = self.output_path.join(ep).join(path_below_date);
+            let fep = self.data_output_path.join(ep).join(path_below_date);
             if fep.exists() {
                 info!("Found {:?}", &fep);
                 return Some(fep);
@@ -100,7 +184,7 @@ impl Config {
     fn yesterday_or_earlier_path(&self) -> Vec<String> {
         //todo: take *last* available date, not yesterday.
         let today = Utc::today().naive_utc().format("%Y-%m-%d").to_string();
-        let mut date_paths: Vec<String> = list_dir(&self.output_path)
+        let mut date_paths: Vec<String> = list_dir(&self.data_output_path)
             .expect("Failed to list output dir")
             .into_iter()
             .filter(|x| DATE_YYYYMMDD_REGEXPS.is_match(x))
@@ -121,6 +205,34 @@ impl Config {
         }
         Ok(res)
     }
+
+    pub fn get_derivation_args(&self, pkg: &str, version: &Version) -> Option<NixValue> {
+        match self.derivation_args_.get(pkg) {
+            None => None,
+            Some(entries) => {
+                for (start_ver, stop_ver, dv) in entries.iter() {
+                    let after_start = match start_ver {
+                        Some(sv) => sv <= version,
+                        None => true, // a left open interval.
+                    };
+                    let before_end = match stop_ver {
+                        Some(sv) => version <= sv,
+                        None => true, //a right open interval
+                    };
+
+                    if after_start && before_end {
+                        let out: HashMap<String, NixValue> = dv
+                            .iter()
+                            .map(|(k, v)| (k.to_string(), v.clone().into()))
+                            .collect();
+
+                        return Some(out.into())
+                    }
+                }
+                None
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -128,6 +240,19 @@ pub struct DateRangePlus<T: Ord + Clone> {
     pub element: T,
     pub start_date: NaiveDate,
     pub end_date: NaiveDate,
+}
+
+impl<T: Ord + Clone> DateRangePlus<T> {
+    fn new(element: T, start_date: NaiveDate, end_date: NaiveDate) -> DateRangePlus<T> {
+        if end_date < start_date {
+            panic!("end date {} < start_date {}", end_date, start_date);
+        }
+        DateRangePlus {
+            element,
+            start_date,
+            end_date,
+        }
+    }
 }
 
 impl<T: Ord + Clone> DateRangePlus<T> {
@@ -147,10 +272,8 @@ impl<T: Ord + Clone> DateRangePlus<T> {
         input
             .into_iter()
             .zip(end_dates.into_iter().skip(1))
-            .map(|((element, start_date), end_date)| DateRangePlus {
-                element,
-                start_date,
-                end_date,
+            .map(|((element, start_date), end_date)| {
+                DateRangePlus::new(element, start_date, end_date)
             })
             .collect()
     }
@@ -296,6 +419,17 @@ pub enum Repo {
     BiocSoftware(Version),
 }
 
+impl Repo {
+    pub fn download_url(variant: &Repo) -> String {
+        match variant {
+            Repo::Cran => "https://cran.r-project.org/src/contrib/".to_string(),
+            Repo::BiocSoftware(ver) => {
+                format!("http://bioconductor.org/packages/{}/bioc/src/contrib/", ver)
+            }
+        }
+    }
+}
+
 impl Display for Repo {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
@@ -341,7 +475,7 @@ pub struct PackageInfoWithSource {
     //parsed_version: Version,
     #[allow(dead_code)]
     pub sha256: String,
-    pub desc: HashMap<String, Vec<String>>,
+    pub desc: HashMap<String, String>,
     pub is_archived: bool,
     #[allow(dead_code)]
     pub source: Repo, //todo: optimize the memory & cloning on this
@@ -358,14 +492,32 @@ pub static DEFAULT_DESC_FIELDS_TO_PARSE: Lazy<HashSet<&'static str>> = Lazy::new
         "Date/Publication",
         "Packaged",
         "Date",
+        "SystemRequirements",
     ]
     .into_iter()
     .collect()
 });
 
+pub static REGEXPS_PACKAGE_NAME: Lazy<Regex> = lazy_regex!("^[A-Za-z0-9.]+");
+
+fn parse_r_dependencies(input: Option<&String>) -> Result<Vec<String>> {
+    let mut res = Vec::new();
+    if let Some(input) = input {
+        for entry in input.split(", ") {
+            if !entry.is_empty() {
+                match REGEXPS_PACKAGE_NAME.captures(entry) {
+                    Some(v) => res.push(v[0].to_string()),
+                    None => return Err(anyhow!("failed to parse for r dependencies {}", &input)),
+                };
+            }
+        }
+    }
+    Ok(res)
+}
+
 impl PackageInfoWithSource {
     fn new_from_package_info(pi: PackageInfo, repo: Repo) -> Result<PackageInfoWithSource> {
-        let desc = retrieval::parse_desc(&pi.raw_desc, &DEFAULT_DESC_FIELDS_TO_PARSE)
+        let desc = desc_parser::parse_desc(&pi.raw_desc, &DEFAULT_DESC_FIELDS_TO_PARSE)
             .with_context(|| {
                 format!(
                     "Parsing description for {} failed.\nDesc was {}",
@@ -390,6 +542,35 @@ impl PackageInfoWithSource {
 
     pub fn tag(&self) -> String {
         format!("{}_{}", &self.name, &self.version)
+    }
+
+    pub fn r_deps(&self, ignored_packages: &HashSet<String>) -> Result<Vec<String>> {
+        let mut res = Vec::new();
+        for what in ["Depends", "Imports", "LinkingTo"] {
+            for entry in parse_r_dependencies(self.desc.get(what))
+                .with_context(|| format!("parsing {}", &what))?
+            {
+                if !ignored_packages.contains(&entry) {
+                    res.push(entry);
+                }
+            }
+        }
+
+        Ok(res)
+    }
+
+    pub fn system_deps(&self, lookup: &Vec<(String, String)>) -> Result<Vec<String>> {
+        let desc_reqs = self.desc.get("SystemRequirements");
+        let mut res = Vec::new();
+        if let Some(desc_reqs) = desc_reqs {
+            for (query, out_value) in lookup.iter() {
+                if desc_reqs.contains(query) {
+                    res.push(out_value.to_string())
+                }
+            }
+        }
+
+        Ok(res)
     }
 }
 

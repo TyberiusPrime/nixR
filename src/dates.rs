@@ -15,7 +15,7 @@ pub static YEAR_REGEXPS: Lazy<Regex> = lazy_regex!(r"(^|[^0-9]+)(\d\d\d\d)([^0-9
 static DETERMINISTIC_DATE_REGEPS: Lazy<Vec<(regex::Regex, String, bool)>> = Lazy::new(|| {
     let mut m = Vec::new();
     m.push((
-        (r"^\d\d\d\d-[01]\d-[0123]\d [012]\d:[0-5]\d:[0-5]\d$"),
+        (r"^\d\d\d\d-[01]?\d-[0123]?\d [012]\d:[0-5]\d:[0-5]\d$"),
         "%Y-%m-%d %H:%M:%S",
         false,
     ));
@@ -296,6 +296,19 @@ fn parse_dates_in_package_infos(
     //todo  count the left/right, decide on the action
 }
 
+fn empty_str_to_none(input: Option<&String>) -> Option<&String> {
+    match input {
+        Some(x) => {
+            if x.is_empty() {
+                None
+            } else {
+                Some(x)
+            }
+        }
+        None => None,
+    }
+}
+
 fn _parse_package_infos_for_dates(
     package_infos: &[PackageInfoWithSource],
     parse_option: &DateParsingOption,
@@ -314,14 +327,15 @@ fn _parse_package_infos_for_dates(
                     Ok(DateParsingResult::Determined(*overriden_date))
                 }
                 None => {
-                    let str_date = package_info.desc.get("Date/Publication").or_else(|| {
-                        package_info
-                            .desc
-                            .get("Packaged")
-                            .or_else(|| package_info.desc.get("Date").or(None))
-                    });
+                    let str_date = empty_str_to_none(package_info.desc.get("Date/Publication"))
+                        .or_else(|| {
+                            package_info
+                                .desc
+                                .get("Packaged")
+                                .or_else(|| package_info.desc.get("Date").or(None))
+                        });
                     match str_date {
-                        Some(str_date) => parse_cursed_date(&str_date.join(", "), parse_option)
+                        Some(str_date) => parse_cursed_date(&str_date, parse_option)
                             .with_context(|| format!("source {:?}", &package_info)),
                         None => Err(anyhow!("Could not find date field in {:?}", package_info)),
                     }
