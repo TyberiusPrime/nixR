@@ -5,6 +5,7 @@
   xvfb_run,
   utillinux,
   pkgs,
+  importCargo,
 }:
 #{ name, version, buildInputs ? [ ], additional_buildInputs ? [ ], patches ? [ ]
 package_info: let
@@ -25,19 +26,15 @@ package_info: let
   requireX = false;
   doCheck = true;
   installFlags = ["--no-multiarch"];
-  buildInputs = package_info.buildInputs;
+  buildInputs = package_info.buildInputs; # that's the r packages, pointing at the correct 'name_version' derivations
 in
   stdenv.mkDerivation (
     {
       name = "r-" + name + "-" + package_info.version;
       buildInputs =
         [R]
-        ++ buildInputs
-        ++ (
-          if requireX
-          then [aThousandLocks]
-          else []
-        );
+        ++ buildInputs # that's the r packages...
+        ++ (package_info.b or []);
 
       propagatedBuildInputs = buildInputs; # the R packages
 
@@ -45,9 +42,43 @@ in
       src = package_info.src;
 
       nativeBuildInputs =
-        if requireX
-        then [xvfb_run flock]
-        else [] ++ (package_info.bI or []);
+        [R]
+        ++ (
+          if requireX
+          then [xvfb_run flock]
+          else []
+        )
+        ++ buildInputs # that's the r packages...
+        ++ (package_info.b or [])
+        ++ (package_info.d.add_nativeBuildInputs or [])
+        ++ (
+          if (package_info.d.CargoLockInSource or "") != ""
+          then [
+            ((
+                let
+                  extract_cargo_lock = stdenv.mkDerivation {
+                    pname = "r-" + name + "-unpacked";
+                    version = package_info.version;
+                    unpackPhase = ":";
+                    buildPhase = ''
+                      mkdir $out
+                      ${pkgs.gnutar}/bin/tar xf ${package_info.src} ${package_info.d.CargoLockInSource} -O > $out/Cargo.lock
+                    '';
+                    installPhase = ":";
+                    configurePhase = ":";
+                    checkPhase = ":";
+                  };
+                in
+                  importCargo
+                  {
+                    lockFile = "${extract_cargo_lock}/Cargo.lock";
+                    inherit pkgs;
+                  }
+              )
+              .cargoHome)
+          ]
+          else []
+        );
 
       configurePhase = ''
         runHook preConfigure
@@ -73,7 +104,7 @@ in
           "--built-timestamp=0"
         ];
 
-      rCommand = "R";
+      rCommand = "${R}/bin/R";
       # Unfortunately, xvfb-run has a race condition even with -a option, so that
       # we acquire a lock explicitly.
 
@@ -91,6 +122,7 @@ in
           runHook preInstall
           mkdir -p $out/library
           export SN=$(($RANDOM % 1000+1000))
+          export MAKE="make -j $NIX_BUILD_CORES"
 
           # one shell script per level, or you go mad with escaping between
           # flock -> xvbf-run -> (xvfb | R)
@@ -117,11 +149,11 @@ in
         else ''
           runHook preInstall
           mkdir -p $out/library
-          # ${pkgs.perl}/bin/perl -0777 -i -ne   "s~(?sm)Imports:.+?\n([A-Za-z0-9])~\\1~;print;" DESCRIPTION
-          # ${pkgs.perl}/bin/perl -0777 -i -ne   "s~(?sm)Depends:.+?\n([A-Za-z0-9])~\\1~;print;" DESCRIPTION
-          ls .
+          export MAKE="make -j $NIX_BUILD_CORES"
+
           echo $rCommand CMD INSTALL $installFlags --configure-args="$configureFlags" -l $out/library .
           $rCommand CMD INSTALL $installFlags --configure-args="$configureFlags" -l $out/library .
+
           #remove date stamps
           echo "going for replacement"
           sed -i "s/^\(Built: R [0-9.]*\).*/\\1/" $out/library/${name}/DESCRIPTION
@@ -144,5 +176,5 @@ in
     // {
       strictDeps = true;
     }
-    // (package_info.dv or {})
+    // (package_info.d or {}) # derivation args
   )

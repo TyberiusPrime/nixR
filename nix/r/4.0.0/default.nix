@@ -1,22 +1,25 @@
 { stdenv, fetchurl, bzip2, gfortran, libX11, libXmu, libXt, libjpeg, libpng
 , libtiff, ncurses, pango, pcre2, perl, readline, tcl, texLive, tk, xz, zlib
-, less, texinfo, graphviz, icu, pkgconfig, bison, imake, which, jdk, blas, lapack
-, curl, Cocoa, Foundation, libobjc, libcxx, tzdata, fetchpatch
+, less, texinfo, graphviz, icu, pkgconfig, bison, imake, which, jdk, blas, openblas
+, curl, Cocoa, Foundation, libobjc, libcxx, tzdata, fetchpatch, cf-private
 , withRecommendedPackages ? true
 , enableStrictBarrier ? false
 # R as of writing does not support outputting both .so and .a files; it outputs:
 #     --enable-R-static-lib conflicts with --enable-R-shlib and will be ignored
 , static ? false
 }:
+let lapack = openblas; # nixpkgs 20.03 had no 'lapack' only openblas, but this derivation is from later on..
+in
 
-assert (!blas.isILP64) && (!lapack.isILP64);
+#assert (!blas.isILP64) && (!lapack.isILP64);
 
 stdenv.mkDerivation rec {
   name = "R-4.0.0";
 
   src = fetchurl {
     url = "https://cran.r-project.org/src/base/R-4/${name}.tar.gz";
-  };
+    sha256 = "sha256-Br6wKRtWmXhITrDctdIzlmXsdFc3vftOhz56WnVJKUA=";
+      };
 
   dontUseImakeConfigure = true;
 

@@ -114,6 +114,31 @@ pub fn fetch_bioconductor_release(
     is_finished_release: bool,
     bc_path: &Path,
 ) -> Result<Vec<PackageInfoWithSource>> {
+    let mut res =
+        fetch_bioconductor_release_software(config, version, is_finished_release, bc_path)?;
+    res.extend(fetch_bioconductor_release_annotation_data(
+        config,
+        version,
+        is_finished_release,
+        bc_path,
+    )?);
+    /*
+    res.extend(fetch_bioconductor_release_experiment_data(
+        config,
+        version,
+        is_finished_release,
+        bc_path,
+    )?);
+    */
+    Ok(res)
+}
+
+pub fn fetch_bioconductor_release_software(
+    config: &Config,
+    version: &Version,
+    is_finished_release: bool,
+    bc_path: &Path,
+) -> Result<Vec<PackageInfoWithSource>> {
     let str_version = version.to_string();
     let out_path = bc_path.join(&str_version); // that's a dated path...
     let non_dated_out_path = config
@@ -130,7 +155,8 @@ pub fn fetch_bioconductor_release(
             );
             let target_path = out_path.join("packages.json");
             if is_finished_release {
-                //we can symlink these for 'done' bioconductor versions. But not for earlier ones
+                //we can symlink these for 'done' bioconductor versions. But not for
+                //the current one
                 config.find_file_from_earlier_and_symlink(&target_path)?;
             }
             let current: Vec<String> = cache_json(&target_path, || {
@@ -183,6 +209,107 @@ pub fn fetch_bioconductor_release(
         .collect()
 }
 
+pub fn fetch_bioconductor_release_annotation_data(
+    config: &Config,
+    version: &Version,
+    is_finished_release: bool,
+    bc_path: &Path,
+) -> Result<Vec<PackageInfoWithSource>> {
+    let str_version = version.to_string();
+    let out_path = bc_path.join(&str_version).join("data_annotation"); // that's a dated path...
+    let without_source: Vec<PackageInfo> = cache_bioc_data_without_archive(
+        config,
+        &str_version,
+        version,
+        &out_path,
+        is_finished_release,
+        "data/annotation",
+    )?;
+    without_source
+        .into_iter()
+        .map(|e| {
+            PackageInfoWithSource::new_from_package_info(
+                e,
+                Repo::BiocAnnotationData(version.to_owned()),
+            )
+        })
+        .collect()
+}
+pub fn fetch_bioconductor_release_experiment_data(
+    config: &Config,
+    version: &Version,
+    is_finished_release: bool,
+    bc_path: &Path,
+) -> Result<Vec<PackageInfoWithSource>> {
+    let str_version = version.to_string();
+    let out_path = bc_path.join(&str_version).join("data_experiment"); // that's a dated path...
+    let without_source: Vec<PackageInfo> = cache_bioc_data_without_archive(
+        config,
+        &str_version,
+        version,
+        &out_path,
+        is_finished_release,
+        "data/experiment",
+    )?;
+    without_source
+        .into_iter()
+        .map(|e| {
+            PackageInfoWithSource::new_from_package_info(
+                e,
+                Repo::BiocExperimentData(version.to_owned()),
+            )
+        })
+        .collect()
+}
+fn cache_bioc_data_without_archive(
+    config: &Config,
+    str_version: &str,
+    version: &Version,
+    out_path: &Path,
+    is_finished_release: bool,
+    key: &str,
+) -> Result<Vec<PackageInfo>> {
+    cache_bincode(&out_path.join("parsed.bincode.gz"), || {
+        ex::fs::create_dir_all(&out_path)?;
+        let base_url = format!(
+            "http://bioconductor.org/packages/{}/{}/src/contrib/",
+            &str_version, &key
+        );
+        let target_path = out_path.join("packages.json");
+        if is_finished_release {
+            // we can symlink these for 'done' bioconductor versions. But not for the
+            // current one
+            config.find_file_from_earlier_and_symlink(&target_path)?;
+        }
+        let current: Vec<String> = cache_json(&target_path, || {
+            let packages_gz = fetch_url_to_vec(&(base_url.to_owned() + "PACKAGES.gz"))?;
+
+            let mut d = GzDecoder::new(&packages_gz[..]);
+            let mut s = Vec::new();
+            d.read_to_end(&mut s)?;
+            parse_packages_gz(&String::from_utf8_lossy(&s))
+        })?;
+        let current: HashSet<String> = current.into_iter().collect();
+        let archived = Vec::new(); //no archive for data.
+        let archived: Vec<String> = archived
+            .into_iter()
+            .filter(|x| !current.contains(x))
+            .collect();
+
+        let infos: Vec<PackageInfo> = fetch_package_infos(
+            config,
+            &config.date_path().join("bioconductor").join(&str_version),
+            current,
+            archived,
+            &base_url,
+            is_finished_release,
+            Repo::BiocSoftware(version.to_owned()),
+        )?;
+
+        Ok(infos)
+    })
+}
+
 fn fetch_bioconductor_archived(
     config: &Config,
     str_version: &str,
@@ -192,36 +319,43 @@ fn fetch_bioconductor_archived(
     // but this mirror still has them apperantly.
     // note that we can download the files just fine from bioconductor?
     // See https://support.bioconductor.org/p/9146648/
-    let base_url_with_archives = if Version::from_str(str_version)
-        .expect("bioconductor version parsing failed")
+    if Version::from_str(str_version).expect("bioconductor version parsing failed")
         < Version::from_str("3.15").unwrap()
     {
-        format!(
+        let base_url_with_archives = format!(
             "https://bioconductor.statistik.tu-dortmund.de/packages/{}/bioc/src/contrib/",
             str_version
+        );
+        fetch_archive(
+            config,
+            &base_url_with_archives,
+            out_path,
+            &ARCHIVE_AND_DATE_REGEXPS_BIOCONDUCTOR_MIRROR,
+            |matches| {
+                let stupid_date = matches[2].to_string();
+                let date = chrono::NaiveDate::parse_from_str(&stupid_date, "%d-%b-%Y")
+                    .with_context(|| format!("failed to parse date: '{}'", &stupid_date))?;
+                let out_date = date.format("%Y-%m-%d").to_string();
+                Ok((matches[1].to_string(), out_date))
+            },
+            &PACKAGE_REGEXPS_BIOCONDUCTOR_MIRROR,
+            |matches| Ok(matches[1].to_string()),
         )
     } else {
-        format!(
+        let base_url_with_archives = format!(
             "https://bioconductor.org/packages/{}/bioc/src/contrib/",
             str_version
+        );
+        fetch_archive(
+            config,
+            &base_url_with_archives,
+            out_path,
+            &ARCHIVE_AND_DATE_REGEXPS,
+            |matches| Ok((matches[1].to_string(), matches[2].to_string())),
+            &PACKAGE_REGEXPS_BIOCONDUCTOR_MIRROR,
+            |matches| Ok(matches[1].to_string()),
         )
-    };
-
-    fetch_archive(
-        config,
-        &base_url_with_archives,
-        out_path,
-        &ARCHIVE_AND_DATE_REGEXPS_BIOCONDUCTOR_MIRROR,
-        |matches| {
-            let stupid_date = matches[2].to_string();
-            let date = chrono::NaiveDate::parse_from_str(&stupid_date, "%d-%b-%Y")
-                .with_context(|| format!("failed to parse date: '{}'", &stupid_date))?;
-            let out_date = date.format("%Y-%m-%d").to_string();
-            Ok((matches[1].to_string(), out_date))
-        },
-        &PACKAGE_REGEXPS_BIOCONDUCTOR_MIRROR,
-        |matches| Ok(matches[1].to_string()),
-    )
+    }
 }
 fn parse_packages_gz(input: &str) -> Result<Vec<String>> {
     input
@@ -290,6 +424,7 @@ fn fetch_package_infos(
     // can't use cache_json here, because we want to extend
     let known_shas: HashMap<String, String> = load_hashes(config, &repo.to_string())?;
     let known_descs: HashMap<String, String> = load_descs(config, &repo.to_string())?;
+    ex::fs::create_dir_all(&PathBuf::from("cache"))?;
 
     let blacklist = config.get_blacklist()?;
 
@@ -344,6 +479,7 @@ fn fetch_package_infos(
         .filter_map(|x| x)
         .collect();
 
+    let mut do_bail = false;
     if current_info.iter().any(|x| x.is_err()) || archived_info.iter().any(|x| x.is_err()) {
         for x in current_info.iter().filter(|x| x.is_err()) {
             error!("{}", x.as_ref().unwrap_err());
@@ -351,7 +487,7 @@ fn fetch_package_infos(
         for x in archived_info.iter().filter(|x| x.is_err()) {
             error!("{}", x.as_ref().unwrap_err());
         }
-        bail!("Failed to download all descriptions. Check logs");
+        do_bail = true;
     }
 
     let mut out: Vec<PackageInfo> = current_info.into_iter().filter_map(|x| x.ok()).collect();
@@ -362,6 +498,9 @@ fn fetch_package_infos(
         // only export if anything changed
         save_hashes(config, &repo.to_string(), &out)?;
         save_descs(config, &repo.to_string(), &out)?;
+    }
+    if do_bail {
+        bail!("Failed to download all descriptions. Check logs");
     }
     Ok(out)
 }
@@ -488,7 +627,7 @@ pub fn bioconductor_fetch_releases(
                     is_finished: false,
                 },
                 start_date: last_entry.1,
-                end_date: today(),
+                end_date: today().succ(), // right inclusive..
             });
             Ok(bioc_release_infos)
         })
@@ -512,7 +651,22 @@ fn download_hash_and_desc(
 
     let raw: Vec<u8> = if known_hash.is_none() || known_desc.is_none() {
         info!("downloading {}", &url);
-        fetch_url_to_vec(&url)?
+        let cache_path = PathBuf::from(format!(
+            "cache/{}_{}.tar.gz",
+            &tag,
+            sha256::digest_bytes(url.as_bytes())
+        ));
+        if cache_path.exists() {
+            info!("was_cached {}", &url);
+            crate::helpers::read_to_bytes(&cache_path)?
+        } else {
+            let v = fetch_url_to_vec(&url)?;
+            let tf = cache_path.with_extension(".temp");
+            crate::helpers::write_from_bytes(&tf, &v)?;
+            ex::fs::rename(tf, cache_path)?;
+            info!("downloaded {}", &url);
+            v
+        }
     } else {
         Vec::new()
     };
@@ -592,12 +746,44 @@ fn extract_description_from_tar_gz(name: &str, tar_gz_bytes: &[u8]) -> Result<Ve
 
 /// fetch the list of currently avilable packages (tags: 'name_ver')
 fn cran_fetch_current(config: &Config, base_url: &str) -> Result<Vec<String>> {
-    download_regexs_and_cache_json(
+    let mut unfiltered = download_regexs_and_cache_json(
         base_url,
         &config.date_path().join("cran/packages.json"),
         &PACKAGE_REGEXPS,
         |x| Ok(x[1].to_string()),
-    )
+    )?;
+    // the cran file listing contains *multiple* entries for one package
+    // the older ones *should* be in the archive...
+    // but since versions don't quite sort alphabetically
+    // we ave to do this dance^^
+    // maybe we should have parsed packages.gz after all for the lis tof packages?
+    unfiltered.sort_by(|a, b| {
+        let (a_name, a_str_ver) = a.split_once('_').unwrap();
+        let (b_name, b_str_ver) = b.split_once('_').unwrap();
+        match a_name.cmp(b_name) {
+            std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+            std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+            std::cmp::Ordering::Equal => {
+                let a_ver = Version::from_str(a_str_ver)
+                    .unwrap_or_else(|_| Version::from_str("0.0").unwrap());
+                let b_ver = Version::from_str(b_str_ver)
+                    .unwrap_or_else(|_| Version::from_str("0.0").unwrap());
+                //note reversed - larger ones first..
+                b_ver.cmp(&a_ver)
+            }
+        }
+    });
+
+    let mut res = Vec::new();
+    let mut last_name = "".to_string();
+    for tag in unfiltered.into_iter() {
+        let (name, _) = tag.split_once('_').unwrap();
+        if name != last_name {
+            last_name = name.to_string();
+            res.push(tag)
+        }
+    }
+    Ok(res)
 }
 
 fn download_regexs_and_cache_json<
@@ -790,7 +976,7 @@ pub fn fetch_r_release_dates(config: &Config) -> Result<Vec<DateRangePlus<Versio
         .collect();
     Ok(DateRangePlus::from_elements_and_release_dates(
         input?,
-        &today(),
+        &today().succ(), //right exclusive
     ))
 }
 
@@ -882,6 +1068,6 @@ pub fn get_nixpkgs_releases() -> Result<Vec<DateRangePlus<Version>>> {
         .collect();
     Ok(DateRangePlus::from_elements_and_release_dates(
         vd?,
-        &today(),
+        &today().succ(), // right exclusive..
     ))
 }

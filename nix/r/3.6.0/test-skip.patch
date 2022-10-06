@@ -1,0 +1,35 @@
+From aeb75e12863019be06fe6c762ab705bf5ed8b38c Mon Sep 17 00:00:00 2001
+From: ripley <ripley@00db46b3-68df-0310-9c12-caf00c1e9a41>
+Date: Tue, 23 Apr 2019 17:58:54 +0000
+Subject: [PATCH] isSymmetric is not S4 generic without Matrix
+
+git-svn-id: https://svn.r-project.org/R/trunk@76417 00db46b3-68df-0310-9c12-caf00c1e9a41
+---
+ tests/reg-tests-1d.R | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/tests/reg-tests-1d.R b/tests/reg-tests-1d.R
+index 14a1110290e..036a2f37357 100644
+--- a/tests/reg-tests-1d.R
++++ b/tests/reg-tests-1d.R
+@@ -2275,15 +2275,18 @@ stopifnot(exprs = {
+ ## in R <= 3.5.1
+ 
+ 
+-## str() now even works with invalid objects:
++## str() now even works with invalid S4  objects:
++## this needs Matrix loaded to be an S4 generic
++if(requireNamespace('Matrix', lib.loc = .Library)) {
+ moS <- mo <- findMethods("isSymmetric")
+ attr(mo, "arguments") <- NULL
+-validObject(mo, TRUE)# shows what's wrong
++print(validObject(mo, TRUE)) # shows what's wrong
+ tools::assertError(capture.output( mo ))
+ op <- options(warn = 1)# warning:
+ str(mo, max.level = 2)
+ options(op)# revert
+ ## in R <= 3.5.x, str() gave error instead of the warning
++}
+ 
+ 
+ ## seq.default() w/ integer overflow in border cases: -- PR#17497, Suharto Anggono

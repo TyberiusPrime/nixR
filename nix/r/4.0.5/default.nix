@@ -1,7 +1,7 @@
 { stdenv, fetchurl, bzip2, gfortran, libX11, libXmu, libXt, libjpeg, libpng
 , libtiff, ncurses, pango, pcre2, perl, readline, tcl, texLive, tk, xz, zlib
 , less, texinfo, graphviz, icu, pkgconfig, bison, imake, which, jdk, blas, lapack
-, curl, Cocoa, Foundation, libobjc, libcxx, tzdata, fetchpatch
+, curl, Cocoa, Foundation, libobjc, libcxx, tzdata, fetchpatch, cf-private
 , withRecommendedPackages ? true
 , enableStrictBarrier ? false
 # R as of writing does not support outputting both .so and .a files; it outputs:
@@ -16,7 +16,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "https://cran.r-project.org/src/base/R-4/${name}.tar.gz";
-#    sha256 = "0xdy3dy2bzdiba8z94hjykyra8si8a5q15s0bri7c26scjrymg6k";
+    sha256 = "sha256-Cj7geap3LhMf5UNTEatif8vMtaUMq8VCkub2IEbx/+8=";
   };
 
   dontUseImakeConfigure = true;

@@ -1,0 +1,25 @@
+From 7543c28b931db386bb254e58995973493f88e30d Mon Sep 17 00:00:00 2001
+From: ripley <ripley@00db46b3-68df-0310-9c12-caf00c1e9a41>
+Date: Wed, 12 May 2021 08:27:24 +0000
+Subject: [PATCH] use codetools conditionally
+
+git-svn-id: https://svn.r-project.org/R/trunk@80284 00db46b3-68df-0310-9c12-caf00c1e9a41
+---
+ tests/reg-tests-1d.R | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/tests/reg-tests-1d.R b/tests/reg-tests-1d.R
+index 841e0b7da63..593f408e0d6 100644
+--- a/tests/reg-tests-1d.R
++++ b/tests/reg-tests-1d.R
+@@ -4904,7 +4904,9 @@ check_regexetc <- function(txt, fx.ptn, s.ptn, gr.ptn, msg = stop) {
+     }
+ } ## end{ check_regexetc }
+ 
+-codetools::findGlobals(check_regexetc,merge=FALSE)
++if(requireNamespace("codetools", quietly = TRUE))
++    codetools::findGlobals(check_regexetc, merge=FALSE)
++
+ ## "default check"
+ txt <- c(
+     "The", "licenses", "for", "most", "software", "are",  "designed", "to",

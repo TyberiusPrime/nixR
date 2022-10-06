@@ -1,14 +1,16 @@
 {}: let
   defaultArgs = pkgs:
-    with pkgs; {
-      # TODO: split docs into a separate output
-      texLive = texlive.combine {
-        inherit (texlive) scheme-small inconsolata helvetic texinfo fancyvrb cm-super;
-      };
-      withRecommendedPackages = false;
-      inherit (darwin.apple_sdk.frameworks) Cocoa Foundation;
-      inherit (darwin) libobjc cf-private;
-    };
+    with pkgs;
+      {
+        # TODO: split docs into a separate output
+        texLive = texlive.combine {
+          inherit (texlive) scheme-small inconsolata helvetic texinfo fancyvrb cm-super;
+        };
+        withRecommendedPackages = false;
+        inherit (darwin.apple_sdk.frameworks) Cocoa Foundation;
+        inherit (darwin) libobjc cf-private;
+      }
+      ;
 
   versions = [
     "3.4.2"
@@ -30,6 +32,7 @@
     "4.0.5"
     "4.1.0"
     "4.1.1"
+    "4.1.3"
     "4.2.0"
     "4.2.1"
   ];

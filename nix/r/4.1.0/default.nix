@@ -1,7 +1,7 @@
 { lib, stdenv, fetchurl, bzip2, gfortran, libX11, libXmu, libXt, libjpeg, libpng
 , libtiff, ncurses, pango, pcre2, perl, readline, tcl, texLive, tk, xz, zlib
 , less, texinfo, graphviz, icu, pkg-config, bison, imake, which, jdk, blas, lapack
-, curl, Cocoa, Foundation, libobjc, libcxx, tzdata
+, curl, Cocoa, Foundation, libobjc, libcxx, tzdata, cf-private
 , withRecommendedPackages ? true
 , enableStrictBarrier ? false
 , enableMemoryProfiling ? false
@@ -31,6 +31,8 @@ stdenv.mkDerivation rec {
 
   patches = [
     ./no-usr-local-search-paths.patch
+    ./7543c28b931db386bb254e58995973493f88e30d.patch
+    ./7715c67cabe13bb15350cba1a78591bbb76c7bac.patch
   ];
 
   # Test of the examples for package 'tcltk' fails in Darwin sandbox. See:

@@ -1,5 +1,5 @@
 # we strip surrounding whitespace in the strings.
-# otherwise, they get copied literally into an attrset on the packages
+# otherwise, they get copied *literally* into an attrset on the packages
 # so valid nixlang  for the values please
 
 # unlike other intervals, these are right inclusive!
@@ -7,7 +7,93 @@
 #["curl_3.0.."] 
 #preConfigure = "export CURL_INCLUDES=${pkgs.curl}/include"
 
-["openssl_1.0.1.."]
-OPENSSL_INCLUDES = "${pkgs.openssl}/include"
-LD_LIBRARY_PATH = "${pkgs.openssl.out}/lib"
+["openssl_0.9.7..1.4.5"]
+OPENSSL_INCLUDES = "''${pkgs.openssl}/include''"
+LD_LIBRARY_PATH = "''${pkgs.openssl.out}/lib''"
+
+["openssl_2.0.0.."]
+PKGCONFIG_CFLAGS = "''-I${pkgs.openssl.dev}/include''"
+PKGCONFIG_LIBS = "''-Wl,-rpath,${pkgs.openssl.out}/lib -L${pkgs.openssl.out}/lib -lssl -lcrypto''"
+
+["Java_1.0.6.."]
+preConfigure= """'''
+                export JAVA_CPPFLAGS=-I${pkgs.jdk}/include/
+                export JAVA_HOME=${pkgs.jdk}
+        '''"""
+add_nativeBuildInputs = "[pkgs.make]"
+
+["Nifti_1.4.0.."]
+add_nativeBuildInputs = "[pkgs.zlib]"
+
+
+
+["h2o_3.36.0.4.."]
+preInstall= """''
+	ls /build
+	mkdir /build/h2o/inst/java
+	cp $jarSource/h2o.jar /build/h2o/inst/java
+	''"""
+jarSource= """
+	pkgs.fetchzip{
+        url="http://h2o-release.s3.amazonaws.com/h2o/rel-zizler/3/h2o-3.34.0.3.zip";
+        sha256="07kkh1px0naq2g0718y1y0khydivsi80v63kdy1frxls1c5ky3kf";
+	}
+	"""
+
+
+["string2path_.."]
+postPatch = """''
+	substituteInPlace src/Makevars.in --replace "--release" "--release --offline"
+''"""
+preConfigure= "''export NOT_CRAN=true\n''"
+CargoLockInSource = "''string2path/src/rust/Cargo.lock''"
+#add_nativeBuildInputs =  "(importCargo { lockFile = \"./rust/Cargo.lock\"; inherit pkgs; }).cargoHome"
+
+["salso_.."]
+postPatch = """
+	''substituteInPlace tools/cargo.R --replace "env <- c(env,
+CARGO_HOME=n(cargo_home))"''
+"""
+#add_nativeBuildInputs =  "(importCargo { lockFile = ./../cargos/{pkg}/Cargo.lock; inherit pkgs; }).cargoHome"
+
+["precautionary_.."]
+#add_nativeBuildInputs =  "(importCargo { lockFile = ./../cargos/{pkg}/Cargo.lock; inherit pkgs; }).cargoHome"
+
+["R.cache_0.15.0..01.15.0"]
+HOME = "''$TMPDIR''"  # cache will be recreated if missing during runtime, so no problem here
+
+["data.table_.."]
+postPatch = "''patchShebangs configure''"
+
+["cuda.ml_.."]
+postPatch = "''patchShebangs configure''"
+
+["NxtIRFcore_.."]
+postPatch = "''patchShebangs configure''"
+
+
+["arrow_7.0.0..7.0.0"]
+postPatch = """''
+	patchShebangs configure inst/build_arrow_static.sh
+	''"""
+NOT_CRAN="''true''"
+ARROW_R_DEV="''true''"
+add_nativeBuildInputs = "[(pkgs.callPackage ../nix/packages/arrow_7.0.0/default.nix {})]"
+
+
+["Rmpi_.."]
+add_nativeBuildInputs = "[pkgs.openssh pkgs.openmpi]"
+
+["Rsmbl_.."]
+add_nativeBuildInputs = "[(pkgs.callPackage ../nix/packages/libSMBL.nix {})]"
+
+
+["vapour_0.8.5.."]
+preConfigure = """
+''
+ldconfig -v
+substituteInPlace configure --replace "2> errors.txt" ""
+''
+"""
+add_nativeBuildInputs = "[pkgs.sqlite.out pkgs.sqlite pkgs.geos]"
 

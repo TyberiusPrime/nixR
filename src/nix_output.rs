@@ -105,7 +105,7 @@ fn format_nix_attr_set(attr_set: &HashMap<String, NixValue>) -> String {
         "{{{}}}",
         attr_set
             .iter()
-            .map(|(k, v)| format!("{} = {};\n", nix_escape_string(k), v))
+            .map(|(k, v)| format!("{} = {};\n", nix_escape_attrname(k), v))
             .join(" ")
     )
 }
@@ -125,6 +125,10 @@ fn nix_escape_string(input: &str) -> String {
     }
     escaped.push('"');
     escaped
+}
+
+fn nix_escape_attrname(input: &str) -> String {
+    nix_escape_string(input) //todo: improve
 }
 
 pub fn nix_pretty_print(path: &Path) -> Result<()> {

@@ -67,14 +67,14 @@ pub static PKG_AND_VERSION_RANGE_REGEXPS: Lazy<Regex> = lazy_regex!(r"^(.+)_(.+)
 
 fn load_derivation_args(override_path: &Path) -> Result<DerivationArgs> {
     let input: HashMap<String, HashMap<String, String>> =
-        load_toml(&override_path.join("derivation_args.toml"), false).context("parsing overrides/derivation_args.toml")?;
+        load_toml(&override_path.join("derivation_args.toml"), false)
+            .context("parsing overrides/derivation_args.toml")?;
 
     let mut out = HashMap::new();
 
     for (k, v) in input.into_iter() {
         let parsed = PKG_AND_VERSION_RANGE_REGEXPS.captures_iter(&k).next();
         let parsed = parsed.with_context(||format!("Could not parse derivation_args version target statement '{}'. Syntax is pkg_<start_version>..<stop_version>. Versions can be empty, so ff you want to match all version, use 'pkgs_..'", k))?;
-        dbg!(&parsed);
         let pkg = &parsed[1];
         let start: Option<Version> = match parsed.get(2) {
             Some(x) => Some(Version::from_str(x.as_str())?),
@@ -223,10 +223,10 @@ impl Config {
                     if after_start && before_end {
                         let out: HashMap<String, NixValue> = dv
                             .iter()
-                            .map(|(k, v)| (k.to_string(), v.clone().into()))
+                            .map(|(k, v)| (k.to_string(), NixValue::Literal(v.clone())))
                             .collect();
 
-                        return Some(out.into())
+                        return Some(out.into());
                     }
                 }
                 None
@@ -376,7 +376,6 @@ pub trait FindHit<T: Ord + Clone> {
 impl<T: Ord + Clone> FindHit<T> for Vec<DateRangePlus<T>> {
     fn find_hit(&self, query: &NaiveDate) -> Option<DateRangePlus<T>> {
         for entry in self.iter() {
-            //dbg!(query, &entry.start_date, &entry.end_date, entry.contains(query));
             if entry.contains(query) {
                 return Some(entry.clone());
             }
@@ -417,6 +416,8 @@ impl BioconductorRelease {
 pub enum Repo {
     Cran,
     BiocSoftware(Version),
+    BiocAnnotationData(Version),
+    BiocExperimentData(Version),
 }
 
 impl Repo {
@@ -425,6 +426,18 @@ impl Repo {
             Repo::Cran => "https://cran.r-project.org/src/contrib/".to_string(),
             Repo::BiocSoftware(ver) => {
                 format!("http://bioconductor.org/packages/{}/bioc/src/contrib/", ver)
+            }
+            Repo::BiocAnnotationData(ver) => {
+                format!(
+                    "http://bioconductor.org/packages/{}/data/annotation/src/contrib/",
+                    ver
+                )
+            }
+            Repo::BiocExperimentData(ver) => {
+                format!(
+                    "http://bioconductor.org/packages/{}/data/experiment/src/contrib/",
+                    ver
+                )
             }
         }
     }
@@ -435,6 +448,12 @@ impl Display for Repo {
         match self {
             Repo::Cran => formatter.write_str("cran"),
             Repo::BiocSoftware(ver) => formatter.write_str(&format!("bioconductor_{}", ver)),
+            Repo::BiocAnnotationData(ver) => {
+                formatter.write_str(&format!("bioconductor_data_annotation{}", ver))
+            }
+            Repo::BiocExperimentData(ver) => {
+                formatter.write_str(&format!("bioconductor_data_experiment{}", ver))
+            }
         }
     }
 }
@@ -500,14 +519,21 @@ pub static DEFAULT_DESC_FIELDS_TO_PARSE: Lazy<HashSet<&'static str>> = Lazy::new
 
 pub static REGEXPS_PACKAGE_NAME: Lazy<Regex> = lazy_regex!("^[A-Za-z0-9.]+");
 
-fn parse_r_dependencies(input: Option<&String>) -> Result<Vec<String>> {
+pub fn parse_r_dependencies(input: Option<&String>) -> Result<Vec<String>> {
     let mut res = Vec::new();
     if let Some(input) = input {
-        for entry in input.split(", ") {
+        for entry in input.split(",") {
             if !entry.is_empty() {
+                let entry = entry.trim();
                 match REGEXPS_PACKAGE_NAME.captures(entry) {
                     Some(v) => res.push(v[0].to_string()),
-                    None => return Err(anyhow!("failed to parse for r dependencies {}", &input)),
+                    None => {
+                        return Err(anyhow!(
+                            "failed to parse for r dependencies {} - entry: {}",
+                            &input,
+                            &entry
+                        ))
+                    }
                 };
             }
         }
@@ -561,16 +587,18 @@ impl PackageInfoWithSource {
 
     pub fn system_deps(&self, lookup: &Vec<(String, String)>) -> Result<Vec<String>> {
         let desc_reqs = self.desc.get("SystemRequirements");
-        let mut res = Vec::new();
+        let mut res = HashSet::new();
         if let Some(desc_reqs) = desc_reqs {
             for (query, out_value) in lookup.iter() {
                 if desc_reqs.contains(query) {
-                    res.push(out_value.to_string())
+                    for pkg in out_value.split(" ") {
+                        res.insert(pkg.to_string());
+                    }
                 }
             }
         }
 
-        Ok(res)
+        Ok(res.into_iter().collect())
     }
 }
 

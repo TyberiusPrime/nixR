@@ -28,6 +28,13 @@ builtins.derivation {
                   findRInput $input
               done
           fi
+          # depends on the nixpkgs version which file is being used..
+          if test -f $pkg/nix-support/propagated-build-inputs; then
+          for input in `${nixpkgs.coreutils}/bin/cat $pkg/nix-support/propagated-build-inputs`; do
+                  findRInput $input
+              done
+          fi
+
         fi
       }
 

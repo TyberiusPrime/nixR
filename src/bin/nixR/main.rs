@@ -99,18 +99,56 @@ fn main() -> Result<()> {
 }
 
 fn test_parsing(config: &Config) -> Result<Vec<PackageInfo>> {
-    let desc = "Package: a4
-Version: 1.44.0
-Depends: a4Base, a4Preproc, a4Classif, a4Core, a4Reporting
-Suggests: MLP, nlcv, ALL, Cairo, Rgraphviz, GOstats
-License: GPL-3
-MD5sum: cc696d3373a9f258d293f2d966da11d5
+    let desc = "pillar_1.7.0 Package: pillar
+Title: Coloured Formatting for Columns
+Version: 1.7.0
+Authors@R: 
+    c(person(given = \"Kirill\",
+             family = \"Mcller\",
+             role = c(\"aut\", \"cre\"),
+             email = \"krlmlr+r@mailbox.org\"),
+      person(given = \"Hadley\",
+             family = \"Wickham\",
+             role = \"aut\"),
+      person(given = \"RStudio\",
+             role = \"cph\"))
+Description: Provides 'pillar' and 'colonnade' generics designed
+    for formatting columns of data using the full range of colours
+    provided by modern terminals.
+License: MIT + file LICENSE
+URL: https://pillar.r-lib.org/, https://github.com/r-lib/pillar
+BugReports: https://github.com/r-lib/pillar/issues
+Imports: cli (>= 2.3.0), crayon (>= 1.3.4), ellipsis (>= 0.3.2), fansi,
+        glue, lifecycle, rlang (>= 0.3.0), utf8 (>= 1.1.0), utils,
+        vctrs (>= 0.3.8)
+Suggests: bit64, debugme, DiagrammeR, dplyr, formattable, ggplot2,
+        knitr, lubridate, nanotime, nycflights13, palmerpenguins,
+        rmarkdown, scales, stringi, survival, testthat (>= 3.1.1),
+        tibble, units (>= 0.7.2), vdiffr, withr
+VignetteBuilder: knitr
+Encoding: UTF-8
+RoxygenNote: 7.1.2
+Config/testthat/edition: 3
+Config/testthat/parallel: true
+Config/testthat/start-first: format_multi_fuzz, format_multi_fuzz_2,
+        format_multi, ctl_colonnade, ctl_colonnade_1, ctl_colonnade_2
+Config/autostyle/scope: line_breaks
+Config/autostyle/strict: true
+Config/gha/extra-packages: DiagrammeR=?ignore-before-r=3.5.0
 NeedsCompilation: no
+Packaged: 2022-02-01 07:58:34 UTC; kirill
+Author: Kirill Müller [aut, cre],
+  Hadley Wickham [aut],
+  RStudio [cph]
+Maintainer: Kirill Müller <krlmlr+r@mailbox.org>
+Repository: CRAN
+Date/Publication: 2022-02-01 08:30:02 UTC
 ";
     let should =
-        nixr::desc_parser::parse_desc(&desc, &(["Package", "Version"].into_iter().collect()));
+        nixr::desc_parser::parse_desc(&desc, &(["Imports"].into_iter().collect()))?;
 
     dbg!(&should);
+    dbg!(nixr::parse_r_dependencies(should.get("Imports"))?);
     Ok(Vec::new())
 }
 
@@ -263,11 +301,11 @@ fn assemble(config: &Config) -> Result<()> {
         cran_packages,
         //Repo::Cran,
         &manual_date_overrides,
-        &today(),
+        &today().succ(), // right exclusive..
         cran_final_archive_dates,
     )?;
 
-    let min_version = Version::from_str("3.6")?;
+    let min_version = Version::from_str("3.14")?;
 
     let mut all_the_packages: HashMap<String, PackageInfoWithSource> = HashMap::new();
     let nix_r_by_date_path = config.nix_output_path.join("r_by_date.nix");
@@ -338,26 +376,28 @@ fn assemble(config: &Config) -> Result<()> {
 
             r_by_date.insert(date.to_string(), r_by_date_entry.into());
         }
-
-        break; // todo remove
     }
     let nix_packages_cran_path = config.nix_output_path.join("cran.nix");
-    let nix_packages_biocsoftware_path = config.nix_output_path.join("bioc_software.nix");
+    let nix_packages_bioc_software_path = config.nix_output_path.join("bioc_software.nix");
+    let nix_packages_bioc_data_annotation_path = config.nix_output_path.join("bioc_data_annotation.nix");
+    let nix_packages_bioc_data_experiment_path = config.nix_output_path.join("bioc_data_experiment.nix");
 
     let mut out_packages_cran: HashMap<String, NixValue> = HashMap::new();
     let mut out_packages_bioc_software: HashMap<String, NixValue> = HashMap::new();
+    let mut out_packages_bioc_data_annotation: HashMap<String, NixValue> = HashMap::new();
+    let mut out_packages_bioc_data_experiment: HashMap<String, NixValue> = HashMap::new();
 
     for (tag, package) in all_the_packages.iter() {
         let r_deps = package.r_deps(&config.build_in_packages())?;
         let non_r_deps = package.system_deps(&config.system_requirement_lookups())?;
         let mut this_out: HashMap<_, NixValue> = HashMap::new();
-        this_out.insert("sha256", package.sha256.clone().into());
+        this_out.insert("s", package.sha256.clone().into());
         if !r_deps.is_empty() {
-            this_out.insert("rbI", r_deps.into());
+            this_out.insert("r", r_deps.into());
         }
         if !non_r_deps.is_empty() {
             this_out.insert(
-                "bI",
+                "b",
                 non_r_deps
                     .into_iter()
                     .map(|x| NixValue::Literal(x))
@@ -365,34 +405,66 @@ fn assemble(config: &Config) -> Result<()> {
             );
         }
         if package.desc.get("NeedsCompilation").map(|x| (&**x)) == Some("yes") {
-            this_out.insert("compile", NixValue::Bool(true));
+            this_out.insert("c", NixValue::Bool(true));
         }
         let derivation_args = config.get_derivation_args(&package.name, &package.parsed_version()?);
 
         if let Some(derivation_args) = derivation_args {
-            this_out.insert("dv", derivation_args);
+            this_out.insert("d", derivation_args);
         }
 
-        out_packages_cran.insert(tag.to_string(), this_out.into());
+        match package.source {
+            Repo::Cran => out_packages_cran.insert(tag.to_string(), this_out.into()),
+            Repo::BiocSoftware(_) => {
+                out_packages_bioc_software.insert(tag.to_string(), this_out.into())
+            }
+            Repo::BiocAnnotationData(_) => out_packages_bioc_data_annotation.insert(tag.to_string(), this_out.into()),
+            Repo::BiocExperimentData(_) => out_packages_bioc_data_experiment.insert(tag.to_string(), this_out.into()),
+        };
     }
     write_from_bytes_iter(
         &nix_packages_cran_path,
         [
-            "{pkgs}:\nwith pkgs;\n".as_bytes(),
+            "#s = sha256; r=r packages; b=non r build inputs; c=compile, d=derivation arguments; \n".as_bytes(),
+            "{pkgs, importCargo}:\nwith pkgs;\n".as_bytes(),
             NixValue::AttrSet(out_packages_cran).to_string().as_bytes(),
         ]
         .into_iter(),
     )?;
     write_from_bytes_iter(
-        &nix_packages_biocsoftware_path,
+        &nix_packages_bioc_software_path,
         [
-            "{pkgs}:\nwith pkgs;\n".as_bytes(),
+            "#s = sha256; r=r packages; b=non r build inputs; c=compile, d=derivation arguments; \n".as_bytes(),
+            "{pkgs, importCargo}:\nwith pkgs;\n".as_bytes(),
             NixValue::AttrSet(out_packages_bioc_software)
                 .to_string()
                 .as_bytes(),
         ]
         .into_iter(),
     )?;
+    write_from_bytes_iter(
+        &nix_packages_bioc_data_annotation_path,
+        [
+            "#s = sha256; r=r packages; b=non r build inputs; c=compile, d=derivation arguments; \n".as_bytes(),
+            "{pkgs}:\nwith pkgs;\n".as_bytes(),
+            NixValue::AttrSet(out_packages_bioc_data_annotation)
+                .to_string()
+                .as_bytes(),
+        ]
+        .into_iter(),
+    )?;
+   write_from_bytes_iter(
+        &nix_packages_bioc_data_experiment_path,
+        [
+            "#s = sha256; r=r packages; b=non r build inputs; c=compile, d=derivation arguments; \n".as_bytes(),
+            "{pkgs}:\nwith pkgs;\n".as_bytes(),
+            NixValue::AttrSet(out_packages_bioc_data_experiment)
+                .to_string()
+                .as_bytes(),
+        ]
+        .into_iter(),
+    )?;
+
     let r_by_date_out = write_from_bytes_iter(
         &nix_r_by_date_path,
         [
@@ -402,10 +474,11 @@ fn assemble(config: &Config) -> Result<()> {
         .into_iter(),
     );
 
-    nix_pretty_print(&nix_packages_cran_path)?;
-    nix_pretty_print(&nix_packages_biocsoftware_path)?;
+    info!("pretty printing");
+    //nix_pretty_print(&nix_packages_cran_path)?;
+    //nix_pretty_print(&nix_packages_biocsoftware_path)?;
 
-    panic!("temp");
+    error!("generated nix code");
 
     //let hits: Vec<u32> = interval_set.query(&chrono::NaiveDate::from_ymd(2022, 1, 1))?;
     //info!("packages at that date: {}", hits.len());

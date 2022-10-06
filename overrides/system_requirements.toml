@@ -1,4 +1,25 @@
 # a lookup from the strings that appear in SystemRequirements
 # to the actual nix package pkgs.${name}
+# you can seperate multiple with spaces.
+# teh list get's deduped, so don't worry about pkgconfig repetitions
 libcurl = "pkgconfig curl"
-"OpenSSL >= 1.0.1" = "openssl openssl.out"
+"OpenSSL >= 1.0.1" = "pkgconfig openssl openssl.out"
+libxml2 = "pkgconfig libxml2"
+java = "jdk"
+ICU4C = "pkgconfig iuc"
+PROJ = "pkgconfig proj"
+"PROJ.4" = "pkgconfig proj"
+GDAL = "pkgconfig gdal"
+GEOS = "pkgconfig geos"
+sqlite3 = "pkgconfig sqlite"
+gmp = "pkgconfig gmp"
+tiff = "pkgconfig libtiff"
+libjpeg = "libjpeg"
+libpng = "libpng"
+# this one needs you to also define an importCargo add_nativeBuildInputs in derivation_args
+# todo: automate this...
+Cargo = "rustc cargo"
+"C++11" = "cmake"
+"mono-runtime" = "mono"
+"GNU Scientific Library" = " pkgconfig gsl_1"
+zlib = "zlib"

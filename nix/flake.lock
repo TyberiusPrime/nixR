@@ -1,5 +1,20 @@
 {
   "nodes": {
+    "import-cargo": {
+      "locked": {
+        "lastModified": 1594305518,
+        "narHash": "sha256-frtArgN42rSaEcEOYWg8sVPMUK+Zgch3c+wejcpX3DY=",
+        "owner": "edolstra",
+        "repo": "import-cargo",
+        "rev": "25d40be4a73d40a2572e0cc233b83253554f06c5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "edolstra",
+        "repo": "import-cargo",
+        "type": "github"
+      }
+    },
     "nixpkgs_17_03": {
       "flake": false,
       "locked": {
@@ -185,6 +200,7 @@
     },
     "root": {
       "inputs": {
+        "import-cargo": "import-cargo",
         "nixpkgs_17_03": "nixpkgs_17_03",
         "nixpkgs_17_09": "nixpkgs_17_09",
         "nixpkgs_18_03": "nixpkgs_18_03",

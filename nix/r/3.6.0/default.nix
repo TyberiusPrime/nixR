@@ -1,7 +1,7 @@
 { stdenv, fetchurl, bzip2, gfortran, libX11, libXmu, libXt, libjpeg, libpng
 , libtiff, ncurses, pango, pcre, perl, readline, tcl, texLive, tk, xz, zlib
 , less, texinfo, graphviz, icu, pkgconfig, bison, imake, which, jdk, openblas
-, curl, Cocoa, Foundation, libobjc, libcxx, tzdata, fetchpatch
+, curl, Cocoa, Foundation, libobjc, libcxx, tzdata, fetchpatch, cf-private
 , withRecommendedPackages ? true
 , enableStrictBarrier ? false
 , javaSupport ? (!stdenv.hostPlatform.isAarch32 && !stdenv.hostPlatform.isAarch64)
@@ -12,7 +12,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "https://cran.r-project.org/src/base/R-3/${name}.tar.gz";
-    sha256 = "12xkifbq0w25y8aq77w289ddax5i5w2djcfsqgffrb3i7syrxajv";
+    sha256 = "sha256-NvysPkUmZhWOYkWcb8gQrcJHxxCe1xxbbDrV/Cv1dQk=";
   };
 
   dontUseImakeConfigure = true;
@@ -27,6 +27,7 @@ stdenv.mkDerivation rec {
 
   patches = [
     ./no-usr-local-search-paths.patch
+    ./test-skip.patch
   ];
 
   prePatch = stdenv.lib.optionalString stdenv.isDarwin ''

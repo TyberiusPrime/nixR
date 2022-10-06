@@ -11,7 +11,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "http://cran.r-project.org/src/base/R-3/${name}.tar.gz";
-    sha256 = "007wlfk3cn1dxn2mpnxwvsk31s0599crbsyah8srm5pa2mfi7c82";
+    sha256 = "sha256-lx4wwkNs9kX1hVKQUQXXV4i9lzO928t8T7/0wabYDGQ=";
   };
 
   buildInputs = [
