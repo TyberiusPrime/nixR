@@ -83,7 +83,7 @@
       #package_info_bioc_data_experiment = import ../nix_output/bioc_data_experiment.nix {inherit pkgs;};
       #package_info_bioc_data_annotation = {};
       package_info_bioc_data_experiment = {};
-      bc_version = entry.bioconductor_version;
+      bc_version = builtins.trace ("bioconductor version: " + entry.bioconductor_version) entry.bioconductor_version;
       R = entry.R pkgs;
       flock =
         if builtins.hasAttr "flock" pkgs
@@ -248,22 +248,37 @@
             #"kgrams"
             #"patternize"
             #"h2o"
-            "string2path"
+            #"string2path"
             #"salso"
             #"R.cache"
-       #     "data.table"
-       #     "glpkAPI"
-       #     "cuda.ml"
-       #     "fixest"
-       #"NxtIRFcore"
-      # "arrow"
-       #"Rmpi"
-       #"rawrr"
-       #"rsbml"
-       #"pins"
-       #"GPBayes"
-       #"httpuv"
-       #"vapour"
+            #     "data.table"
+            #     "glpkAPI"
+            #     "cuda.ml"
+            #     "fixest"
+            #"NxtIRFcore"
+            # "arrow"
+            #"Rmpi"
+            #"rawrr"
+            #"rsbml"
+            #"pins"
+            #"GPBayes"
+            #"httpuv"
+            #"vapour"
+        "missSBM"
+        "nloptr"
+        "terra"
+        "registr"
+        "imager"
+        "rpg"
+        "cytolib"
+        "rGEDI"
+        "GMMAT"
+        "rtiff"
+        "PythonInR"
+        "PoissonBinomial"
+        "RMySQL"
+        "RMariaDB"
+        "V8"
           ];
         }
       ))

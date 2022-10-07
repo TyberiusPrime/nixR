@@ -51,9 +51,10 @@ CargoLockInSource = "''string2path/src/rust/Cargo.lock''"
 
 ["salso_.."]
 postPatch = """
-	''substituteInPlace tools/cargo.R --replace "env <- c(env,
-CARGO_HOME=n(cargo_home))"''
+	''substituteInPlace tools/cargo.R --replace "env <- c(env, CARGO_HOME=n(cargo_home))" ""''
 """
+CargoLockInSource = "''salso/src/rustlib/Cargo.lock''"
+
 #add_nativeBuildInputs =  "(importCargo { lockFile = ./../cargos/{pkg}/Cargo.lock; inherit pkgs; }).cargoHome"
 
 ["precautionary_.."]
@@ -97,3 +98,10 @@ substituteInPlace configure --replace "2> errors.txt" ""
 """
 add_nativeBuildInputs = "[pkgs.sqlite.out pkgs.sqlite pkgs.geos]"
 
+
+["RNifti_1.4.0..1.4.0"]
+# add_nativeBuildInputs = "[pkgs.autoreconfHook]"
+failureHook = """''
+echo 'Failed :('
+cat src/Makevars
+''"""

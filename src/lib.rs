@@ -421,8 +421,8 @@ pub enum Repo {
 }
 
 impl Repo {
-    pub fn download_url(variant: &Repo) -> String {
-        match variant {
+    pub fn download_url(&self) -> String {
+        match self {
             Repo::Cran => "https://cran.r-project.org/src/contrib/".to_string(),
             Repo::BiocSoftware(ver) => {
                 format!("http://bioconductor.org/packages/{}/bioc/src/contrib/", ver)
@@ -449,10 +449,10 @@ impl Display for Repo {
             Repo::Cran => formatter.write_str("cran"),
             Repo::BiocSoftware(ver) => formatter.write_str(&format!("bioconductor_{}", ver)),
             Repo::BiocAnnotationData(ver) => {
-                formatter.write_str(&format!("bioconductor_data_annotation{}", ver))
+                formatter.write_str(&format!("bioconductor_data_annotation_{}", ver))
             }
             Repo::BiocExperimentData(ver) => {
-                formatter.write_str(&format!("bioconductor_data_experiment{}", ver))
+                formatter.write_str(&format!("bioconductor_data_experiment_{}", ver))
             }
         }
     }

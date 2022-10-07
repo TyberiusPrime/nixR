@@ -58,7 +58,7 @@ pub fn update_cran(
             archived,
             &base_url,
             false,
-            Repo::Cran,
+            &Repo::Cran,
         )?;
         info!("Loaded information on {} packages", infos.len());
         Ok(infos)
@@ -122,14 +122,12 @@ pub fn fetch_bioconductor_release(
         is_finished_release,
         bc_path,
     )?);
-    /*
     res.extend(fetch_bioconductor_release_experiment_data(
         config,
         version,
         is_finished_release,
         bc_path,
     )?);
-    */
     Ok(res)
 }
 
@@ -194,7 +192,7 @@ pub fn fetch_bioconductor_release_software(
                 archived,
                 &base_url,
                 is_finished_release,
-                Repo::BiocSoftware(version.to_owned()),
+                &Repo::BiocSoftware(version.to_owned()),
             )?;
 
             Ok(infos)
@@ -220,10 +218,9 @@ pub fn fetch_bioconductor_release_annotation_data(
     let without_source: Vec<PackageInfo> = cache_bioc_data_without_archive(
         config,
         &str_version,
-        version,
         &out_path,
         is_finished_release,
-        "data/annotation",
+        &Repo::BiocAnnotationData(version.to_owned())
     )?;
     without_source
         .into_iter()
@@ -246,10 +243,9 @@ pub fn fetch_bioconductor_release_experiment_data(
     let without_source: Vec<PackageInfo> = cache_bioc_data_without_archive(
         config,
         &str_version,
-        version,
         &out_path,
         is_finished_release,
-        "data/experiment",
+        &Repo::BiocExperimentData(version.to_owned())
     )?;
     without_source
         .into_iter()
@@ -264,17 +260,13 @@ pub fn fetch_bioconductor_release_experiment_data(
 fn cache_bioc_data_without_archive(
     config: &Config,
     str_version: &str,
-    version: &Version,
     out_path: &Path,
     is_finished_release: bool,
-    key: &str,
+    repo: &Repo,
 ) -> Result<Vec<PackageInfo>> {
     cache_bincode(&out_path.join("parsed.bincode.gz"), || {
         ex::fs::create_dir_all(&out_path)?;
-        let base_url = format!(
-            "http://bioconductor.org/packages/{}/{}/src/contrib/",
-            &str_version, &key
-        );
+        let base_url = repo.download_url();
         let target_path = out_path.join("packages.json");
         if is_finished_release {
             // we can symlink these for 'done' bioconductor versions. But not for the
@@ -303,7 +295,7 @@ fn cache_bioc_data_without_archive(
             archived,
             &base_url,
             is_finished_release,
-            Repo::BiocSoftware(version.to_owned()),
+            repo,
         )?;
 
         Ok(infos)
@@ -396,7 +388,7 @@ fn fetch_package_infos(
     archived: Vec<String>,
     base_url: &str,
     symlink_previous: bool,
-    repo: Repo,
+    repo: &Repo,
 ) -> Result<Vec<PackageInfo>> {
     if symlink_previous {
         config.find_file_from_earlier_and_symlink(&out_path.join("parsed.json.gz"))?;
@@ -650,7 +642,6 @@ fn download_hash_and_desc(
     };
 
     let raw: Vec<u8> = if known_hash.is_none() || known_desc.is_none() {
-        info!("downloading {}", &url);
         let cache_path = PathBuf::from(format!(
             "cache/{}_{}.tar.gz",
             &tag,
@@ -660,6 +651,7 @@ fn download_hash_and_desc(
             info!("was_cached {}", &url);
             crate::helpers::read_to_bytes(&cache_path)?
         } else {
+            info!("downloading {}", &url);
             let v = fetch_url_to_vec(&url)?;
             let tf = cache_path.with_extension(".temp");
             crate::helpers::write_from_bytes(&tf, &v)?;

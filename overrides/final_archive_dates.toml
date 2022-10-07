@@ -606,3 +606,10 @@
 "yest" = "2015-01-01" # earlier than earliest MRAN date
 "zicounts" = "2015-01-01" # earlier than earliest MRAN date
 "ZIGP" = "2015-01-01" # earlier than earliest MRAN date
+
+
+# temp?
+BayesianTools = "2022-10-07"
+fellov = "2022-10-07"
+tidylab = "2022-10-07"
+usethat = "2022-10-07"

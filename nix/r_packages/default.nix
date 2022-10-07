@@ -23,7 +23,7 @@ package_info: let
   };
   name = package_info.pname;
   patches = package_info.patches or [];
-  requireX = false;
+  requireX = builtins.any (pkg: pkg == pkgs.x11) (package_info.b or []);
   doCheck = true;
   installFlags = ["--no-multiarch"];
   buildInputs = package_info.buildInputs; # that's the r packages, pointing at the correct 'name_version' derivations
@@ -56,18 +56,15 @@ in
           then [
             ((
                 let
-                  extract_cargo_lock = stdenv.mkDerivation {
-                    pname = "r-" + name + "-unpacked";
-                    version = package_info.version;
-                    unpackPhase = ":";
-                    buildPhase = ''
+                  extract_cargo_lock =
+                    pkgs.runCommandLocal
+                    ("r-"
+                      + name
+                      + "-Cargo.lock")
+                    ''
                       mkdir $out
                       ${pkgs.gnutar}/bin/tar xf ${package_info.src} ${package_info.d.CargoLockInSource} -O > $out/Cargo.lock
                     '';
-                    installPhase = ":";
-                    configurePhase = ":";
-                    checkPhase = ":";
-                  };
                 in
                   importCargo
                   {

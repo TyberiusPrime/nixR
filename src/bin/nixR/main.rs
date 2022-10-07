@@ -40,7 +40,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const BIOCONDUCTOR_URL: &str = "https://bioconductor.org/";
 // const YEAR_TO_EARLY_INT: i32 = 2016;
-const MINIMUM_BIOCONDUCTOR_VERSION: &str = "3.6";
+const MINIMUM_BIOCONDUCTOR_VERSION: &str = "3.14";
 
 fn configure_logging(matches: &ArgMatches<'static>) {
     let verbosity = value_t!(matches, "verbose", usize).unwrap_or(2);
@@ -305,7 +305,7 @@ fn assemble(config: &Config) -> Result<()> {
         cran_final_archive_dates,
     )?;
 
-    let min_version = Version::from_str("3.14")?;
+    let min_version = Version::from_str(MINIMUM_BIOCONDUCTOR_VERSION)?;
 
     let mut all_the_packages: HashMap<String, PackageInfoWithSource> = HashMap::new();
     let nix_r_by_date_path = config.nix_output_path.join("r_by_date.nix");
@@ -536,7 +536,7 @@ fn assemble_packages_during_bioconductor_release(
         //this case does happen if a package is rereleased in the same day.
         if end_date == &pi.start_date {
             if !pi.element.is_archived {
-                bail!("start date == end date, but not archived!? {:#?}", pi);
+                warn!("start date == end date, but not archived!? {:#?}", pi);
             }
             info!(
                 "Skipping {} - another release later the same day",
