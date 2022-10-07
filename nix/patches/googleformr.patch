@@ -1,0 +1,14 @@
+diff --git a/R/comments_gformr.R b/R/comments_gformr.R
+index 891a4e4..46ef7bb 100644
+--- a/R/comments_gformr.R
++++ b/R/comments_gformr.R
+@@ -12,6 +12,8 @@
+ #' comments_gformr(post_content = "It would useful to be able to distinguish
+ #' between lots of comments from one useR vs. many useRs")
+ #' }
+-
++comments_gformr = NULL
++try(
+ comments_gformr <- gformr(form = "https://docs.google.com/forms/d/1doF8dvWKqbTBS_hQIj_QpYtGc1_fl8GdIN-X08hJ644/viewform"
+                       , custom_reply  = "Thanks for supporting googleformr!")
++)

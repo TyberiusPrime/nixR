@@ -1,0 +1,54 @@
+diff --git a/R/spiR.R b/R/spiR.R
+index 5305308..0c834cb 100644
+--- a/R/spiR.R
++++ b/R/spiR.R
+@@ -1,26 +1,28 @@
+ 
+ 
+-# Loading data
+-url <- paste0("https://warin.ca/datalake/spiR/SPI_data.csv")
+-path <- file.path(tempdir(), "temp.csv")
+-curl::curl_download(url, path)
+-csv_file <- file.path(paste0(tempdir(), "/temp.csv"))
+-SPI_data <- readr::read_csv(csv_file)
+-
+-
+-# Loading indicators
+-url <- paste0("https://warin.ca/datalake/spiR/SPI_indicator.csv")
+-path <- file.path(tempdir(), "temp.csv")
+-curl::curl_download(url, path)
+-csv_file <- file.path(paste0(tempdir(), "/temp.csv"))
+-SPI_indicator <- readr::read_csv(csv_file)
+-
+-# Creating the default values for the function query
+-# IF an entry is missing, all the observations of this variable will be displayed
+-
+-spi_country <- base::unique(SPI_data$country_code)
+-spi_year <- base::unique(SPI_data$year)
+-spi_indicator <- base::unique(SPI_data$indicator_code)
++tryCatch({
++	# Loading data
++	url <- paste0("https://warin.ca/datalake/spiR/SPI_data.csv")
++	path <- file.path(tempdir(), "temp.csv")
++	curl::curl_download(url, path)
++	csv_file <- file.path(paste0(tempdir(), "/temp.csv"))
++	SPI_data <- readr::read_csv(csv_file)
++
++
++	# Loading indicators
++	url <- paste0("https://warin.ca/datalake/spiR/SPI_indicator.csv")
++	path <- file.path(tempdir(), "temp.csv")
++	curl::curl_download(url, path)
++	csv_file <- file.path(paste0(tempdir(), "/temp.csv"))
++	SPI_indicator <- readr::read_csv(csv_file)
++
++	# Creating the default values for the function query
++	# IF an entry is missing, all the observations of this variable will be displayed
++
++	spi_country <- base::unique(SPI_data$country_code)
++	spi_year <- base::unique(SPI_data$year)
++	spi_indicator <- base::unique(SPI_data$indicator_code)
++}, error=function(e) {F})
+ 
+ 
+ # Function 1: Data collection

@@ -80,9 +80,9 @@
         inherit importCargo;
       };
       package_info_bioc_data_annotation = import ../nix_output/bioc_data_annotation.nix {inherit pkgs;};
-      #package_info_bioc_data_experiment = import ../nix_output/bioc_data_experiment.nix {inherit pkgs;};
+      package_info_bioc_data_experiment = import ../nix_output/bioc_data_experiment.nix {inherit pkgs;};
       #package_info_bioc_data_annotation = {};
-      package_info_bioc_data_experiment = {};
+      #package_info_bioc_data_experiment = {};
       bc_version = builtins.trace ("bioconductor version: " + entry.bioconductor_version) entry.bioconductor_version;
       R = entry.R pkgs;
       flock =
@@ -151,6 +151,7 @@
                 "https://cran.r-project.org/src/contrib/Archive/${v.pname}/${tag}.tar.gz"
               ];
             };
+            repo = "cran";
           })
         (add_in_pname package_info_cran))
         // (lib.mapAttrs (tag: v:
@@ -159,10 +160,14 @@
             src = pkgs.fetchurl {
               sha256 = v.s;
               urls = [
+                "mirror://bioc/${bc_version}/bioc/src/contrib/${tag}.tar.gz"
+                "mirror://bioc/${bc_version}/bioc/src/contrib/Archive/${v.pname}/${tag}.tar.gz"
+                "mirror://bioc/${bc_version}/bioc/src/contrib/Archive/${tag}.tar.gz"
                 "http://bioconductor.org/packages/${bc_version}/bioc/src/contrib/${tag}.tar.gz"
                 "http://bioconductor.org/packages/${bc_version}{}/bioc/src/contrib/Archive/${v.pname}/${tag}.tar.gz"
               ];
             };
+            repo = "bioc_software";
           })
         (add_in_pname package_info_bioc_software))
         // (lib.mapAttrs (tag: v:
@@ -171,10 +176,11 @@
             src = pkgs.fetchurl {
               sha256 = v.s;
               urls = [
+                "mirror://bioc/${bc_version}/data/annotation/src/contrib/${tag}.tar.gz"
                 "http://bioconductor.org/packages/${bc_version}/data/annotation/src/contrib/${tag}.tar.gz"
-                #"http://bioconductor.org/packages/${bc_version}{}/bioc/src/contrib/Archive/${v.pname}/${tag}.tar.gz"
               ];
             };
+            repo = "bioc_data_annotation";
           })
         (add_in_pname package_info_bioc_data_annotation))
         // (lib.mapAttrs (tag: v:
@@ -183,10 +189,12 @@
             src = pkgs.fetchurl {
               sha256 = v.s;
               urls = [
+                "mirror://bioc/${bc_version}/data/experiment/src/contrib/${tag}.tar.gz"
                 "http://bioconductor.org/packages/${bc_version}/data/experiment/src/contrib/${tag}.tar.gz"
                 #"http://bioconductor.org/packages/${bc_version}{}/bioc/src/contrib/Archive/${v.pname}/${tag}.tar.gz"
               ];
             };
+            repo = "bioc_data_experiment";
           })
         (add_in_pname package_info_bioc_data_experiment));
 
@@ -200,20 +208,16 @@
           create_r_package_derivation (v
             // {
               buildInputs = map (dep: let
-                tagged_dep = dep + "_" + entry.pkgs.${dep};
+                tagged_dep = dep + "_" + (entry.pkgs.${dep} or (abort ("Missing dep for " + tag + " dep: " + dep)));
               in
                 package_derivations.${tagged_dep})
-              (v.r or []);
+              ((v.r or []) ++ (v.d.add_r_dependencies or []));
             }))
         package_info_with_src;
       # what packages (by name) were requested
       requested_pkg_names =
-        if (builtins.isBool r_pkg_names && r_pkg_names)
-        then
-          (builtins.attrNames (
-            lib.filterAttrs (k: v: !(v.broken or false))
-            entry.pkgs
-          ))
+        if (builtins.isString r_pkg_names && r_pkg_names == "cran")
+        then (builtins.attrNames entry.pkgs) # that's an attrSet name->version
         else r_pkg_names;
       # what package tags do these translate to at that date.
       r_pkg_tags =
@@ -221,72 +225,42 @@
         requested_pkg_names;
       # and what 'entries' (=package infos) are those
       requested_r_packages = map (x: package_derivations.${x}) r_pkg_tags;
+
+      # now if we're doing '_full', I only want the cran/bioc_software ones.
+      requested_r_packages_filtered =
+        if (builtins.isString r_pkg_names && r_pkg_names == "cran")
+        then (lib.filter (v: (!v.broken or false) && v.repo == "cran") requested_r_packages)
+        else requested_r_packages;
       r_wrapper = with pkgs;
         callPackage ./r/wrapper.nix {
           nixpkgs = pkgs;
           R = R;
           recommendedPackages = [];
-          packages = requested_r_packages;
+          packages = requested_r_packages_filtered;
         };
     in
       r_wrapper;
   in
-    # adte builds with a small example package set.
-    (lib.mapAttrs (k: v:
+    # date is a function taking a list of R package names - e.g. ["httr"]
+    (lib.mapAttrs (k: v: r_pkg_names:
       R_by_date {
         date = k;
-        r_pkg_names = ["httr"];
+        inherit r_pkg_names;
       })
     r_by_date_data)
     // (lib.mapAttrs' (k: v:
-      lib.attrsets.nameValuePair (k + "_full") (
-        R_by_date {
-          date = k;
-          #r_pkg_names = ["paxtoolsr"];
-          #r_pkg_names = ["waddR"];
-          r_pkg_names = [
-            #"kgrams"
-            #"patternize"
-            #"h2o"
-            #"string2path"
-            #"salso"
-            #"R.cache"
-            #     "data.table"
-            #     "glpkAPI"
-            #     "cuda.ml"
-            #     "fixest"
-            #"NxtIRFcore"
-            # "arrow"
-            #"Rmpi"
-            #"rawrr"
-            #"rsbml"
-            #"pins"
-            #"GPBayes"
-            #"httpuv"
-            #"vapour"
-        "missSBM"
-        "nloptr"
-        "terra"
-        "registr"
-        "imager"
-        "rpg"
-        "cytolib"
-        "rGEDI"
-        "GMMAT"
-        "rtiff"
-        "PythonInR"
-        "PoissonBinomial"
-        "RMySQL"
-        "RMariaDB"
-        "V8"
-          ];
-        }
-      ))
+      # _cran buidls all of cran on that date
+        lib.attrsets.nameValuePair (k + "_cran") (
+          R_by_date {
+            date = k;
+            r_pkg_names = "cran";
+          }
+        ))
     r_by_date_data)
     // {
       something = R_by_date {
-        date = "2019-10-30";
-        r_pkg_names = ["httr"];
+        date = "2022-04-26";
+        r_pkg_names = ["terra"];
       };
     };
 }

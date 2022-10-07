@@ -1,3 +1,4 @@
+# note that these are tags, so name_version (or plain name to blacklist all versions)
 # predates DESCRIPTION
 leaps_1.0-3
 lme_3.0b8a-2
@@ -15,9 +16,63 @@ splines_2.0-3
 splines_2.0-5
 tcltk_0.1-1
 vtcl_1.0-1
+
 # no file on bioconductor server but in packages
 domainsignatures_1.37.2
 iontree_1.23.1
 
 #rxode2 2.0.7 is up on cran, but 2.0.8 is in the archive?!
 rxode2_2.0.8
+
+# oracle oci not in nixpkgs, unfree
+ROracle
+# bloomberg, unfree
+Rblpapi
+
+# "needs OpenBUGS, not in nixpkgs. Or in ubuntu. And the website change log says it hasn't updated since 2014. And the ssl certificate is expired.",
+BRugs
+
+# compilation failure
+mined_1.0-2
+
+# unfree
+Rcplex
+
+# crypto, requires internet to build. 
+bitmexr
+
+# not in nixpkgs
+RQuantLib
+#R package managment (not necessary on Nix). Cannot open the connection to 'http://bioconductor.org/config.yaml'
+switchr 
+
+
+# can't find opencl in nixpkgs
+opencl
+
+# can't find SYMPHONY in nixpkgs
+Rsymphony
+
+# compilation failure
+RKHSMetaMod_1.1
+leidenAlg_1.0.3
+gaston_1.5.7
+mined_1.0-1
+fctbases_1.1.0
+
+# no cargo.lock in download
+baseflow_0.13.2
+
+# tcl error
+TTAinterfaceTrendAnalysis_1.5.8
+gWidgets2tcltk_1.0.8
+optrcdmaeAT
+optbdmaeAT
+soptdmaeA
+
+# no libkiwi
+elbird
+
+# build broken with mpi trouble
+pmclust-0.2-1
+pbdSLAP_0.3-2

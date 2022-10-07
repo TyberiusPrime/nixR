@@ -144,8 +144,7 @@ Maintainer: Kirill Müller <krlmlr+r@mailbox.org>
 Repository: CRAN
 Date/Publication: 2022-02-01 08:30:02 UTC
 ";
-    let should =
-        nixr::desc_parser::parse_desc(&desc, &(["Imports"].into_iter().collect()))?;
+    let should = nixr::desc_parser::parse_desc(&desc, &(["Imports"].into_iter().collect()))?;
 
     dbg!(&should);
     dbg!(nixr::parse_r_dependencies(should.get("Imports"))?);
@@ -284,6 +283,17 @@ impl DateIntervalSet {
     }
 }
 
+fn filter_unsuitable_packages(
+    input: Vec<DateRangePlus<PackageInfoWithSource>>,
+) -> Vec<DateRangePlus<PackageInfoWithSource>> {
+    input
+        .into_iter()
+        .filter(|package_info| {
+            package_info.element.desc.get("OS_type").map(|x| (&**x)) != Some("windows")
+        })
+        .collect()
+}
+
 fn assemble(config: &Config) -> Result<()> {
     let r_releases = retrieval::fetch_r_release_dates(config)?;
     let bioc_releases = retrieval::bioconductor_fetch_releases(config, BIOCONDUCTOR_URL)?;
@@ -304,18 +314,22 @@ fn assemble(config: &Config) -> Result<()> {
         &today().succ(), // right exclusive..
         cran_final_archive_dates,
     )?;
+    let cran_packages = filter_unsuitable_packages(cran_packages);
 
     let min_version = Version::from_str(MINIMUM_BIOCONDUCTOR_VERSION)?;
 
     let mut all_the_packages: HashMap<String, PackageInfoWithSource> = HashMap::new();
     let nix_r_by_date_path = config.nix_output_path.join("r_by_date.nix");
     let mut r_by_date: HashMap<String, NixValue> = HashMap::new();
+
+    let broken_packages: HashMap<String, String> = HashMap::new();
     for bioc_release in bioc_releases.iter() {
         if bioc_release.element.version < min_version {
             continue;
         }
 
         let bioc_packages = bioc_release.get_packages(config, &manual_date_overrides)?;
+        let bioc_packages = filter_unsuitable_packages(bioc_packages);
 
         let (packages, mut interval_set) = assemble_packages_during_bioconductor_release(
             &bioc_release,
@@ -325,6 +339,8 @@ fn assemble(config: &Config) -> Result<()> {
             &bioc_packages,
         )?;
 
+        let blacklist = config.get_blacklist()?;
+        // dbg!(&blacklist);
         let dates = vec![bioc_release.start_date, bioc_release.end_date.pred()]; // for now... full on later
                                                                                  //note that the dates are right exclusive, so we want to query the one before...
         for date in dates {
@@ -351,13 +367,67 @@ fn assemble(config: &Config) -> Result<()> {
             let hits: Vec<u32> = interval_set.query(&date)?;
             info!("\tpkg count: {}", hits.len());
             let mut days_packages = HashMap::new();
-            for ii in hits {
-                let p = &packages[ii as usize];
+            //collect all of them
+            for ii in &hits {
+                let p = &packages[*ii as usize];
                 all_the_packages.insert(p.element.tag(), p.element.clone());
                 days_packages.insert(
                     p.element.name.to_string(),
                     NixValue::Str(p.element.version.to_string()),
                 );
+            }
+            //first pass: filter blacklist and those not satisfied with the R version we're using
+            //for this date
+            for ii in &hits {
+                let p = &packages[*ii as usize];
+                if let Some(package_min_r_version) = p.element.min_r_version()? {
+                    if package_min_r_version > r_version.element {
+                        warn!(
+                            "Filtering {} - required R {}, but this bioconductor is on {}",
+                            p.element.tag(),
+                            package_min_r_version,
+                            r_version.element
+                        );
+                        days_packages.remove(&p.element.name);
+                        continue;
+                    }
+                }
+                if blacklist.contains(&p.element.tag()) || blacklist.contains(&p.element.name) {
+                    warn!("Filtering {} (blacklisted)", p.element.tag());
+                    days_packages.remove(&p.element.name);
+                    continue;
+                }
+            }
+
+            // some more passes to filter those with missing R dependencies
+            // has to happen after blacklist/R version filtering above
+            // this really should be a graph based approach
+            // instead of 'keep repeating until nothing moves'.
+            // but r dependencies are fairly flat, so I have yet to see it do more than 5
+            // iterations.
+            let mut any_removed = true;
+            let mut any_removed_counter = 1;
+            let mut already_removed = HashSet::new();
+            while any_removed {
+                info!("any_removed... {}", any_removed_counter);
+                any_removed_counter += 1;
+                any_removed = false;
+                for ii in &hits {
+                    let p = &packages[*ii as usize];
+                    if !already_removed.contains(&p.element.name) {
+                        for rdep in p.element.r_deps(&config.build_in_packages())?.iter() {
+                            if !days_packages.contains_key(rdep) {
+                                warn!(
+                                    "Filtering {} because of missing dependency {}",
+                                    p.element.name, rdep
+                                );
+                                already_removed.insert(p.element.name.to_string());
+                                days_packages.remove(&p.element.name);
+                                any_removed = true; // we get to try again, might go upstream
+                            }
+                        }
+                    }
+                }
             }
             let mut r_by_date_entry: HashMap<String, NixValue> = HashMap::new();
             r_by_date_entry.insert(
@@ -379,8 +449,10 @@ fn assemble(config: &Config) -> Result<()> {
     }
     let nix_packages_cran_path = config.nix_output_path.join("cran.nix");
     let nix_packages_bioc_software_path = config.nix_output_path.join("bioc_software.nix");
-    let nix_packages_bioc_data_annotation_path = config.nix_output_path.join("bioc_data_annotation.nix");
-    let nix_packages_bioc_data_experiment_path = config.nix_output_path.join("bioc_data_experiment.nix");
+    let nix_packages_bioc_data_annotation_path =
+        config.nix_output_path.join("bioc_data_annotation.nix");
+    let nix_packages_bioc_data_experiment_path =
+        config.nix_output_path.join("bioc_data_experiment.nix");
 
     let mut out_packages_cran: HashMap<String, NixValue> = HashMap::new();
     let mut out_packages_bioc_software: HashMap<String, NixValue> = HashMap::new();
@@ -418,8 +490,12 @@ fn assemble(config: &Config) -> Result<()> {
             Repo::BiocSoftware(_) => {
                 out_packages_bioc_software.insert(tag.to_string(), this_out.into())
             }
-            Repo::BiocAnnotationData(_) => out_packages_bioc_data_annotation.insert(tag.to_string(), this_out.into()),
-            Repo::BiocExperimentData(_) => out_packages_bioc_data_experiment.insert(tag.to_string(), this_out.into()),
+            Repo::BiocAnnotationData(_) => {
+                out_packages_bioc_data_annotation.insert(tag.to_string(), this_out.into())
+            }
+            Repo::BiocExperimentData(_) => {
+                out_packages_bioc_data_experiment.insert(tag.to_string(), this_out.into())
+            }
         };
     }
     write_from_bytes_iter(
@@ -453,7 +529,7 @@ fn assemble(config: &Config) -> Result<()> {
         ]
         .into_iter(),
     )?;
-   write_from_bytes_iter(
+    write_from_bytes_iter(
         &nix_packages_bioc_data_experiment_path,
         [
             "#s = sha256; r=r packages; b=non r build inputs; c=compile, d=derivation arguments; \n".as_bytes(),

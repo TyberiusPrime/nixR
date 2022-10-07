@@ -4,7 +4,7 @@
 
 # unlike other intervals, these are right inclusive!
 # first 'version matching' entry wins, so be mindfull of the order
-#["curl_3.0.."] 
+#["curl_3.0.."]
 #preConfigure = "export CURL_INCLUDES=${pkgs.curl}/include"
 
 ["openssl_0.9.7..1.4.5"]
@@ -12,14 +12,15 @@ OPENSSL_INCLUDES = "''${pkgs.openssl}/include''"
 LD_LIBRARY_PATH = "''${pkgs.openssl.out}/lib''"
 
 ["openssl_2.0.0.."]
-PKGCONFIG_CFLAGS = "''-I${pkgs.openssl.dev}/include''"
-PKGCONFIG_LIBS = "''-Wl,-rpath,${pkgs.openssl.out}/lib -L${pkgs.openssl.out}/lib -lssl -lcrypto''"
+#PKGCONFIG_CFLAGS = "''-I${pkgs.openssl.dev}/include''"
+#PKGCONFIG_LIBS = "''-Wl,-rpath,${pkgs.openssl.out}/lib -L${pkgs.openssl.out}/lib -lssl -lcrypto''"
+#add_nativeBuildInputs = "[pkgconfig openssl_1_1]"
 
 ["Java_1.0.6.."]
 preConfigure= """'''
-                export JAVA_CPPFLAGS=-I${pkgs.jdk}/include/
-                export JAVA_HOME=${pkgs.jdk}
-        '''"""
+	export JAVA_CPPFLAGS=-I${pkgs.jdk}/include/
+	export JAVA_HOME=${pkgs.jdk}
+'''"""
 add_nativeBuildInputs = "[pkgs.make]"
 
 ["Nifti_1.4.0.."]
@@ -47,6 +48,7 @@ postPatch = """''
 ''"""
 preConfigure= "''export NOT_CRAN=true\n''"
 CargoLockInSource = "''string2path/src/rust/Cargo.lock''"
+
 #add_nativeBuildInputs =  "(importCargo { lockFile = \"./rust/Cargo.lock\"; inherit pkgs; }).cargoHome"
 
 ["salso_.."]
@@ -55,15 +57,80 @@ postPatch = """
 """
 CargoLockInSource = "''salso/src/rustlib/Cargo.lock''"
 
+["ymd_.."]
+#postPatch = """
+	#''substituteInPlace tools/cargo.R --replace "env <- c(env, CARGO_HOME=n(cargo_home))" ""''
+#"""
+CargoLockInSource = "''ymd/src/rust/Cargo.lock''"
+NOT_CRAN="true"
+
+
 #add_nativeBuildInputs =  "(importCargo { lockFile = ./../cargos/{pkg}/Cargo.lock; inherit pkgs; }).cargoHome"
 
 ["precautionary_.."]
 #add_nativeBuildInputs =  "(importCargo { lockFile = ./../cargos/{pkg}/Cargo.lock; inherit pkgs; }).cargoHome"
 
-["R.cache_0.15.0..01.15.0"]
+["R.cache_.."]
 HOME = "''$TMPDIR''"  # cache will be recreated if missing during runtime, so no problem here
 
+# which I could hotfix all these R.cache  downstreams.
+
+["pins_.."]
+HOME = "''$TMPDIR''"  #
+
+["TBRDist_.."]
+HOME = "''$TMPDIR''"  #
+
+["TreeDist_.."]
+HOME = "''$TMPDIR''"  #
+
+["Quartet_.."]
+HOME = "''$TMPDIR''"  #
+
+["TotalCopheneticIndex_.."]
+HOME = "''$TMPDIR''"  #
+
+["R.filesets_.."]
+HOME = "''$TMPDIR''"  #
+
+["EstMix_.."]
+HOME = "''$TMPDIR''"  #
+
+["R.rsp_.."]
+HOME = "''$TMPDIR''"  #
+
+["precommit_.."]
+HOME = "''$TMPDIR''"
+
+
+["scholar_.."]
+HOME = "''$TMPDIR''"
+
+["DiceView_.."]
+HOME = "''$TMPDIR''"
+
+["TreeTools_.."]
+HOME = "''$TMPDIR''"
+
+["PSCBS_.."]
+HOME = "''$TMPDIR''"
+
+["repmis_.."]
+HOME = "''$TMPDIR''"
+
+["acs_.."]
+postPatch = "''patchShebangs configure''"
+
+["cuml4r_.."]
+postPatch = "''patchShebangs configure''"
+
+["ijtiff_.."]
+postPatch = "''patchShebangs configure''"
+
 ["data.table_.."]
+postPatch = "''patchShebangs configure''"
+
+["ps_.."]
 postPatch = "''patchShebangs configure''"
 
 ["cuda.ml_.."]
@@ -83,25 +150,316 @@ add_nativeBuildInputs = "[(pkgs.callPackage ../nix/packages/arrow_7.0.0/default.
 
 
 ["Rmpi_.."]
-add_nativeBuildInputs = "[pkgs.openssh pkgs.openmpi]"
+add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
+
+["RcppCNPy_.."]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+
+["divest_.."]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+
+["affyio_.."]
+add_nativeBuildInputs = "[zlib]"
 
 ["Rsmbl_.."]
 add_nativeBuildInputs = "[(pkgs.callPackage ../nix/packages/libSMBL.nix {})]"
 
 
 ["vapour_0.8.5.."]
-preConfigure = """
-''
-ldconfig -v
-substituteInPlace configure --replace "2> errors.txt" ""
-''
-"""
-add_nativeBuildInputs = "[pkgs.sqlite.out pkgs.sqlite pkgs.geos]"
+# preConfigure = """
+# ''
+# substituteInPlace configure --replace "2> errors.txt" ""
+# ''
+# """
+add_nativeBuildInputs = "[pkgconfig pkgs.sqlite.out pkgs.sqlite pkgs.geos]"
 
 
 ["RNifti_1.4.0..1.4.0"]
-# add_nativeBuildInputs = "[pkgs.autoreconfHook]"
-failureHook = """''
-echo 'Failed :('
-cat src/Makevars
+patches = "[../nix/patches/Rnifti_1.4.0_zlib_objects.patch]"
+
+
+["tkrplot_.."]
+add_nativeBuildInputs = "[tk]"
+
+["island_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["SymTS_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["CLVTools_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["RCPPGsl_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["RcppZiggurat_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["BNSP_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+
+["RPostgreSQL_.."]
+add_nativeBuildInputs = "[postgresql]"
+
+["HiCseg_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["KFKSDS_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["OpenCL_.."]
+add_nativeBuildInputs = "[opencl-headers]"
+
+["RSclient_.."]
+add_nativeBuildInputs = "[pkgconfig openssl]"
+
+["RcppCWB_.."]
+add_nativeBuildInputs = "[pkgconfig openssl pcre glib]"
+
+["RcppParallel_.."]
+postPatch = "''patchShebangs configure''"
+
+["RcppGetconf_.."]
+postPatch = "''patchShebangs configure''"
+
+["Rhdf5lib_.."]
+add_nativeBuildInputs = "[zlib]"
+
+["rtk_.."]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+
+["Rsymphony_.."]
+add_nativeBuildInputs = "[pkgconfig doxygen graphviz subversion]"
+
+["RcppCGAL_.."]
+add_nativeBuildInputs = "[pkgconfig cgal]"
+
+
+["BayesSAE_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["hSDM_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["mBvs_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["pbdMPI_.."]
+add_nativeBuildInputs = "[pkgconfig openmpi openssh]"
+
+["hicseg_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["bbl_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["catSurv_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["ltable_.."]
+add_nativeBuildInputs = "[pkgconfig gsl]"
+
+["mixcat_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["mvabund_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["mashr_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["loon_.."]
+add_nativeBuildInputs = "[x11]"
+
+["bio3d_.."]
+add_nativeBuildInputs = "[zlib]"
+
+["unrtf_.."]
+add_nativeBuildInputs = "[pkgconfig zlib bzip2 lzma pcre icu]"
+
+["SemiCompRisks_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["psbcGroup_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+["littler_.."]
+add_nativeBuildInputs = "[pkgconfig bzip2 zlib lzma]"
+
+
+["RVowpalWabbit_.."]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+configureFlags = """[
+                "--with-boost=${pkgs.boost.dev}"
+                "--with-boost-libdir=${pkgs.boost.out}/lib"
+]"""
+
+["rJava_.."]
+add_nativeBuildInputs = "[ zlib bzip2 icu lzma pcre jdk libzip ]"
+preConfigure= """''
+	export JAVA_CPPFLAGS=-I${pkgs.jdk}/include/
+	export JAVA_HOME=${pkgs.jdk}
+''"""
+
+["optbdmaeAT_.."]
+add_nativeBuildInputs = "[x11 tk]"
+
+["soptdmaeA_.."]
+add_nativeBuildInputs = "[x11 tk]"
+
+["optrcdmaeAT_.."]
+add_nativeBuildInputs = "[x11 tk]"
+
+["qpdf_.."]
+add_nativeBuildInputs = "[pkgconfig zlib libjpeg]"
+
+["hipread_.."]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+
+["rmumps_.."]
+add_nativeBuildInputs = "[zlib]"
+
+["vcfR_.."]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+
+["valse_.."]
+add_nativeBuildInputs = "[pkgconfig gsl]"
+patches = "[../nix/patches/valse.patch]"
+
+["nloptr_.."]
+add_nativeBuildInputs = "[pkgconfig nlopt]"
+
+["gWidgets2tcltk_.."]
+add_nativeBuildInputs = "[x11]"
+
+["clustermq_.."]
+add_nativeBuildInputs = "[pkgconfig zeromq]"
+
+["rrd_.."]
+add_nativeBuildInputs = "[pkgconfig rrdtool]"
+
+["RmecabKo_.."]
+add_nativeBuildInputs = "[mecab]"
+
+["RcppMeCab_.."]
+add_nativeBuildInputs = "[mecab]"
+
+["exifr_.."]
+add_nativeBuildInputs = "[exiftool]"
+
+["registr_.."]
+add_nativeBuildInputs = "[zlib bzip2 lzma]"
+
+["elbird_.."]
+add_nativeBuildInputs = "[which coreutils git]"
+
+
+["trajeR_.."]
+postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
+
+["iriR_.."]
+patches = "[../nix/patches/iriR.patch]"
+
+["RKEELjars_.."]
+patches = "[../nix/patches/RKEELjars.patch]"
+
+["spiR_.."]
+patches = "[../nix/patches/spiR.patch]"
+
+["x13binary_1.1.57-3.."]
+patches = "[../nix/patches/x13binary_1.57.patch]"
+X13BINARY= """builtins.fetchurl{
+url = "https://github.com/x13org/x13prebuilt/raw/master/v1.1.57/linux/64/x13ashtml";
+sha256 = "0lpn41lvj4k38ld1w2v9q99gm4bs35ja2zygrndax12rk2a6qjf4";
+}"""
+
+
+["googleformr_.."]
+patches = "[../nix/patches/googleformr.patch]"
+
+["packagefinder_.."]
+patches = "[../nix/patches/packagefinder.patch]"
+
+["Rpostgres_.."]
+postPatch = """''patchShebangs configure
+	substituteInPlace configure --replace "/bin/bash" "${pkgs.bash}/bin/bash"
+''"""
+add_nativeBuildInputs = "[pkgconfig postgresql]"
+
+
+["writexl_.."]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+
+["sparkwarc_.."]
+add_nativeBuildInputs = "[zlib]"
+
+["XVector_.."]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+
+["snpStats_.."]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+
+["largeList_.."]
+add_nativeBuildInputs = "[zlib]"
+
+["apsimx_.."]
+add_nativeBuildInputs = "[mono which]"
+
+["Rhtslib_.."]
+add_nativeBuildInputs = "[pkgconfig zlib bzip2 lzma curl autoconf]"
+
+["tiledb_.."]
+add_nativeBuildInputs = "[pkgconfig tiledb]"
+
+["symengine_.."]
+add_nativeBuildInputs = "[cmake which]"
+
+["terra_1.5-21.."]
+PROJ_LIB =  "''${pkgs.proj}/share/proj''"
+add_nativeBuildInputs = "[cmake which proj.dev]"
+
+["TTAinterfaceTrendAnalysis_.."]
+add_nativeBuildInputs = "[x11]"
+
+["spectralGraphTopology_.."]
+add_r_dependencies = "[\"CVXR\"]"
+
+["rhdf5lib_.."]
+add_nativeBuildInputs = "[hdf5-cpp which zlib]"
+
+# todo : avidaR - tries webaccess / patch? /nix/store/a5nj0f4m82125n628w5jjcnh35lcd3zx-r-avidaR-1.0.1.drv
+
+["hdf5r_.."]
+add_nativeBuildInputs = "[hdf5.dev]"
+
+["commonsMath_.."]
+patches = "[../nix/patches/commonsMath.patch]"
+
+
+["gifski_.."]
+CargoLockInSource = "''gifski/src/myrustlib/Cargo.lock''"
+postPatch= """''
+substituteInPlace src/Makevars --replace "cargo build" "cargo build --offline"
+substituteInPlace src/Makevars --replace "export CARGO_HOME=\\$(PWD)/.cargo" ""
+''
+"""
+
+
+["rbedrock_.."]
+add_nativeBuildInputs = "[which]"
+
+
+["rcrypt_.."]
+add_nativeBuildInputs = "[gnupg]"
+
+["websocket_1.4.1.."]
+add_nativeBuildInputs = "[openssl_1_1]"
+
+
+["xslt_.._"]
+preConfigure = """''
+  export LIBXML_CFLAGS=`pkg-config --cflags libxml-2.0`
+  export LIBXML_LIBS=`pkg-config --libs libxml-2.0`
 ''"""

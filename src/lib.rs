@@ -77,11 +77,15 @@ fn load_derivation_args(override_path: &Path) -> Result<DerivationArgs> {
         let parsed = parsed.with_context(||format!("Could not parse derivation_args version target statement '{}'. Syntax is pkg_<start_version>..<stop_version>. Versions can be empty, so ff you want to match all version, use 'pkgs_..'", k))?;
         let pkg = &parsed[1];
         let start: Option<Version> = match parsed.get(2) {
-            Some(x) => Some(Version::from_str(x.as_str())?),
+            Some(x) => Some(
+                Version::from_str(x.as_str()).with_context(|| format!("Parsing start of {}", k))?,
+            ),
             None => None,
         };
         let stop: Option<Version> = match parsed.get(3) {
-            Some(x) => Some(Version::from_str(x.as_str())?),
+            Some(x) => Some(
+                Version::from_str(x.as_str()).with_context(|| format!("Parsing stop of {}", k))?,
+            ),
             None => None,
         };
         let entry = out.entry(pkg.to_string()).or_insert_with(|| Vec::new());
@@ -194,7 +198,7 @@ impl Config {
         date_paths
     }
 
-    fn get_blacklist(&self) -> Result<HashSet<String>> {
+    pub fn get_blacklist(&self) -> Result<HashSet<String>> {
         let r = ex::fs::read_to_string(self.override_path.join("blacklist.txt"))?;
         let mut res = HashSet::new();
         for line in r.split('\n') {
@@ -361,7 +365,7 @@ impl BioconductorRelease {
             //Repo::BiocSoftware(self.element.version.to_owned()),
             &manual_date_overrides,
             &self.end_date,
-            HashMap::new(), // bioconductor doesn't archive within a release. I hope.
+            HashMap::new(), // bioconductor doesn't archive/eol within a release. I hope.
         )?;
         Ok(bioc_packages)
     }
@@ -518,6 +522,7 @@ pub static DEFAULT_DESC_FIELDS_TO_PARSE: Lazy<HashSet<&'static str>> = Lazy::new
 });
 
 pub static REGEXPS_PACKAGE_NAME: Lazy<Regex> = lazy_regex!("^[A-Za-z0-9.]+");
+pub static REGEXPS_MIN_R_VERSION_SEARCH: Lazy<Regex> = lazy_regex!("R \\(>= ([0-9.]+)\\)");
 
 pub fn parse_r_dependencies(input: Option<&String>) -> Result<Vec<String>> {
     let mut res = Vec::new();
@@ -585,6 +590,19 @@ impl PackageInfoWithSource {
         Ok(res)
     }
 
+    pub fn min_r_version(&self) -> Result<Option<Version>> {
+        if let Some(depends) = self.desc.get("Depends") {
+            let mut hits = REGEXPS_MIN_R_VERSION_SEARCH.captures_iter(depends);
+            if let Some(hit) = hits.next() {
+                let str_ver = &hit[1];
+                return Ok(Some(Version::from_str(str_ver).with_context(|| {
+                    format!("R version dpendency parsing failure in {:?}", self)
+                })?));
+            }
+        }
+        Ok(None)
+    }
+
     pub fn system_deps(&self, lookup: &Vec<(String, String)>) -> Result<Vec<String>> {
         let desc_reqs = self.desc.get("SystemRequirements");
         let mut res = HashSet::new();
@@ -597,8 +615,10 @@ impl PackageInfoWithSource {
                 }
             }
         }
+        let mut res: Vec<_> = res.into_iter().collect();
+        res.sort();
 
-        Ok(res.into_iter().collect())
+        Ok(res)
     }
 }
 

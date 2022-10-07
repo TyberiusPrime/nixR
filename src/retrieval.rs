@@ -65,13 +65,13 @@ pub fn update_cran(
     })?;
     let final_archive_dates = cran_fetch_final_archival_dates(config, &base_url)?;
 
-    let blacklist = config.get_blacklist()?;
+    //let blacklist = config.get_blacklist()?;
     let out: Result<Vec<PackageInfoWithSource>> = infos
         .into_iter()
         // blacklist had been filtered
         // but changes  would require rebuilding
         // so we do it agian
-        .filter(|pi| !blacklist.contains(&pi.tag()))
+        //.filter(|pi| !(blacklist.contains(&pi.tag()) || blacklist.contains(&pi.name)))
         .map(|pi| PackageInfoWithSource::new_from_package_info(pi, Repo::Cran))
         .collect();
     //trust is ok, paranoia is better...
@@ -220,7 +220,7 @@ pub fn fetch_bioconductor_release_annotation_data(
         &str_version,
         &out_path,
         is_finished_release,
-        &Repo::BiocAnnotationData(version.to_owned())
+        &Repo::BiocAnnotationData(version.to_owned()),
     )?;
     without_source
         .into_iter()
@@ -245,7 +245,7 @@ pub fn fetch_bioconductor_release_experiment_data(
         &str_version,
         &out_path,
         is_finished_release,
-        &Repo::BiocExperimentData(version.to_owned())
+        &Repo::BiocExperimentData(version.to_owned()),
     )?;
     without_source
         .into_iter()
@@ -418,11 +418,11 @@ fn fetch_package_infos(
     let known_descs: HashMap<String, String> = load_descs(config, &repo.to_string())?;
     ex::fs::create_dir_all(&PathBuf::from("cache"))?;
 
-    let blacklist = config.get_blacklist()?;
+    //let blacklist = config.get_blacklist()?;
 
     let current_info: Vec<Result<PackageInfo>> = current
         .par_iter()
-        .filter(|&tag| !blacklist.contains(tag))
+        //.filter(|&tag| !blacklist.contains(tag))
         .map(|tag| {
             match download_hash_and_desc(
                 base_url,
@@ -447,7 +447,7 @@ fn fetch_package_infos(
 
     let archived_info: Vec<Result<PackageInfo>> = archived
         .par_iter()
-        .filter(|&tag| !blacklist.contains(tag))
+        //.filter(|&tag| !blacklist.contains(tag))
         .filter(|&tag| !current.contains(tag))
         .map(|tag| {
             match download_hash_and_desc(
@@ -1063,3 +1063,4 @@ pub fn get_nixpkgs_releases() -> Result<Vec<DateRangePlus<Version>>> {
         &today().succ(), // right exclusive..
     ))
 }
+

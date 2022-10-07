@@ -1,0 +1,24 @@
+diff --git a/R/scalaDevelDownloadJARs.R b/R/scalaDevelDownloadJARs.R
+index b725d0d..e5298ca 100644
+--- a/R/scalaDevelDownloadJARs.R
++++ b/R/scalaDevelDownloadJARs.R
+@@ -21,7 +21,18 @@ scalaDevelDownloadJARs <- function(description, scalaMajorVersion="", prefix="ht
+     artifact <- cells[2]
+     version  <- cells[3]
+     jar <- sprintf("%s%s/%s/%s/%s.jar",prefix,group,artifact,version,paste(artifact,version,sep="-"))
+-    download.file(jar, file.path(destDir, basename(jar)), mode="wb")
++    print("try to copy from nix provided jars. If it fails, attemtp download (which will fail}, but you can then go and update the nix package")
++    found = F
++    for (env in Sys.getenv()) {
++	if (endsWith(env, basename(jar))) {
++           file.copy(env, file.path(destDir, basename(jar)))
++           found = T
++           break
++	}
++    }
++    if (!found) {
++      download.file(jar, file.path(destDir, basename(jar)), mode="wb")
++    }
+   }
+ }
+ 
