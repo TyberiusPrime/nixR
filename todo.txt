@@ -1,0 +1,5 @@
+* symlinking -> replace with smart 'look for last revision' functionality
+(don't make the symlinks..)
+* replace nixpkgs flake imports with tarballs
+  otherwise we fetch all of them by necessity
+* bioconductor, don't reparse when 'finished' and parsed.bincode.gz available
