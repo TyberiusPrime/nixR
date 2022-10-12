@@ -11,9 +11,6 @@ Rblpapi
 # "needs OpenBUGS, not in nixpkgs. Or in ubuntu. And the website change log says it hasn't updated since 2014. And the ssl certificate is expired.",
 BRugs
 
-# compilation failure
-mined_1.0-2
-
 # unfree
 Rcplex
 
@@ -26,35 +23,19 @@ RQuantLib
 #R package managment (not necessary on Nix). Cannot open the connection to 'http://bioconductor.org/config.yaml'
 switchr 
 
-
 # can't find opencl in nixpkgs
 opencl
 
 # can't find SYMPHONY in nixpkgs
 Rsymphony
 
-# compilation failure
-RKHSMetaMod_1.1
-leidenAlg_1.0.3
-gaston_1.5.7
-mined_1.0-1
-fctbases_1.1.0
-
 # no cargo.lock in download
 baseflow_0.13.2
-
-# tcl error
-TTAinterfaceTrendAnalysis_1.5.8
-gWidgets2tcltk_1.0.8
-optrcdmaeAT
-optbdmaeAT
-soptdmaeA
 
 # no libkiwi
 # and libwiki compilation needs LFS,
 # and well, that appears broken in fetchgit
-#elbird
+elbird
 
 # can't get it to find proj_h. during configure & compilation. Probably patachble
-terra_1.5-21
 

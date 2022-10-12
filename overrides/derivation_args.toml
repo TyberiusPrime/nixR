@@ -574,17 +574,11 @@ add_buildInputs = "[tiledb]"
 add_nativeBuildInputs = "[cmake which]"
 
 # I can't get this to correctly find proj
-# ["terra_1.5-21.."]
-# installFlags = """
-# [
-# "--with-proj-include=${pkgs.proj.dev}/include"
-# "--with-proj-lib=${pkgs.proj}/lib"
-# "--with-proj-share=${pkgs.proj}/share/proj"
-# "--with-proj-api=no"
-# ]
-# """
-# IgnoreSystemRequirement="true"
-# add_nativeBuildInputs = "[pkgconfig cmake which proj_7.dev proj_7.out geos gdal sqlite]"
+["terra_1.5-21.."]
+#CFLAGS='"-I${pkgs.zlib.dev}/include"'
+IgnoreSystemRequirement="true"
+add_nativeBuildInputs = "[pkgconfig proj gdal geos sqlite]"
+add_buildInputs = "[gettext sqlite proj]"
 
 ["TTAinterfaceTrendAnalysis_.."]
 add_nativeBuildInputs = "[x11]"
@@ -842,5 +836,34 @@ patches = "[../nix/patches/nanonext_0.4.0.patch]"
 add_nativeBuildInputs = "[cmake pkgconfig (pkgs.callPackage ../nix/packages/libKiwi_0.11.2.nix {})]"
 add_buildInputs = "[(pkgs.callPackage ../nix/packages/libKiwi_0.11.2.nix {})]"
 
+["gaston_.."]
+add_nativeBuildInputs = "[zlib]"
+add_buildInputs = "[zlib]"
+
+["rflsgen_1.0.0.."]
+JAR_SRC = """fetchurl {
+	url = "https://github.com/dimitri-justeau/flsgen/releases/download/v1.1.0/flsgen-1.1.0.jar";
+	sha256 = "sha256-MN3UZQnNPakIqbMHUrL77VB6cRnWiI1jNT5edcJgRp8=";
+}"""
+patches = "[../nix/patches/rflsgen.patch]"
+
+["robis_.."]
+patches = "[../nix/patches/robis.patch]"
+
+["mined_.."]
+patches = "[../nix/patches/mined.patch]"
+
+["fctbases_.."]
+patches = "[../nix/patches/fctbases.patch]"
+
+["RKHSMetaMod_.."]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+
+
+["leidenAlg_.."]
+add_nativeBuildInputs = "[pkgconfig gmp]"
+add_buildInputs = "[gmp]"
 
 

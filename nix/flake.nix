@@ -260,8 +260,7 @@
     // {
       something = R_by_date {
         date = "2022-04-26";
-        r_pkg_names = ["elbird"]; #
-        # RclusTool RcmdrPllugin.PcaRobust biplotbootGUI cncaGUI forensim multibiplotGUI uHMM
+        r_pkg_names = ["optbdmaeAT"]; #
 
 
 

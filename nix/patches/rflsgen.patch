@@ -1,0 +1,12 @@
+diff --git a/R/zzz.R b/R/zzz.R
+index 77d699a..781f072 100644
+--- a/R/zzz.R
++++ b/R/zzz.R
+@@ -12,6 +12,7 @@
+   }
+   # Download flsgen jar if not already downloaded
+   jar_path <- file.path(libname, pkgname, "java", "flsgen-1.1.0.jar")
++  file.copy(Sys.getenv("JAR_SRC"), jar_path);
+   if (!file.exists(jar_path)) {
+     old_options <- options(timeout = max(1000, getOption("timeout")))
+     on.exit(options(old_options))

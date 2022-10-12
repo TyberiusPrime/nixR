@@ -1,0 +1,12 @@
+diff --git a/src/mathfunc.cpp b/src/mathfunc.cpp
+index cb617f0..fa3071c 100644
+--- a/src/mathfunc.cpp
++++ b/src/mathfunc.cpp
+@@ -53,6 +53,7 @@ ComplexVector IFFT(ComplexVector& x){
+ /*
+ * Omega function
+ */
++#define PI 3.14159
+ double calOmega(double x){
+   return 2.0 * PI * PI * (x * x - x + 1.0 / 6.0);
+ } 
