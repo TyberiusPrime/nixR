@@ -1,0 +1,30 @@
+diff --git a/configure b/configure
+index 2d321cb..9eeb33d 100755
+--- a/configure
++++ b/configure
+@@ -66,9 +66,9 @@ elif [ -d "/usr/local/opt/nng" ]; then
+ else
+   echo "prior system libnng installation not found"
+   echo "preparing to download and build library from source..."
+-  curl -L https://github.com/nanomsg/nng/archive/refs/tags/v$LIB_VER.tar.gz -o nng.tar.gz
+-  gzip -dc nng.tar.gz | tar -xf -
+-  rm -f nng.tar.gz
++  #curl -L https://github.com/nanomsg/nng/archive/refs/tags/v$LIB_VER.tar.gz -o nng.tar.gz
++  gzip -dc $NNG_SRC | tar -xf -
++  # rm -f nng.tar.gz
+   cd nng-$LIB_VER
+   mkdir build
+   cd build
+@@ -119,9 +119,9 @@ if [ $? -ne 0 ]; then
+   else
+     echo "Attempt to use system libnng failed"
+     echo "Preparing to download and build library from source..."
+-    curl -L https://github.com/nanomsg/nng/archive/refs/tags/v$LIB_VER.tar.gz -o nng.tar.gz
+-    gzip -dc nng.tar.gz | tar -xf -
+-    rm -f nng.tar.gz
++    #curl -L https://github.com/nanomsg/nng/archive/refs/tags/v$LIB_VER.tar.gz -o nng.tar.gz
++    gzip -dc $NNG_SRC | tar -xf -
++    #rm -f nng.tar.gz
+     cd nng-$LIB_VER
+     mkdir build
+     cd build

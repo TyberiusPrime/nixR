@@ -459,7 +459,8 @@ add_nativeBuildInputs = "[pkgconfig zlib]"
 add_buildInputs = "[zlib]"
 
 ["rmumps_.."]
-add_nativeBuildInputs = "[zlib]"
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
 
 ["vcfR_.."]
 add_nativeBuildInputs = "[zlib]"
@@ -500,10 +501,6 @@ add_nativeBuildInputs = "[exiftool]"
 ["registr_.."]
 add_nativeBuildInputs = "[pkgconfig zlib bzip2 lzma icu]"
 add_buildInputs = "[zlib bzip2 lzma icu]"
-
-["elbird_.."]
-add_nativeBuildInputs = "[which coreutils git]"
-
 
 ["trajeR_.."]
 postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
@@ -738,6 +735,15 @@ configureFlags = """[
 	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
 ]"""
 
+["pbdSLAP_.."]
+add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
+configureFlags = """[
+	"--with-Rmpi-type=OPENMPI"
+	"--with-Rmpi-include=${pkgs.openmpi}/include"
+	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
+]"""
+
+
 
 ["kazaam_.."]
 add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
@@ -819,5 +825,22 @@ patches = "[../nix/patches/happign.patch]"
 
 ["worldfootballR_.."]
 patches = "[../nix/patches/worldfootballR.patch]"
+
+
+["nanonext_0.4.0..0.4.0"]
+add_nativeBuildInputs = "[cmake]"
+NNG_SRC= """
+pkgs.fetchurl {
+	url = "https://github.com/nanomsg/nng/archive/refs/tags/v1.5.2.tar.gz";
+	sha256 = "sha256-+LJauGc4hksfLjEo6LratYFRD6gIX/XKm7mA0xczTEY=";
+	}
+"""
+patches = "[../nix/patches/nanonext_0.4.0.patch]"
+
+
+["elbird_0.2.3..0.2.3"]
+add_nativeBuildInputs = "[cmake pkgconfig (pkgs.callPackage ../nix/packages/libKiwi_0.11.2.nix {})]"
+add_buildInputs = "[(pkgs.callPackage ../nix/packages/libKiwi_0.11.2.nix {})]"
+
 
 

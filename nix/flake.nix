@@ -260,7 +260,7 @@
     // {
       something = R_by_date {
         date = "2022-04-26";
-        r_pkg_names = ["loon.ggplot"]; #
+        r_pkg_names = ["elbird"]; #
         # RclusTool RcmdrPllugin.PcaRobust biplotbootGUI cncaGUI forensim multibiplotGUI uHMM
 
 

@@ -51,18 +51,10 @@ optbdmaeAT
 soptdmaeA
 
 # no libkiwi
-elbird
-
-# build broken with mpi trouble
-pmclust-0.2-1
-pbdSLAP_0.3-2
-
-
-# needs libseq, not in nixpkgs
-rmumps
+# and libwiki compilation needs LFS,
+# and well, that appears broken in fetchgit
+#elbird
 
 # can't get it to find proj_h. during configure & compilation. Probably patachble
 terra_1.5-21
 
-# nng not in nixpkgs
-nanonext
