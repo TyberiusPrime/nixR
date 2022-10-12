@@ -1,0 +1,22 @@
+diff --git a/R/init.R b/R/init.R
+index 50d5104..3dbffae 100644
+--- a/R/init.R
++++ b/R/init.R
+@@ -9,8 +9,9 @@
+ .onAttach <- function(libname, pkgname) {
+ 
+    if (!has_internet()) {
+-      stop("No internet connection.")
++      warning("No internet connection.")
+    }
++   else {
+ 
+    # Last actu
+ 
+@@ -43,5 +44,6 @@
+    }
+ 
+    reset_config()
++   }
+ 
+ }

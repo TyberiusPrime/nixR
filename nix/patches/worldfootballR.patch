@@ -1,0 +1,21 @@
+diff --git a/R/fotmob_leagues.R b/R/fotmob_leagues.R
+index 683fd36..97923d5 100644
+--- a/R/fotmob_leagues.R
++++ b/R/fotmob_leagues.R
+@@ -1,9 +1,16 @@
+ 
+ ## TODO: Cache this.
+ .fotmob_load_csv <- function(suffix) {
++  tryCatch (
+   read.csv(
+     sprintf("https://raw.githubusercontent.com/JaseZiv/worldfootballR_data/master/raw-data/%s", suffix),
+     stringsAsFactors = FALSE
++  ), 
++  error = function(e) {
++      print("could not access internet")
++      print(e)
++      e
++  }
+   )
+ }
+ 

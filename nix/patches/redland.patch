@@ -1,0 +1,24 @@
+diff --git a/configure b/configure
+index a088286..d61ad0b 100755
+--- a/configure
++++ b/configure
+@@ -6,7 +6,7 @@
+ # R CMD INSTALL --configure-vars='INCLUDE_DIR=/.../include LIB_DIR=/.../lib'
+ 
+ # Library settings
+-PKG_CONFIG_NAME="redland"
++PKG_CONFIG_NAME="redland raptor2 rasqal"
+ PKG_DEB_NAME="librdf0-dev"
+ PKG_RPM_NAME="redland-devel"
+ PKG_BREW_NAME="redland"
+@@ -50,7 +50,9 @@ CFLAGS=$(${R_HOME}/bin/R CMD config CFLAGS)
+ CPPFLAGS=$(${R_HOME}/bin/R CMD config CPPFLAGS)
+ 
+ # Test configuration
+-echo "#include $PKG_TEST_HEADER" | ${CC} ${CPPFLAGS} ${PKG_CFLAGS} ${CFLAGS} -E -xc - >/dev/null 2>&1 || R_CONFIG_ERROR=1;
++echo "Here comes the test. $PKG_TEST_HEADER  ${CC} ${CPPFLAGS} ${PKG_CFLAGS} ${CFLAGS}"
++echo "#include $PKG_TEST_HEADER" | ${CC} ${CPPFLAGS} ${PKG_CFLAGS} ${CFLAGS} -E -xc - || R_CONFIG_ERROR=1;
++echo "Done tests"
+ 
+ # Customize the error
+ if [ $R_CONFIG_ERROR ]; then

@@ -1,0 +1,19 @@
+diff --git a/R/aaa.R b/R/aaa.R
+index 048cf56..70fbf77 100644
+--- a/R/aaa.R
++++ b/R/aaa.R
+@@ -15,6 +15,7 @@
+ 
+   # Install and Use default scheme ------------------------------------------
+ 
++try({
+   if (
+     !dmdScheme::scheme_installed(
+       name = dmdScheme::scheme_default()$name,
+@@ -31,5 +32,6 @@
+     name = dmdScheme::scheme_default()$name,
+     version = dmdScheme::scheme_default()$version
+   )
++})
+ 
+ }

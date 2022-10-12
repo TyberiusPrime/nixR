@@ -1,0 +1,27 @@
+diff --git a/R/zzz.R b/R/zzz.R
+index 8e7101d..5f8ee30 100644
+--- a/R/zzz.R
++++ b/R/zzz.R
+@@ -29,8 +29,13 @@ require(utils)
+   #If any jar file is missing, download them
+   if(length(downloadList) > 0){
+ 
++    zip_path = Sys.getenv("JAR_DOWNLOAD")
++    if (length(zip_path) > 0) {
++     utils::unzip(zipfile = zip_path, exdir = system.file("exe", package="RKEELjars"))
++    }
++    else {
++ 
+     downloadedFile <- file.path(system.file("exe", package="RKEELjars"), "RKEELjars.zip")
+-
+     #packageStartupMessage("Download RKEEL jars")
+ 
+     #Try to download from uco
+@@ -56,6 +61,6 @@ require(utils)
+       utils::unzip(zipfile = downloadedFile, exdir = system.file("exe", package="RKEELjars"))
+       unlink(downloadedFile)
+     }
+-  } #If all jars are downloaded, not download again
++  }} #If all jars are downloaded, not download again
+ 
+ }

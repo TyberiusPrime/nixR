@@ -23,10 +23,16 @@ package_info: let
   };
   name = package_info.pname;
   patches = package_info.patches or [];
-  requireX = builtins.any (pkg: pkg.name == pkgs.x11.name) (package_info.b or []);
+  requireX = (
+    (builtins.any (pkg: pkg.name == pkgs.x11.name) (package_info.b or []))
+    || (builtins.any (r_pkg: r_pkg == "tcltk2" || r_pkg == "tkrplot") (package_info.r or [])) # otherwise you run into endlees loops
+    || (builtins.any (pkg: pkg.name == pkgs.x11.name) (package_info.d.add_nativeBuildInputs or []))
+  );
   doCheck = true;
-  installFlags = ["--no-multiarch"];
-  buildInputs = package_info.buildInputs; # that's the r packages, pointing at the correct 'name_version' derivations
+  installFlags = ["--no-multiarch"] ++ (package_info.installFlags or []);
+  buildInputs =
+    package_info.buildInputs
+    ++ (package_info.d.add_buildInputs or []); # that's the r packages, pointing at the correct 'name_version' derivations
 in
   stdenv.mkDerivation (
     {
@@ -38,6 +44,7 @@ in
         ++ (package_info.b or []);
 
       propagatedBuildInputs = buildInputs; # the R packages
+      propagatedNativeBuildInputs = package_info.d.propagatedNativeBuildInputs or [];
 
       patches = patches;
       src = package_info.src;
@@ -57,11 +64,10 @@ in
           then [
             ((
                 let
-                  extract_cargo_lock =
-                    pkgs.runCommandLocal "r-${name}-Cargo.lock" {} ''
-                      mkdir $out
-                      ${pkgs.gnutar}/bin/tar xf ${package_info.src} ${package_info.d.CargoLockInSource} -O > $out/Cargo.lock
-                    '';
+                  extract_cargo_lock = pkgs.runCommandLocal "r-${name}-Cargo.lock" {} ''
+                    mkdir $out
+                    ${pkgs.gnutar}/bin/tar xf ${package_info.src} ${package_info.d.CargoLockInSource} -O > $out/Cargo.lock
+                  '';
                 in
                   importCargo
                   {

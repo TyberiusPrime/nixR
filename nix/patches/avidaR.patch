@@ -1,0 +1,21 @@
+diff --git a/R/data_access.R b/R/data_access.R
+index f6330e0..0c96b00 100644
+--- a/R/data_access.R
++++ b/R/data_access.R
+@@ -146,7 +146,14 @@ triplestore_access = R6::R6Class(
+ #'
+ #' @export
+ triplestore <- triplestore_access$new()
++tryCatch (
+ triplestore$set_access_options(url = "https://graphdb.fortunalab.org",
+                                user = "public_avida",
+                                password = "public_avida",
+-                               repository = "avidaDB_test")
+\ No newline at end of file
++                               repository = "avidaDB_test"),
++		  error = function(e) { 
++			  print(e)
++			  print("failed to fetch graphdb")
++			  e
++		  }
++)

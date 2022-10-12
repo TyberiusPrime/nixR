@@ -18,7 +18,6 @@ pub mod helpers;
 pub mod nix_output;
 pub mod retrieval;
 use helpers::{list_dir, load_toml};
-use nix_output::NixValue;
 
 pub static DATE_YYYYMMDD_REGEXPS: Lazy<Regex> = lazy_regex!(r"\d\d\d\d-[01]?\d-[0123]?\d");
 
@@ -198,8 +197,8 @@ impl Config {
         date_paths
     }
 
-    pub fn get_blacklist(&self) -> Result<HashSet<String>> {
-        let r = ex::fs::read_to_string(self.override_path.join("blacklist.txt"))?;
+    fn load_blacklist(path: &Path) -> Result<HashSet<String>> {
+        let r = ex::fs::read_to_string(path)?;
         let mut res = HashSet::new();
         for line in r.split('\n') {
             let line = line.trim();
@@ -210,7 +209,40 @@ impl Config {
         Ok(res)
     }
 
-    pub fn get_derivation_args(&self, pkg: &str, version: &Version) -> Option<NixValue> {
+    pub fn get_input_blacklist(&self) -> Result<HashSet<String>> {
+        Config::load_blacklist(&self.override_path.join("input_blacklist.txt"))
+    }
+
+    pub fn get_output_blacklist(&self) -> Result<HashSet<String>> {
+        Config::load_blacklist(&self.override_path.join("output_blacklist.txt"))
+    }
+
+    pub fn get_derivation_args(
+        &self,
+        pkg: &str,
+        version: &Version,
+        r_deps: &Vec<String>,
+    ) -> Option<HashMap<String, String>> {
+        //this really needs a fully recursive query :(
+        let dv = self._get_derivation_args(pkg, version);
+        let dv = if r_deps.iter().any(|x| x ==("R.cache")) {
+            let mut mdf = match dv {
+                Some(mdv) => mdv,
+                None => HashMap::new(),
+            };
+            mdf.insert("HOME".to_string(), "''$TMPDIR''".to_string());
+            Some(mdf)
+        } else {
+            dv
+        };
+        dv
+    }
+
+    pub fn _get_derivation_args(
+        &self,
+        pkg: &str,
+        version: &Version,
+    ) -> Option<HashMap<String, String>> {
         match self.derivation_args_.get(pkg) {
             None => None,
             Some(entries) => {
@@ -225,12 +257,10 @@ impl Config {
                     };
 
                     if after_start && before_end {
-                        let out: HashMap<String, NixValue> = dv
-                            .iter()
-                            .map(|(k, v)| (k.to_string(), NixValue::Literal(v.clone())))
-                            .collect();
+                        let out: HashMap<String, String> =
+                            dv.iter().map(|(k, v)| (k.to_string(), v.clone())).collect();
 
-                        return Some(out.into());
+                        return Some(out);
                     }
                 }
                 None

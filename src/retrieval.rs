@@ -65,13 +65,13 @@ pub fn update_cran(
     })?;
     let final_archive_dates = cran_fetch_final_archival_dates(config, &base_url)?;
 
-    //let blacklist = config.get_blacklist()?;
+    let blacklist = config.get_input_blacklist()?;
     let out: Result<Vec<PackageInfoWithSource>> = infos
         .into_iter()
         // blacklist had been filtered
         // but changes  would require rebuilding
         // so we do it agian
-        //.filter(|pi| !(blacklist.contains(&pi.tag()) || blacklist.contains(&pi.name)))
+        .filter(|pi| !(blacklist.contains(&pi.tag())))
         .map(|pi| PackageInfoWithSource::new_from_package_info(pi, Repo::Cran))
         .collect();
     //trust is ok, paranoia is better...
@@ -418,11 +418,11 @@ fn fetch_package_infos(
     let known_descs: HashMap<String, String> = load_descs(config, &repo.to_string())?;
     ex::fs::create_dir_all(&PathBuf::from("cache"))?;
 
-    //let blacklist = config.get_blacklist()?;
+    let blacklist = config.get_input_blacklist()?;
 
     let current_info: Vec<Result<PackageInfo>> = current
         .par_iter()
-        //.filter(|&tag| !blacklist.contains(tag))
+        .filter(|&tag| !(blacklist.contains(tag)))
         .map(|tag| {
             match download_hash_and_desc(
                 base_url,
@@ -447,7 +447,7 @@ fn fetch_package_infos(
 
     let archived_info: Vec<Result<PackageInfo>> = archived
         .par_iter()
-        //.filter(|&tag| !blacklist.contains(tag))
+        .filter(|&tag| !(blacklist.contains(tag)))
         .filter(|&tag| !current.contains(tag))
         .map(|tag| {
             match download_hash_and_desc(
@@ -711,13 +711,24 @@ pub fn parse_desc(
 }
 
 fn extract_description_from_tar_gz(name: &str, tar_gz_bytes: &[u8]) -> Result<Vec<u8>> {
+    match extract_description_from_tar_gz_inner(name, tar_gz_bytes, false) {
+        Ok(x) => Ok(x),
+        Err(_) => extract_description_from_tar_gz_inner(name, tar_gz_bytes, true),
+    }
+}
+
+fn extract_description_from_tar_gz_inner(
+    name: &str,
+    tar_gz_bytes: &[u8],
+    old_school: bool,
+) -> Result<Vec<u8>> {
+    let name_in_tar = if old_school {
+        "./".to_string() + name + "/DESCRIPTION"
+    } else {
+        name.to_owned() + "/DESCRIPTION"
+    };
     let mut child = std::process::Command::new("tar")
-        .args(&[
-            "xzf",
-            "-",
-            &(name.to_owned() + "/DESCRIPTION"),
-            "--to-stdout",
-        ])
+        .args(&["xzf", "-", &name_in_tar, "--to-stdout"])
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
         .spawn()?;
@@ -1063,4 +1074,3 @@ pub fn get_nixpkgs_releases() -> Result<Vec<DateRangePlus<Version>>> {
         &today().succ(), // right exclusive..
     ))
 }
-

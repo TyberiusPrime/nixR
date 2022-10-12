@@ -87,7 +87,7 @@ pub fn write_bincode<S: serde::ser::Serialize>(
 }
 
 pub fn load_bincode<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool) -> Result<T> {
-    info!("Loading {:?} gz: {}", &filename, do_gz);
+    //info!("Loading {:?} gz: {}", &filename, do_gz);
     let res = if do_gz {
         let mut file = BufReader::new(ex::fs::File::open(filename)?);
         let d = GzDecoder::new(&mut file);
@@ -96,11 +96,11 @@ pub fn load_bincode<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: b
         let file = BufReader::new(ex::fs::File::open(filename)?);
         Ok(bincode::deserialize_from(file)?)
     };
-    info!("done loading");
+    //info!("done loading");
     res
 }
 pub fn load_toml<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool) -> Result<T> {
-    info!("Loading {:?} gz: {}", &filename, do_gz);
+    //info!("Loading {:?} gz: {}", &filename, do_gz);
     let mut raw = Vec::new();
     if do_gz {
         let mut file = BufReader::new(ex::fs::File::open(filename)?);
@@ -110,12 +110,12 @@ pub fn load_toml<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool
         let mut file = BufReader::new(ex::fs::File::open(filename)?);
         file.read_to_end(&mut raw)?;
     }
-    info!("done loading");
+    //info!("done loading");
     Ok(toml::from_slice(&raw)?)
 }
 
 pub fn load_json<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool) -> Result<T> {
-    info!("Loading {:?} gz: {}", &filename, do_gz);
+    //info!("Loading {:?} gz: {}", &filename, do_gz);
     let res = if do_gz {
         let mut file = BufReader::new(ex::fs::File::open(filename)?);
         let d = GzDecoder::new(&mut file);
@@ -124,7 +124,7 @@ pub fn load_json<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool
         let file = BufReader::new(ex::fs::File::open(filename)?);
         Ok(serde_json::from_reader(file)?)
     };
-    info!("done loading");
+    //info!("done loading");
     res
 }
 

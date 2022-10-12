@@ -1,0 +1,13 @@
+diff --git a/configure b/configure
+index b6a4016..3240f23 100755
+--- a/configure
++++ b/configure
+@@ -5,7 +5,7 @@
+ # R CMD INSTALL --configure-vars='INCLUDE_DIR=/.../include LIB_DIR=/.../lib'
+ 
+ # Library settings
+-PKG_CONFIG_NAME="tesseract"
++PKG_CONFIG_NAME="tesseract lept"
+ PKG_DEB_NAME="libtesseract-dev libleptonica-dev"
+ PKG_RPM_NAME="tesseract-devel leptonica-devel"
+ PKG_CSW_NAME="libtesseract_dev"

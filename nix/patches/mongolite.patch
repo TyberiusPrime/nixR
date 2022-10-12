@@ -1,0 +1,13 @@
+diff --git a/configure b/configure
+index 5dfd3eb..3a33dc4 100755
+--- a/configure
++++ b/configure
+@@ -12,7 +12,7 @@ if [ `uname` = "Darwin" ] && [ -z "$MONGOLITE_USE_OPENSSL" ]; then
+ fi
+ 
+ # Library settings
+-PKG_CONFIG_NAME="openssl"
++PKG_CONFIG_NAME="openssl libsasl zlib"
+ PKG_DEB_NAME="libssl-dev, libsasl2-dev"
+ PKG_RPM_NAME="openssl-devel, cyrus-sasl-devel"
+ PKG_CSW_NAME="libssl_dev, sasl_dev"

@@ -339,7 +339,7 @@ fn assemble(config: &Config) -> Result<()> {
             &bioc_packages,
         )?;
 
-        let blacklist = config.get_blacklist()?;
+        let blacklist = config.get_output_blacklist()?;
         // dbg!(&blacklist);
         let dates = vec![bioc_release.start_date, bioc_release.end_date.pred()]; // for now... full on later
                                                                                  //note that the dates are right exclusive, so we want to query the one before...
@@ -405,11 +405,14 @@ fn assemble(config: &Config) -> Result<()> {
             // instead of 'keep repeating until nothing moves'.
             // but r dependencies are fairly flat, so I have yet to see it do more than 5
             // iterations.
+            // and we'd need to build the tree for every day...
             let mut any_removed = true;
             let mut any_removed_counter = 1;
             let mut already_removed = HashSet::new();
             while any_removed {
-                info!("any_removed... {}", any_removed_counter);
+                if any_removed_counter > 10 {
+                    info!("The recursive removal loop had to run more than 10 times. This works, but it's time to evaluate a graph based solution.");
+                }
                 any_removed_counter += 1;
                 any_removed = false;
                 for ii in &hits {
@@ -461,7 +464,29 @@ fn assemble(config: &Config) -> Result<()> {
 
     for (tag, package) in all_the_packages.iter() {
         let r_deps = package.r_deps(&config.build_in_packages())?;
-        let non_r_deps = package.system_deps(&config.system_requirement_lookups())?;
+        let derivation_args = config.get_derivation_args(&package.name, &package.parsed_version()?, &r_deps);
+
+        let non_r_deps = {
+            let do_ignore = match &derivation_args {
+                Some(dv) => match dv.get("IgnoreSystemRequirement") {
+                    Some(x) => {
+                        if x == "true" {
+                            info!("ignoring SystemRequirement for {}", &tag);
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    None => false,
+                },
+                None => false,
+            };
+            if do_ignore {
+                Vec::new()
+            } else {
+                package.system_deps(&config.system_requirement_lookups())?
+            }
+        };
         let mut this_out: HashMap<_, NixValue> = HashMap::new();
         this_out.insert("s", package.sha256.clone().into());
         if !r_deps.is_empty() {
@@ -479,10 +504,15 @@ fn assemble(config: &Config) -> Result<()> {
         if package.desc.get("NeedsCompilation").map(|x| (&**x)) == Some("yes") {
             this_out.insert("c", NixValue::Bool(true));
         }
-        let derivation_args = config.get_derivation_args(&package.name, &package.parsed_version()?);
 
         if let Some(derivation_args) = derivation_args {
-            this_out.insert("d", derivation_args);
+            this_out.insert(
+                "d",
+                derivation_args
+                    .into_iter()
+                    .map(|(k, v)| (k, NixValue::Literal(v)))
+                    .collect(),
+            );
         }
 
         match package.source {
