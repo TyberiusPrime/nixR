@@ -172,30 +172,34 @@
         (add_in_pname package_info_bioc_software))
         // (lib.mapAttrs (tag: v:
           v
-          // {
+          // (let
+            name_version = lib.removeSuffix ("-" + bc_version) tag;
+          in {
             src = pkgs.fetchurl {
               sha256 = v.s;
               urls = [
-                "mirror://bioc/${bc_version}/data/annotation/src/contrib/${tag}.tar.gz"
-                "http://bioconductor.org/packages/${bc_version}/data/annotation/src/contrib/${tag}.tar.gz"
+                "mirror://bioc/${bc_version}/data/annotation/src/contrib/${name_version}.tar.gz"
+                "http://bioconductor.org/packages/${bc_version}/data/annotation/src/contrib/${name_version}.tar.gz"
               ];
             };
             repo = "bioc_data_annotation";
-          })
+          }))
         (add_in_pname package_info_bioc_data_annotation))
         // (lib.mapAttrs (tag: v:
           v
-          // {
+          // (let
+            name_version = lib.removeSuffix ("-" + bc_version) tag;
+          in {
             src = pkgs.fetchurl {
               sha256 = v.s;
               urls = [
-                "mirror://bioc/${bc_version}/data/experiment/src/contrib/${tag}.tar.gz"
-                "http://bioconductor.org/packages/${bc_version}/data/experiment/src/contrib/${tag}.tar.gz"
+                "mirror://bioc/${bc_version}/data/experiment/src/contrib/${name_version}.tar.gz"
+                "http://bioconductor.org/packages/${bc_version}/data/experiment/src/contrib/${name_version}.tar.gz"
                 #"http://bioconductor.org/packages/${bc_version}{}/bioc/src/contrib/Archive/${v.pname}/${tag}.tar.gz"
               ];
             };
             repo = "bioc_data_experiment";
-          })
+          }))
         (add_in_pname package_info_bioc_data_experiment));
 
       # now turn it into derivations
@@ -216,7 +220,7 @@
         package_info_with_src;
       # what packages (by name) were requested
       requested_pkg_names =
-        if (builtins.isString r_pkg_names && r_pkg_names == "cran")
+        if (builtins.isString r_pkg_names && (r_pkg_names == "cran" || r_pkg_names == "bioc_software"))
         then (builtins.attrNames entry.pkgs) # that's an attrSet name->version
         else r_pkg_names;
       # what package tags do these translate to at that date.
@@ -257,13 +261,37 @@
           }
         ))
     r_by_date_data)
+    // (lib.mapAttrs' (k: v:
+      # _cran buidls all of cran on that date
+        lib.attrsets.nameValuePair (k + "_bioc_software") (
+          R_by_date {
+            date = k;
+            r_pkg_names = "bioc_software";
+          }
+        ))
+    r_by_date_data)
     // {
       something = R_by_date {
-        date = "2022-04-26";
-        r_pkg_names = ["optbdmaeAT"]; #
+        date = "2022-05-10";
+        r_pkg_names = [
+          #"Rbwa" # can't get to work.
+          "arrow"
+          "bigmemory"
+          #"ifultools"
+          "nanonext"
+          "spreadr"
+          "squant"
+          "ssdtools"
+          "stfit"
+          "stlnpp"
+          "stochvolTMB"
+          "boomer"
+          "tRNA"
+          "tabula"
+          "newscatcheR"
 
-
-
+          #"MAGeCKFlute"
+        ]; #, networkBMA
       };
     };
 }

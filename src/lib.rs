@@ -72,22 +72,27 @@ fn load_derivation_args(override_path: &Path) -> Result<DerivationArgs> {
     let mut out = HashMap::new();
 
     for (k, v) in input.into_iter() {
-        let parsed = PKG_AND_VERSION_RANGE_REGEXPS.captures_iter(&k).next();
-        let parsed = parsed.with_context(||format!("Could not parse derivation_args version target statement '{}'. Syntax is pkg_<start_version>..<stop_version>. Versions can be empty, so ff you want to match all version, use 'pkgs_..'", k))?;
-        let pkg = &parsed[1];
-        let start: Option<Version> = match parsed.get(2) {
-            Some(x) => Some(
-                Version::from_str(x.as_str()).with_context(|| format!("Parsing start of {}", k))?,
-            ),
-            None => None,
+        let (pkg, start, stop) = if k.contains("..") {
+            let parsed = PKG_AND_VERSION_RANGE_REGEXPS.captures_iter(&k).next();
+            let parsed = parsed.with_context(||format!("Could not parse derivation_args version target statement '{}'. Syntax is pkg_<start_version>..<stop_version>. Versions can be empty, so ff you want to match all version, use 'pkgs_..'", k))?;
+            let pkg = &parsed[1];
+            let start: Option<Version> = match parsed.get(2) {
+                Some(x) => Some(
+                    Version::from_str(x.as_str()).with_context(|| format!("Parsing start of {}", k))?,
+                ),
+                None => None,
+            };
+            let stop: Option<Version> = match parsed.get(3) {
+                Some(x) => Some(
+                    Version::from_str(x.as_str()).with_context(|| format!("Parsing stop of {}", k))?,
+                ),
+                None => None,
+            };
+            (pkg.to_string(), start, stop)
+        } else {
+            (k.to_string(), None, None)
         };
-        let stop: Option<Version> = match parsed.get(3) {
-            Some(x) => Some(
-                Version::from_str(x.as_str()).with_context(|| format!("Parsing stop of {}", k))?,
-            ),
-            None => None,
-        };
-        let entry = out.entry(pkg.to_string()).or_insert_with(|| Vec::new());
+        let entry = out.entry(pkg).or_insert_with(|| Vec::new());
         entry.push((start, stop, v));
     }
 
@@ -117,6 +122,7 @@ impl Config {
                 .context("Failed parsing overrides/system_requirements.toml")?;
         let system_requirement_lookups: Vec<(String, String)> =
             system_requirement_lookups.into_iter().collect();
+
         let res = Config {
             data_output_path,
             nix_output_path,
@@ -198,23 +204,21 @@ impl Config {
     }
 
     fn load_blacklist(path: &Path) -> Result<HashSet<String>> {
-        let r = ex::fs::read_to_string(path)?;
-        let mut res = HashSet::new();
-        for line in r.split('\n') {
-            let line = line.trim();
-            if !line.is_empty() && !line.starts_with('#') {
-                res.insert(line.to_owned());
-            }
-        }
-        Ok(res)
+        let raw: HashMap<String, String> = load_toml(path, false).with_context(||format!("Loading {:?}", path))?;
+        Ok(raw.into_iter().map(|(k, _)| k).collect())
+    }
+
+    pub fn extra_dates(&self) -> Result<HashMap<NaiveDate, String>> {
+        Ok(load_toml(&self.override_path.join("extra_dates.toml"), false)?)
+
     }
 
     pub fn get_input_blacklist(&self) -> Result<HashSet<String>> {
-        Config::load_blacklist(&self.override_path.join("input_blacklist.txt"))
+        Config::load_blacklist(&self.override_path.join("input_blacklist.toml"))
     }
 
     pub fn get_output_blacklist(&self) -> Result<HashSet<String>> {
-        Config::load_blacklist(&self.override_path.join("output_blacklist.txt"))
+        Config::load_blacklist(&self.override_path.join("output_blacklist.toml"))
     }
 
     pub fn get_derivation_args(
@@ -223,18 +227,28 @@ impl Config {
         version: &Version,
         r_deps: &Vec<String>,
     ) -> Option<HashMap<String, String>> {
-        //this really needs a fully recursive query :(
+        //this really needs a fully recursive query to be 100% sucessful.
+        //But it's a lot of work to save some repetition in overrides/derivation_args
         let dv = self._get_derivation_args(pkg, version);
-        let dv = if r_deps.iter().any(|x| x ==("R.cache")) {
-            let mut mdf = match dv {
-                Some(mdv) => mdv,
-                None => HashMap::new(),
-            };
-            mdf.insert("HOME".to_string(), "''$TMPDIR''".to_string());
-            Some(mdf)
+        let mut extra_dv = HashMap::new();
+        if r_deps.iter().any(|x| x == ("R.cache")) {
+            extra_dv.insert("HOME".to_string(), "''$TMPDIR''".to_string());
+        };
+        if r_deps
+            .iter()
+            .any(|x| x == "AnnotationHub" || x == "ExperimentHub")
+        {
+            extra_dv.insert("doCheck".to_string(), "false".to_string());
+        };
+
+        let mut dv = if !extra_dv.is_empty() && dv.is_none() {
+            Some(HashMap::new())
         } else {
             dv
         };
+        for (k, v) in extra_dv.into_iter() {
+            dv.as_mut().unwrap().insert(k, v);
+        }
         dv
     }
 
@@ -446,7 +460,7 @@ impl BioconductorRelease {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Repo {
     Cran,
     BiocSoftware(Version),

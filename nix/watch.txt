@@ -1,5 +1,5 @@
 ./flake.nix
-./packages/libSMBL.nix
+./packages/libSBML.nix
 ./r/3.4.2/default.nix
 ./r/3.4.3/default.nix
 ./r/3.4.4/default.nix

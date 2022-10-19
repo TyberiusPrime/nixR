@@ -202,6 +202,10 @@ pub fn fetch_bioconductor_release_software(
     without_source
         .into_iter()
         .map(|e| {
+            // if we ever need to discern by version. Possibly not for all packages
+            //                e.version += "-";
+            //               e.version += &str_version;
+
             PackageInfoWithSource::new_from_package_info(e, Repo::BiocSoftware(version.to_owned()))
         })
         .collect()
@@ -224,7 +228,11 @@ pub fn fetch_bioconductor_release_annotation_data(
     )?;
     without_source
         .into_iter()
-        .map(|e| {
+        .map(|mut e| {
+            // bioconductor rereleases datasets with same version, but different hash, so we need
+            // to distinguish
+            e.version += "-";
+            e.version += &str_version;
             PackageInfoWithSource::new_from_package_info(
                 e,
                 Repo::BiocAnnotationData(version.to_owned()),
@@ -249,7 +257,12 @@ pub fn fetch_bioconductor_release_experiment_data(
     )?;
     without_source
         .into_iter()
-        .map(|e| {
+        .map(|mut e| {
+            // bioconductor rereleases datasets with same version, but different hash, so we need
+            // to distinguish
+            e.version += "-";
+            e.version += &str_version;
+
             PackageInfoWithSource::new_from_package_info(
                 e,
                 Repo::BiocExperimentData(version.to_owned()),

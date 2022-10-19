@@ -1,0 +1,29 @@
+diff --git a/R/zzz.R b/R/zzz.R
+index 0dd4ab4..4238d79 100644
+--- a/R/zzz.R
++++ b/R/zzz.R
+@@ -27,13 +27,17 @@
+     if (any(toset)) options(op.multimir[toset])
+ 
+     # Set database version options 
+-    vers_table <- multimir_dbInfoVersions()
+-    curr_vers  <- vers_table[1, ] # only choose top row (sorted in queryDBVersions)
+-    set_dbversion(dbversion_row = curr_vers)
+-
+-    # No warning catches necessary, parse_response() takes care of failed con
+-    # messages
+-    invisible()
++    tryCatch({
++	    vers_table <- multimir_dbInfoVersions()
++	    curr_vers  <- vers_table[1, ] # only choose top row (sorted in queryDBVersions)
++	    set_dbversion(dbversion_row = curr_vers)
++
++	    # No warning catches necessary, parse_response() takes care of failed con
++	    # messages
++	    invisible()
++}, error = function (e) {
++	warning("failed to retrieve multimr version")
++})
+ 
+ }
+ 

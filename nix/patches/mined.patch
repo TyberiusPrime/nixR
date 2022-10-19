@@ -6,7 +6,7 @@ index cb617f0..fa3071c 100644
  /*
  * Omega function
  */
-+#define PI 3.14159
++#define PI M_PI
  double calOmega(double x){
    return 2.0 * PI * PI * (x * x - x + 1.0 / 6.0);
  } 

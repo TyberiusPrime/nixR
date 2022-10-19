@@ -1,0 +1,12 @@
+diff --git a/src/gpart_cpp.cpp b/src/gpart_cpp.cpp
+index ed03d42..e2c7a83 100644
+--- a/src/gpart_cpp.cpp
++++ b/src/gpart_cpp.cpp
+@@ -15,6 +15,7 @@ using namespace std;  // to avoid typing std::
+ #define MINV(aa, bb) (((aa) > (bb))? (bb) : (aa))
+ #define RECIP_2_53 0.00000000000000011102230246251565404236316680908203125
+ #define SMALLISH_EPSILON 0.00000000002910383045673370361328125
++#define PI M_PI
+ 
+ // [[Rcpp::export]]
+ IntegerMatrix VCFtogeno(CharacterMatrix vcf){

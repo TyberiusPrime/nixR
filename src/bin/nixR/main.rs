@@ -340,9 +340,14 @@ fn assemble(config: &Config) -> Result<()> {
         )?;
 
         let blacklist = config.get_output_blacklist()?;
-        // dbg!(&blacklist);
-        let dates = vec![bioc_release.start_date, bioc_release.end_date.pred()]; // for now... full on later
-                                                                                 //note that the dates are right exclusive, so we want to query the one before...
+        //note that the dates are right exclusive, so we want to query the one before...
+        let mut dates = vec![bioc_release.start_date, bioc_release.end_date.pred()]; // for now... every date later on maybe.
+        for (extra_date, _reason) in config.extra_dates()?.iter() {
+            if dates[0] <= *extra_date && dates[1] >= *extra_date {
+                dates.push(*extra_date)
+            }
+        }
+        
         for date in dates {
             info!("Date {}", date);
             info!(
@@ -370,7 +375,23 @@ fn assemble(config: &Config) -> Result<()> {
             //collect all of them
             for ii in &hits {
                 let p = &packages[*ii as usize];
-                all_the_packages.insert(p.element.tag(), p.element.clone());
+                match all_the_packages.insert(p.element.tag(), p.element.clone()) {
+                    Some(doublette) => match &doublette.source {
+                        Repo::BiocAnnotationData(ver) => {
+                            if doublette.source != p.element.source {
+                                error!( "package with identicial versions in multiple bioconductor versions.\n {} {:?} {:?}.",
+                                p.element.tag(), p.element, &doublette
+                                        );
+
+                                bail!(concat!("This has been handled for bioc_data_annotation and bioc_data_experiment,\n",
+                                "but not for bioc_software. If it ever happens, we need to patch that to include the bioc version\n",
+                                "in those package versions as well. Don't forget to fix the flake accordingly."));
+                            }
+                        }
+                        _ => {}
+                    },
+                    None => {}
+                }
                 days_packages.insert(
                     p.element.name.to_string(),
                     NixValue::Str(p.element.version.to_string()),
@@ -382,18 +403,21 @@ fn assemble(config: &Config) -> Result<()> {
                 let p = &packages[*ii as usize];
                 if let Some(package_min_r_version) = p.element.min_r_version()? {
                     if package_min_r_version > r_version.element {
-                        warn!(
+                        /* warn!(
                             "Filtering {} - required R {}, but this bioconductor is on {}",
                             p.element.tag(),
                             package_min_r_version,
                             r_version.element
-                        );
+                        ); */
                         days_packages.remove(&p.element.name);
                         continue;
                     }
                 }
-                if blacklist.contains(&p.element.tag()) || blacklist.contains(&p.element.name) {
-                    warn!("Filtering {} (blacklisted)", p.element.tag());
+                if blacklist.contains(&p.element.tag())
+                    || blacklist.contains(&p.element.name)
+                    || blacklist.contains(&format!("{}::{}", p.element.name, date.to_string(),))
+                {
+                    // warn!("Filtering {} (blacklisted)", p.element.tag());
                     days_packages.remove(&p.element.name);
                     continue;
                 }
@@ -420,10 +444,10 @@ fn assemble(config: &Config) -> Result<()> {
                     if !already_removed.contains(&p.element.name) {
                         for rdep in p.element.r_deps(&config.build_in_packages())?.iter() {
                             if !days_packages.contains_key(rdep) {
-                                warn!(
+                                /* warn!(
                                     "Filtering {} because of missing dependency {}",
                                     p.element.name, rdep
-                                );
+                                ); */
                                 already_removed.insert(p.element.name.to_string());
                                 days_packages.remove(&p.element.name);
                                 any_removed = true; // we get to try again, might go upstream
@@ -464,7 +488,8 @@ fn assemble(config: &Config) -> Result<()> {
 
     for (tag, package) in all_the_packages.iter() {
         let r_deps = package.r_deps(&config.build_in_packages())?;
-        let derivation_args = config.get_derivation_args(&package.name, &package.parsed_version()?, &r_deps);
+        let derivation_args =
+            config.get_derivation_args(&package.name, &package.parsed_version()?, &r_deps);
 
         let non_r_deps = {
             let do_ignore = match &derivation_args {
@@ -600,6 +625,8 @@ fn assemble(config: &Config) -> Result<()> {
 
     Ok(())
 }
+
+/// turn bioc packages into date-ranged ones
 fn assemble_packages_during_bioconductor_release(
     bioc_release: &BioconductorRelease,
     config: &Config,

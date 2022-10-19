@@ -1,0 +1,29 @@
+diff --git a/R/internalFunctions.R b/R/internalFunctions.R
+index 267f7b4..261e4eb 100644
+--- a/R/internalFunctions.R
++++ b/R/internalFunctions.R
+@@ -275,7 +275,7 @@ deepblue_column_types = function()
+     return(dict)
+ }
+ 
+-col_dict = deepblue_column_types()
++col_dict = tryCatch({deepblue_column_types()}, error=function(e){F})
+ 
+ #' @description Parse the GTF semicolon separated attributes into a data frame
+ #' @title deepblue_parse_gtf
+diff --git a/R/zzz.R b/R/zzz.R
+index 485f6c6..085ed29 100644
+--- a/R/zzz.R
++++ b/R/zzz.R
+@@ -1,9 +1,11 @@
+ .onAttach <- function(libname, pkgname){
+     packageStartupMessage("Welcome to the DeepBlueR package")
+ 
++tryCatch({
+     if(RCurl::url.exists("http://deepblue.mpi-inf.mpg.de")){
+         packageStartupMessage("DeepBlue is online")
+     }else{
+         warning("DeepBlue could not be reached. Check network connectivity.")
+     }
++}, error= function(e) {F})
+ }

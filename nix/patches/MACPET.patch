@@ -1,0 +1,13 @@
+diff --git a/src/Stage_3_PeakFinderSubFunctions.cpp b/src/Stage_3_PeakFinderSubFunctions.cpp
+index 7f4f41d..6d30c5d 100644
+--- a/src/Stage_3_PeakFinderSubFunctions.cpp
++++ b/src/Stage_3_PeakFinderSubFunctions.cpp
+@@ -1,6 +1,8 @@
+ #include <Rcpp.h>
+ using namespace Rcpp;
+ 
++#define DOUBLE_EPS DBL_EPSILON
++
+ //####################################################
+ //Functions for preparing local fit in a region:
+ //####################################################

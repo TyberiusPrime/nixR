@@ -1,0 +1,23 @@
+diff --git a/src/cppgoslin/makefile b/src/cppgoslin/makefile
+index 4b3bdac..beb8d57 100644
+--- a/src/cppgoslin/makefile
++++ b/src/cppgoslin/makefile
+@@ -1,4 +1,4 @@
+-install_dir = /usr
++mnstall_dir = /usr
+ ifeq ($(origin CC),default)
+ CC  = g++
+ endif
+@@ -58,9 +58,9 @@ src/tests/%.o: src/tests/%.cpp libcppGoslin.so
+ 	${CC} ${opt} -I. -fPIC -o $@ -c $<
+ 	
+ clean:
+-	rm -f "cppgoslin/parser/KnownGrammars.h"
+-	rm -f "src/domain/LipidClasses.cpp"
+-	rm -f "cppgoslin/domain/ClassesEnum.h"
++	# rm -f "cppgoslin/parser/KnownGrammars.h"
++	# rm -f "src/domain/LipidClasses.cpp"
++	# rm -f "cppgoslin/domain/ClassesEnum.h"
+ 	rm -f cppgoslin/domain/*.o
+ 	rm -f cppgoslin/parser/*.o
+ 	rm -f cppgoslin/tests/*.o

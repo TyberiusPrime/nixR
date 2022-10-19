@@ -28,7 +28,7 @@ package_info: let
     || (builtins.any (r_pkg: r_pkg == "tcltk2" || r_pkg == "tkrplot") (package_info.r or [])) # otherwise you run into endlees loops
     || (builtins.any (pkg: pkg.name == pkgs.x11.name) (package_info.d.add_nativeBuildInputs or []))
   );
-  doCheck = true;
+  doCheck = package_info.d.doCheck or true;
   installFlags = ["--no-multiarch"] ++ (package_info.installFlags or []);
   buildInputs =
     package_info.buildInputs

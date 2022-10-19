@@ -1,0 +1,15 @@
+diff --git a/R/zzz.R b/R/zzz.R
+index 2f7d3ad..1437876 100644
+--- a/R/zzz.R
++++ b/R/zzz.R
+@@ -1,4 +1,7 @@
+ .onLoad <- function(libname, pkgname)
+ {
+-  rfamClanDefinitions <<- rfamGetClanDefinitions()
+-}
+\ No newline at end of file
++rfamClanDefinitions <<- tryCatch(
++{
++   rfamGetClanDefinitions()
++}, error= function(e) { F })
++}

@@ -1,0 +1,20 @@
+diff --git a/R/zzz.r b/R/zzz.r
+index c99a626..462a328 100644
+--- a/R/zzz.r
++++ b/R/zzz.r
+@@ -51,6 +51,7 @@ NONEXPORTS.AVAILABLE <- TRUE
+ 
+     # Load the reference distributions from cache
+     if (is.null(.brownianBridgeEmpcdf(0))) {
++        tryCatch({
+         brownianBridgeEmpcdf.path <- .cache.getOrDownload(
+             url=brownianBridgeEmpcdf.url,
+             rname="empcdf.ref")
+@@ -59,6 +60,7 @@ NONEXPORTS.AVAILABLE <- TRUE
+         assign(".brownianBridgeEmpcdf", 
+                empcdf.ref,
+                environment(.brownianBridgeEmpcdf))
++	}, error = function(e) { warning("Could not retrieve from github")})
+     }
+ }
+ 

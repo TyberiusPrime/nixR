@@ -99,7 +99,7 @@ pub fn load_bincode<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: b
     //info!("done loading");
     res
 }
-pub fn load_toml<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool) -> Result<T> {
+pub fn load_toml<T: serde::de::DeserializeOwned>(filename: &Path, do_gz: bool) -> Result<T> {
     //info!("Loading {:?} gz: {}", &filename, do_gz);
     let mut raw = Vec::new();
     if do_gz {

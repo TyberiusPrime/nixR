@@ -1,0 +1,41 @@
+# these get filtered on *output* 
+# and corretly go down the tree, removing packages that depend on them
+# contrast with input_blacklist.txt
+# acceptable format is <name>|<name>_<version> or <name>::<date>
+# note that that's an underscore!
+# to blacklist a package completly, based on it's version, or just on one outpuk date
+
+ROracle = "oracle oci not in nixpkgs, unfree"
+Rblpapi = "bloomberg, unfree"
+
+BRugs = "needs OpenBUGS, not in nixpkgs. Or in ubuntu. And the website change log says it hasn't updated since 2014. And the ssl certificate is expired."
+
+Rcplex = "unfree"
+
+bitmexr = "crypto, requires internet to build. "
+
+RQuantLib = "not in nixpkgs"
+
+switchr = "R package managment (not necessary on Nix). Cannot open the connection to 'http://bioconductor.org/config.yaml'"
+
+#opencl = "# can't find opencl in nixpkgs"
+
+Rsymphony = "can't find SYMPHONY in nixpkgs"
+
+"baseflow_0.13.2" ="no cargo.lock in download"
+
+elbird = "no libkiwi in nixpkgs, and libwiki compilation needs LFS, and well, that appears broken in fetchgit"
+
+SCATE = "loads SCATEData on build, which fails with experimenthub 'can't fail sensible if offline" # patchme
+MAGeCKFlute = "loads demap on build, which needs experimenthub" # patchme
+crisprScore = "loads crisprScoreData on build, which needs experimenthub" # patchme
+
+"Rbwa_1.0.0" = "can't find kthread.o. I think kthread.h is missing, and the org github repo is gone"
+
+"SPONGE::2022-04-27" = "object 'combnPrim' is not exported by 'namespace:gRbase'"
+
+"ifultools::2022-04-27" = "error: 'PROBLEM' undeclared (first use in this function)"
+"ifultools::2022-05-10" = "error: 'PROBLEM' undeclared (first use in this function)"
+
+"tenXplore::2022-04-27" = """class "RESTfulSummarizedExperiment" is not exported by 'namespace:restfulSE'"""
+"tenXplore::2022-05-10" = """class "RESTfulSummarizedExperiment" is not exported by 'namespace:restfulSE'"""

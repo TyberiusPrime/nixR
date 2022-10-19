@@ -1,0 +1,15 @@
+diff --git a/R/utils.R b/R/utils.R
+index ffc3be9..62fd308 100644
+--- a/R/utils.R
++++ b/R/utils.R
+@@ -5,7 +5,9 @@
+   options(base.address = "https://reactome.org/ContentService")
+   # welcome message
+   packageStartupMessage("Connecting...", appendLF=FALSE)
+-  version <- .checkVersion()
++  version <- tryCatch({
++	 .checkVersion()
++  }, error = function (e) { F })
+   packageStartupMessage("welcome to Reactome v", version, "!")
+ }
+ 

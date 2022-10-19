@@ -1,0 +1,19 @@
+diff --git a/R/zzz.R b/R/zzz.R
+index 52b1ec2..533f1ff 100644
+--- a/R/zzz.R
++++ b/R/zzz.R
+@@ -14,9 +14,12 @@ pkg_globals <- new.env(parent = emptyenv())
+     }
+     snaptron_host <- paste0(snaptron_host, "/")
+     assign("snaptron_host", snaptron_host, envir = pkg_globals)
+-    json_data <-
++    json_data <- tryCatch({
+         paste(pkg_globals$snaptron_host, "snaptron", "registry", sep = "/") %>%
+-        httr::GET()
++        httr::GET()}, error=function(e) {F})
++    if (json_data == F) {
++        return()
++    } 
+     if (httr::http_error(json_data)) {
+         return()
+     }

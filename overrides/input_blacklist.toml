@@ -1,0 +1,30 @@
+# this is the input black list 
+# these packgaes are removed right after 'finding' them,
+# preventing download and description parsing
+# (mostly for packages that have no DESCRIPTION in the expected place,
+# or are not present though listed in an index)
+# format is name|name_ver
+# (just filtering by name is not supported!)
+
+"leaps_1.0-3" = "predates DESCRIPTION"
+"lme_3.0b8a-2" = "predates DESCRIPTION"
+"lme_3.0-0" = "predates DESCRIPTION"
+"lme_3.1-0" = "predates DESCRIPTION"
+"multilm_0.1" = "predates DESCRIPTION"
+"nls_0.2-1" = "predates DESCRIPTION"
+"nls_0.3-1" = "predates DESCRIPTION"
+"logspline_1.0-2" = "predates DESCRIPTION"
+"ppr_1.1-2" = "predates DESCRIPTION"
+"pspline_1.0-2" = "predates DESCRIPTION"
+"ratetables_1.0-2" = "predates DESCRIPTION"
+"rhosp_1.0" = "predates DESCRIPTION"
+"splines_2.0-3" = "predates DESCRIPTION"
+"splines_2.0-5" = "predates DESCRIPTION"
+"tcltk_0.1-1" = "predates DESCRIPTION"
+"vtcl_1.0-1" = "predates DESCRIPTION"
+
+"domainsignatures_1.37.2" = "no file on bioconductor server but in packages"
+"iontree_1.23.1" = "no file on bioconductor server but in packages"
+
+"rxode2_2.0.8" = "rxode2 2.0.7 is up on cran, but 2.0.8 is in the archive?"
+

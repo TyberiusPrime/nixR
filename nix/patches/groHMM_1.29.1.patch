@@ -1,0 +1,84 @@
+diff --git a/src/DecayAlgorithm.c b/src/DecayAlgorithm.c
+index 2f1de9e..e705279 100644
+--- a/src/DecayAlgorithm.c
++++ b/src/DecayAlgorithm.c
+@@ -30,7 +30,6 @@
+  ******************************************************************************/
+ 
+ #include <R.h> 
+-#include <S.h>
+ #include <Rdefines.h>
+ #include <Rmath.h>
+ #include <Rinternals.h>
+diff --git a/src/MLEfit.c b/src/MLEfit.c
+index 88e38ef..8aaeb83 100644
+--- a/src/MLEfit.c
++++ b/src/MLEfit.c
+@@ -30,7 +30,6 @@
+  ******************************************************************************/
+ 
+ #include <R.h>
+-#include <S.h>
+ #include <Rdefines.h>
+ #include <Rmath.h>
+ #include <Rinternals.h>
+diff --git a/src/Windowing.c b/src/Windowing.c
+index 302232f..a8a3e93 100644
+--- a/src/Windowing.c
++++ b/src/Windowing.c
+@@ -35,7 +35,6 @@
+ /* extern "C" { */
+ 
+ #include <R.h> 
+-#include <S.h>
+ #include <Rdefines.h>
+ #include <Rmath.h>
+ #include <Rinternals.h>
+diff --git a/src/hmmEM.c b/src/hmmEM.c
+index ff9eb46..2445a69 100644
+--- a/src/hmmEM.c
++++ b/src/hmmEM.c
+@@ -37,7 +37,6 @@
+ 
+ 
+ #include <R.h> 
+-#include <S.h>
+ #include <Rdefines.h>
+ #include <Rmath.h>
+ #include <Rinternals.h>
+diff --git a/src/hmmFwBw.c b/src/hmmFwBw.c
+index b38cab3..b461b5c 100644
+--- a/src/hmmFwBw.c
++++ b/src/hmmFwBw.c
+@@ -32,7 +32,6 @@
+  ******************************************************************************/
+ 
+ #include <R.h> 
+-#include <S.h>
+ #include <Rdefines.h>
+ #include <Rmath.h>
+ #include <Rinternals.h>
+diff --git a/src/hmmMiscFunctions.c b/src/hmmMiscFunctions.c
+index 3eeafb0..68d2359 100644
+--- a/src/hmmMiscFunctions.c
++++ b/src/hmmMiscFunctions.c
+@@ -30,7 +30,6 @@
+  ******************************************************************************/
+ 
+ #include <R.h> 
+-#include <S.h>
+ #include <Rdefines.h>
+ #include <Rmath.h>
+ #include <Rinternals.h>
+diff --git a/src/hmmViterbi.c b/src/hmmViterbi.c
+index 47b9c8f..54ae818 100644
+--- a/src/hmmViterbi.c
++++ b/src/hmmViterbi.c
+@@ -35,7 +35,6 @@
+  ******************************************************************************/
+ 
+ #include <R.h> 
+-#include <S.h>
+ #include <Rdefines.h>
+ #include <Rmath.h>
+ #include <Rinternals.h>
