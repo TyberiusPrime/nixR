@@ -1,0 +1,17 @@
+diff --git a/R/zzz.R b/R/zzz.R
+index 78d6d1d..6c12bc5 100644
+--- a/R/zzz.R
++++ b/R/zzz.R
+@@ -24,9 +24,9 @@ Sys.which2 <- function(cmd) {
+     } else {
+         major <- as.numeric(sub('.*\"(\\d+)\\.\\d+.*', '\\1', javaVersion[1]))
+         minor <- as.numeric(sub('.*\"\\d+\\.(\\d+).*', '\\1', javaVersion[1]))
+-        if((major == 1 && minor < 8) || major < 1) {
+-            warning('Java need to be at least version 1.7 for MS-GF+ to work. Please upgrade.')
+-        }
++        #if((major == 1 && minor < 8) || major < 1) {
++            #warning('Java need to be at least version 1.7 for MS-GF+ to work. Please upgrade.')
++        #}
+     }
+ }
+ 

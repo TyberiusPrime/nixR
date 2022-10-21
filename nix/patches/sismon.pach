@@ -1,0 +1,15 @@
+diff --git a/R/zzz.R b/R/zzz.R
+index 0818234..a695845 100644
+--- a/R/zzz.R
++++ b/R/zzz.R
+@@ -19,8 +19,9 @@
+   }else{
+     ## Test that the correct version of Julia is installed
+     julia_bin = XRJulia::findJulia()
++  print(julia_bin)
+     if (.Platform$OS.type == "windows") cmd_args = "-E \"VERSION < v\\\"1.0.0\\\"\"" else cmd_args = "-E 'VERSION < v\"1.0.0\"'"
+-    version_check = tryCatch(system2(julia_bin, args = cmd_args, stdout = TRUE, stderr = TRUE), warning = function(e) "", error = function(e) "")
++    version_check = tryCatch(system2(julia_bin, args = cmd_args, stdout = TRUE, stderr = TRUE), warning = function(e) {print(e)}, error = function(e) {print(e)})
+     if(version_check == ""){
+       warning("Error when checking the existing Julia version. Please check that Julia is correctly installed.")
+     }

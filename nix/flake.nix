@@ -51,8 +51,18 @@
       "19.9" = import nixpkgs_19_09 {inherit system;};
       "20.3" = import nixpkgs_20_03 {inherit system;};
       "20.9" = import nixpkgs_20_09 {inherit system;};
-      "21.5" = import nixpkgs_21_05 {inherit system;};
-      "21.11" = import nixpkgs_21_11 {inherit system;};
+      "21.5" = import nixpkgs_21_05 {
+        inherit system;
+        config.allowUnfree = true;
+        config.permittedInsecurePackages = [
+          # to build sismonr
+          "libgit2-0.27.10"
+        ];
+      };
+      "21.11" = import nixpkgs_21_11 {
+        inherit system;
+        config.allowUnfree = true;
+      };
       "22.5" = import nixpkgs_22_05 {inherit system;};
     };
     Rs =
@@ -272,26 +282,14 @@
     r_by_date_data)
     // {
       something = R_by_date {
-        date = "2022-05-10";
+        date = "2021-10-26";
         r_pkg_names = [
-          #"Rbwa" # can't get to work.
-          "arrow"
-          "bigmemory"
-          #"ifultools"
-          "nanonext"
-          "spreadr"
-          "squant"
-          "ssdtools"
-          "stfit"
-          "stlnpp"
-          "stochvolTMB"
-          "boomer"
-          "tRNA"
-          "tabula"
-          "newscatcheR"
-
-          #"MAGeCKFlute"
-        ]; #, networkBMA
+         "MSGFplus"
+          "Rbowtie2"
+          "cbpManager"
+          "CSTools"
+          "MicrobiotaProcess"
+        ];
       };
     };
 }

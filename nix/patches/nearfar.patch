@@ -1,0 +1,15 @@
+diff --git a/R/nearfar.R b/R/nearfar.R
+index a3bbd46..b6cf315 100644
+--- a/R/nearfar.R
++++ b/R/nearfar.R
+@@ -360,7 +360,9 @@ stat_lambda = function(lambda) {
+     return(output.all)
+ }
+ 
+-angrist = read.csv(url("https://raw.githubusercontent.com/joerigdon/nearfar/master/angrist.csv"), header=TRUE)
++angrist = tryCatch({
++	 read.csv(url("https://raw.githubusercontent.com/joerigdon/nearfar/master/angrist.csv"), header=TRUE)
++}, error = function(e) {F})
+ 
+ #package.skeleton(name="nearfar", code_files="nearfar.R")
+ 

@@ -40,7 +40,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const BIOCONDUCTOR_URL: &str = "https://bioconductor.org/";
 // const YEAR_TO_EARLY_INT: i32 = 2016;
-const MINIMUM_BIOCONDUCTOR_VERSION: &str = "3.14";
+const MINIMUM_BIOCONDUCTOR_VERSION: &str = "3.13";
 
 fn configure_logging(matches: &ArgMatches<'static>) {
     let verbosity = value_t!(matches, "verbose", usize).unwrap_or(2);
@@ -299,7 +299,7 @@ fn assemble(config: &Config) -> Result<()> {
     let bioc_releases = retrieval::bioconductor_fetch_releases(config, BIOCONDUCTOR_URL)?;
     let nixpkgs = retrieval::get_nixpkgs_releases()?;
     let manual_date_overrides: HashMap<String, chrono::NaiveDate> =
-        helpers::load_toml(&PathBuf::from("overrides/dates.toml"), false)?;
+        helpers::load_toml(&PathBuf::from("overrides/package_dates.toml"), false)?;
 
     let (cran_packages, cran_final_archive_dates) = retrieval::update_cran(config)?;
     info!(

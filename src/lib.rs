@@ -89,7 +89,13 @@ fn load_derivation_args(override_path: &Path) -> Result<DerivationArgs> {
                 None => None,
             };
             (pkg.to_string(), start, stop)
-        } else {
+        } else if k.contains("_") // single version
+		{
+			let (pkg, version) = k.split_once("_").unwrap();
+			let version = Version::from_str(version).with_context(|| format!("Parsing version of {}", k))?;
+			(pkg.to_string(), Some(version.clone()), Some(version))
+		}
+		else {
             (k.to_string(), None, None)
         };
         let entry = out.entry(pkg).or_insert_with(|| Vec::new());
@@ -209,7 +215,7 @@ impl Config {
     }
 
     pub fn extra_dates(&self) -> Result<HashMap<NaiveDate, String>> {
-        Ok(load_toml(&self.override_path.join("extra_dates.toml"), false)?)
+        Ok(load_toml(&self.override_path.join("output_dates.toml"), false)?)
 
     }
 
@@ -260,6 +266,8 @@ impl Config {
         match self.derivation_args_.get(pkg) {
             None => None,
             Some(entries) => {
+				let (mut prio_out, mut out) = (10, None);
+
                 for (start_ver, stop_ver, dv) in entries.iter() {
                     let after_start = match start_ver {
                         Some(sv) => sv <= version,
@@ -271,13 +279,23 @@ impl Config {
                     };
 
                     if after_start && before_end {
-                        let out: HashMap<String, String> =
+                        let temp_out: HashMap<String, String> =
                             dv.iter().map(|(k, v)| (k.to_string(), v.clone())).collect();
+						let prio = match (start_ver, stop_ver) {
+							(Some(x), Some(y)) => {
+								if x == y { 0 } else { 1 }
+								}, 
+							(Some(_), None) | (None, Some(_)) => 2,
+							(None, None) => 3
+						};
+						if prio < prio_out  {
+							prio_out = prio;
+							out = Some(temp_out);
+						}
 
-                        return Some(out);
                     }
                 }
-                None
+				return out;
             }
         }
     }
