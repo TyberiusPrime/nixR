@@ -1,4 +1,4 @@
-data/*
-target/*
-nix_output/*
-nix/result
+nixR_builder/data/*
+nixR_builder/cache/*
+nixR_builder/target/*
+result

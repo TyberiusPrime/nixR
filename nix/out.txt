@@ -1,2 +1,0 @@
-warning: Git tree '/clara/ffs/e/20220921_AG_Finkernagel_nixR/nixR' is dirty
-error: interrupted by the user

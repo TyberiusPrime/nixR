@@ -1,71 +1,295 @@
 {
   inputs = {
-    nixpkgs.url =
-      "github:NixOS/nixpkgs/nixos-22.05"; # that's 21.05
-    utils.url = "github:numtide/flake-utils";
-    utils.inputs.nixpkgs.follows = "nixpkgs";
-    naersk.url = "github:nmattia/naersk";
-    naersk.inputs.nixpkgs.follows = "nixpkgs";
-    rust-overlay.url = "github:oxalica/rust-overlay";
-    rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
-    #mozillapkgs = {
-    #url = "github:mozilla/nixpkgs-mozilla";
-    #flake = false;
-    #};
+    nixpkgs_17_03.url = "github:NixOS/nixpkgs/17.03";
+    nixpkgs_17_03.flake = false;
+    nixpkgs_17_09.url = "github:NixOS/nixpkgs/17.09";
+    nixpkgs_17_09.flake = false;
+
+    nixpkgs_18_03.url = "github:NixOS/nixpkgs/18.03";
+    nixpkgs_18_03.flake = false;
+
+    nixpkgs_18_09.url = "github:NixOS/nixpkgs/18.09";
+    nixpkgs_18_09.flake = false;
+    nixpkgs_19_03.url = "github:NixOS/nixpkgs/19.03";
+    nixpkgs_19_03.flake = false;
+    nixpkgs_19_09.url = "github:NixOS/nixpkgs/19.09";
+    nixpkgs_19_09.flake = false;
+    nixpkgs_20_03.url = "github:NixOS/nixpkgs/20.03";
+    nixpkgs_20_03.flake = false; # technically a flake, but not compatible,
+    nixpkgs_20_09.url = "github:NixOS/nixpkgs/20.09";
+    nixpkgs_21_05.url = "github:NixOS/nixpkgs/21.05";
+    nixpkgs_21_11.url = "github:NixOS/nixpkgs/21.11";
+    nixpkgs_22_05.url = "github:NixOS/nixpkgs/22.05";
+    import-cargo.url = "github:edolstra/import-cargo";
+    import-cargo.inputs.nixpkgs.follows = "nixpkgs";
   };
+  outputs = {
+    self,
+    nixpkgs_17_03,
+    nixpkgs_17_09,
+    nixpkgs_18_03,
+    nixpkgs_18_09,
+    nixpkgs_19_03,
+    nixpkgs_19_09,
+    nixpkgs_20_03,
+    nixpkgs_20_09,
+    nixpkgs_21_05,
+    nixpkgs_21_11,
+    nixpkgs_22_05,
+    import-cargo,
+  }: let
+    lib = nixpkgs_22_05.lib;
+    inherit (import-cargo.builders) importCargo;
 
-  outputs = { self, nixpkgs, utils, naersk, rust-overlay }:
-    utils.lib.eachDefaultSystem (system:
-      let
-        #pkgs = nixpkgs.legacyPackages."${system}";
+    system = "x86_64-linux";
+    nix-pkgs = {
+      "17.3" = import nixpkgs_17_03 {inherit system;};
+      "17.9" = import nixpkgs_17_09 {inherit system;};
+      "18.3" = import nixpkgs_18_03 {inherit system;};
+      "18.9" = import nixpkgs_18_09 {inherit system;};
+      "19.3" = import nixpkgs_19_03 {inherit system;};
+      "19.9" = import nixpkgs_19_09 {inherit system;};
+      "20.3" = import nixpkgs_20_03 {inherit system;};
+      "20.9" = import nixpkgs_20_09 {inherit system;};
+      "21.5" = import nixpkgs_21_05 {
+        inherit system;
+        config.allowUnfree = true;
+        config.permittedInsecurePackages = [
+          # to build sismonr
+          "libgit2-0.27.10"
+        ];
+      };
+      "21.11" = import nixpkgs_21_11 {
+        inherit system;
+        config.allowUnfree = true;
+      };
+      "22.5" = import nixpkgs_22_05 {inherit system;};
+    };
+    Rs =
+      import ./nix/r/default.nix {
+      };
 
-        overlays = [ (import rust-overlay) ];
-        pkgs = import nixpkgs { inherit system overlays; };
-        rust = pkgs.rust-bin.stable."1.63.0".default.override {
-          targets = [ "x86_64-unknown-linux-musl" ];
+    r_by_date_data = import generated/r_by_date.nix {
+      inherit Rs;
+      inherit nix-pkgs;
+    };
+    R_by_date = {
+      date,
+      r_pkg_names ? [],
+    }: let
+      # the per date data (ie nixpkgs, R, bioc versions, map of package name -> pkg version
+      entry = r_by_date_data.${date};
+      pkgs = entry.nixpkgs;
+
+      package_info_cran = import generated/cran.nix {
+        inherit pkgs;
+        inherit importCargo;
+      };
+      package_info_bioc_software = import generated/bioc_software.nix {
+        inherit pkgs;
+        inherit importCargo;
+      };
+      package_info_bioc_data_annotation = import generated/bioc_data_annotation.nix {inherit pkgs;};
+      package_info_bioc_data_experiment = import generated/bioc_data_experiment.nix {inherit pkgs;};
+      #package_info_bioc_data_annotation = {};
+      #package_info_bioc_data_experiment = {};
+      bc_version = builtins.trace ("bioconductor version: " + entry.bioconductor_version) entry.bioconductor_version;
+      R = entry.R pkgs;
+      flock =
+        if builtins.hasAttr "flock" pkgs
+        then pkgs.flock
+        else
+          with pkgs;
+            stdenv.mkDerivation rec {
+              pname = "flock";
+              name = "${pname}-${version}";
+              version = "0.2.3";
+
+              src = fetchFromGitHub {
+                owner = "discoteq";
+                repo = pname;
+                rev = "v${version}";
+                sha256 = "1vdq22zhdfi7wwndsd6s7fwmz02fsn0x04d7asq4hslk7bjxjjzn";
+              };
+              patches = [./nix/patches/flock_no_man.patch]; # don't want to pull in ruby and gem and stuff for the man page here.
+
+              nativeBuildInputs = [autoreconfHook];
+              buildInputs = [];
+
+              meta = with lib; {
+                description = "Cross-platform version of flock(1)";
+                maintainers = [maintainers.matthewbauer];
+                platforms = platforms.all;
+                license = licenses.isc;
+              };
+            };
+
+      create_r_package_derivation = with pkgs;
+        callPackage ./nix/r_packages/default.nix {
+          R = R;
+          flock = flock;
+          stdenv = pkgs.stdenv;
+          importCargo = importCargo;
         };
 
-        # Override the version used in naersk
-        naersk-lib = naersk.lib."${system}".override {
-          cargo = rust;
-          rustc = rust;
-        };
+      # combine the seperate per-repo package informations
+      # into one attrSet with the correct source
+      add_in_pname = package_infos:
+        lib.mapAttrs (
+          tag: v: let
+            split = lib.strings.splitString "_" tag;
+            name =
+              lib.elemAt split 0;
+            version = lib.elemAt split 1;
+          in
+            v
+            // {
+              pname = name;
+              version = version;
+            }
+        )
+        package_infos;
 
-        bacon = naersk-lib.buildPackage { # could also pull a slightly older one from nixpkgs
-          pname = "bacon";
-          version = "1.2.5";
-          src = pkgs.fetchFromGitHub {
-            owner = "Canop";
-            repo = "bacon";
-            rev = "0077701f2923a43d7c37f9e532163bfa01af6b1c";
-            sha256 = "sha256-dpdQ1qBfLU6whkqVHQ/zQxqs/y+nmdvxHanaNw66QxA=";
-          };
-        };
+      package_info_with_src =
+        (lib.mapAttrs (tag: v:
+          v
+          // {
+            src = pkgs.fetchurl {
+              sha256 = v.s;
+              urls = [
+                "https://cran.r-project.org/src/contrib/${tag}.tar.gz"
+                "https://cran.r-project.org/src/contrib/Archive/${v.pname}/${tag}.tar.gz"
+              ];
+            };
+            repo = "cran";
+          })
+        (add_in_pname package_info_cran))
+        // (lib.mapAttrs (tag: v:
+          v
+          // {
+            src = pkgs.fetchurl {
+              sha256 = v.s;
+              urls = [
+                "mirror://bioc/${bc_version}/bioc/src/contrib/${tag}.tar.gz"
+                "mirror://bioc/${bc_version}/bioc/src/contrib/Archive/${v.pname}/${tag}.tar.gz"
+                "mirror://bioc/${bc_version}/bioc/src/contrib/Archive/${tag}.tar.gz"
+                "http://bioconductor.org/packages/${bc_version}/bioc/src/contrib/${tag}.tar.gz"
+                "http://bioconductor.org/packages/${bc_version}{}/bioc/src/contrib/Archive/${v.pname}/${tag}.tar.gz"
+              ];
+            };
+            repo = "bioc_software";
+          })
+        (add_in_pname package_info_bioc_software))
+        // (lib.mapAttrs (tag: v:
+          v
+          // (let
+            name_version = lib.removeSuffix ("-" + bc_version) tag;
+          in {
+            src = pkgs.fetchurl {
+              sha256 = v.s;
+              urls = [
+                "mirror://bioc/${bc_version}/data/annotation/src/contrib/${name_version}.tar.gz"
+                "http://bioconductor.org/packages/${bc_version}/data/annotation/src/contrib/${name_version}.tar.gz"
+              ];
+            };
+            repo = "bioc_data_annotation";
+          }))
+        (add_in_pname package_info_bioc_data_annotation))
+        // (lib.mapAttrs (tag: v:
+          v
+          // (let
+            name_version = lib.removeSuffix ("-" + bc_version) tag;
+          in {
+            src = pkgs.fetchurl {
+              sha256 = v.s;
+              urls = [
+                "mirror://bioc/${bc_version}/data/experiment/src/contrib/${name_version}.tar.gz"
+                "http://bioconductor.org/packages/${bc_version}/data/experiment/src/contrib/${name_version}.tar.gz"
+                #"http://bioconductor.org/packages/${bc_version}{}/bioc/src/contrib/Archive/${v.pname}/${tag}.tar.gz"
+              ];
+            };
+            repo = "bioc_data_experiment";
+          }))
+        (add_in_pname package_info_bioc_data_experiment));
 
-      in rec {
-        # `nix build`
-        packages.my-project = naersk-lib.buildPackage {
-          pname = "anysnake2";
-          root = ./.;
-        };
-        defaultPackage = packages.my-project;
+      # now turn it into derivations
+      package_derivations =
+        # turn the package information
+        # keyed by tag, but in seperate files per repository)
+        # into actual derivations keyed by tag (=name_version)
+        lib.mapAttrs (tag: v: let
+        in
+          create_r_package_derivation (v
+            // {
+              buildInputs = map (dep: let
+                tagged_dep = dep + "_" + (entry.pkgs.${dep} or (abort ("Missing dep for " + tag + " dep: " + dep)));
+              in
+                package_derivations.${tagged_dep})
+              ((v.r or []) ++ (v.d.add_r_dependencies or []));
+            }))
+        package_info_with_src;
+      # what packages (by name) were requested
+      requested_pkg_names =
+        if (builtins.isString r_pkg_names && (r_pkg_names == "cran" || r_pkg_names == "bioc_software"))
+        then (builtins.attrNames entry.pkgs) # that's an attrSet name->version
+        else r_pkg_names;
+      # what package tags do these translate to at that date.
+      r_pkg_tags =
+        builtins.map (pkg_name: pkg_name + "_" + entry.pkgs.${pkg_name})
+        requested_pkg_names;
+      # and what 'entries' (=package infos) are those
+      requested_r_packages = map (x: package_derivations.${x}) r_pkg_tags;
 
-        # `nix run`
-        apps.my-project = utils.lib.mkApp { drv = packages.my-project; };
-        defaultApp = apps.my-project;
-
-        # `nix develop`
-        devShell = pkgs.mkShell {
-          # supply the specific rust version
-          nativeBuildInputs = [
-            rust
-            pkgs.rust-analyzer
-            pkgs.git
-            pkgs.cargo-udeps
-            pkgs.cargo-audit
-            bacon
-          ];
+      # now if we're doing '_full', I only want the cran/bioc_software ones.
+      requested_r_packages_filtered =
+        if (builtins.isString r_pkg_names && r_pkg_names == "cran")
+        then (lib.filter (v: (!v.broken or false) && v.repo == "cran") requested_r_packages)
+        else requested_r_packages;
+      r_wrapper = with pkgs;
+        callPackage ./nix/r/wrapper.nix {
+          nixpkgs = pkgs;
+          R = R;
+          recommendedPackages = [];
+          packages = requested_r_packages_filtered;
         };
-      });
+    in
+      r_wrapper;
+  in
+    # date is a function taking a list of R package names - e.g. ["httr"]
+    (lib.mapAttrs (k: v: r_pkg_names:
+      R_by_date {
+        date = k;
+        inherit r_pkg_names;
+      })
+    r_by_date_data)
+    // (lib.mapAttrs' (k: v:
+      # _cran builds all of cran on that date
+        lib.attrsets.nameValuePair (k + "_cran") (
+          R_by_date {
+            date = k;
+            r_pkg_names = "cran";
+          }
+        ))
+    r_by_date_data)
+    // (lib.mapAttrs' (k: v:
+      # _cran builds all of cran on that date
+        lib.attrsets.nameValuePair (k + "_bioc_software") (
+          R_by_date {
+            date = k;
+            r_pkg_names = "bioc_software";
+          }
+        ))
+    r_by_date_data)
+    // { # for debugging why these sets are not buildng
+      debug_set = R_by_date {
+        date = "2021-10-26";
+        r_pkg_names = [
+          "MSGFplus"
+          "Rbowtie2"
+          "cbpManager"
+          "CSTools"
+          "MicrobiotaProcess"
+        ];
+      };
+    };
 }
-# {

@@ -1,0 +1,1484 @@
+# we strip surrounding whitespace in the strings.
+# otherwise, they get copied *literally* into an attrset on the packages
+# so valid nixlang  for the values please
+
+
+# support formats are
+# [pkg] - all versions of this package
+# ["pkg_version"] - this version of this package
+# ["pkg_versionStart..versionStop"] - the versions start, stop, and all inbetween (so left&right inclusive)
+
+# the most specif one wins
+# so first 'single version',
+# then 'range of versions', (if you have overlaps, it's going to be nondeterministic!)
+# then the no-version one
+
+["openssl_0.9.7..1.4.5"]
+#OPENSSL_INCLUDES = "''${pkgs.openssl}/include''"
+#LD_LIBRARY_PATH = "''${pkgs.openssl.out}/lib''"
+PKGCONFIG_CFLAGS = '"-I${pkgs.openssl.dev}/include"'
+PKGCONFIG_LIBS = '"-Wl,-rpath,${pkgs.openssl.out}/lib -L${pkgs.openssl.out}/lib -lssl -lcrypto"'
+RPATH = "''${pkgs.openssl.out}/lib''"
+add_nativeBuildInputs = "[pkgconfig gettext]"
+add_buildInputs = "[gettext]"
+preConfigure = """''
+substituteInPlace configure --replace 'PKG_LIBS="''${PKG_LIBS_VERSIONED}"' 'PKG_LIB="''${PKG_LIBS_VERSIONED}"';
+''"""
+
+["openssl_2.0.0.."]
+# PKG_CPPFLAGS = "''-I${pkgs.openssl_1_1.dev}/include''"
+# PKGCONFIG_LIBS = "''-Wl,-rpath,${pkgs.openssl_1_1.out}/lib -L${pkgs.openssl_1_1.out}/lib -lssl -lcrypto''"
+PKGCONFIG_CFLAGS = '"-I${pkgs.openssl.dev}/include"'
+PKGCONFIG_LIBS = '"-Wl,-rpath,${pkgs.openssl.out}/lib -L${pkgs.openssl.out}/lib -lssl -lcrypto"'
+add_nativeBuildInputs = "[pkgconfig gettext]"
+add_buildInputs = "[gettext]"
+preConfigure = """''
+substituteInPlace configure --replace 'PKG_LIBS="''${PKG_LIBS_VERSIONED}"' 'PKG_LIB="''${PKG_LIBS_VERSIONED}"';
+''"""
+
+["websocket_1.4.1.."]
+add_nativeBuildInputs = "[pkgconfig]"
+add_buildInputs = "[]"
+PKGCONFIG_CFLAGS = '"-I${pkgs.openssl.dev}/include"'
+PKGCONFIG_LIBS = '"-Wl,-rpath,${pkgs.openssl.out}/lib -L${pkgs.openssl.out}/lib -lssl -lcrypto"'
+
+preConfigure = """''
+substituteInPlace configure --replace 'PKG_LIBS="''${PKG_LIBS_VERSIONED}"' 'PKG_LIB="''${PKG_LIBS_VERSIONED}"';
+''"""
+
+
+
+
+
+["Java_1.0.6.."]
+preConfigure= """''
+	export JAVA_CPPFLAGS=-I${pkgs.jdk}/include/
+	export JAVA_HOME=${pkgs.jdk}
+''"""
+add_nativeBuildInputs = "[pkgs.make]"
+
+["Nifti_1.4.0.."]
+add_nativeBuildInputs = "[zlib]"
+
+
+["R.cache"]
+HOME = '"$TMPDIR"' # this is automatically applied by the rust part for all *direct* downstreams
+# but not for the indirect ones
+[ACNE]
+HOME = '"$TMPDIR"'
+[CoTiMA]
+HOME = '"$TMPDIR"'
+[cubble]
+HOME = '"$TMPDIR"'
+
+[immuneSIM]
+HOME = '"$TMPDIR"'
+[mastif]
+HOME = '"$TMPDIR"'
+[margaret]
+HOME = '"$TMPDIR"'
+[ShinyQuickStarter]
+HOME = '"$TMPDIR"'
+[pins]
+HOME = '"$TMPDIR"'
+[TotalCopheneticIndex]
+HOME = '"$TMPDIR"'
+[calmate]
+HOME = '"$TMPDIR"'
+[matlab2r]
+HOME = '"$TMPDIR"'
+[shinymeta]
+HOME = '"$TMPDIR"'
+[shinyobjects]
+HOME = '"$TMPDIR"'
+[cuddle]
+HOME = '"$TMPDIR"'
+[TreeDist]
+HOME = '"$TMPDIR"'
+[Quartet]
+HOME = '"$TMPDIR"'
+[Rogue]
+HOME = '"$TMPDIR"'
+[EstMix]
+HOME = '"$TMPDIR"'
+[TBRDist]
+HOME = '"$TMPDIR"'
+[TreeSearch]
+HOME = '"$TMPDIR"'
+
+["h2o_3.36.0.4.."]
+preInstall= """''
+	ls /build
+	mkdir /build/h2o/inst/java
+	cp $jarSource/h2o.jar /build/h2o/inst/java
+	''"""
+jarSource= """
+	pkgs.fetchzip{
+        url="http://h2o-release.s3.amazonaws.com/h2o/rel-zizler/3/h2o-3.34.0.3.zip";
+        sha256="07kkh1px0naq2g0718y1y0khydivsi80v63kdy1frxls1c5ky3kf";
+	}
+	"""
+["h2o_3.34.0.3.."]
+JARSOURCE = """
+	pkgs.fetchurl{
+        url="https://s3.amazonaws.com/h2o-release/h2o/rel-zizler/3/Rjar/h2o.jar";
+        sha256="sha256-j/WWBDZaGGnUjtuvZ+4UyBYfI8Uf9/Ml5cOLXgL91P8=";
+	}
+	"""
+patches = "[../nix/patches/h2o_3.34.0.3.patch]"
+
+[string2path]
+postPatch = """''
+	substituteInPlace src/Makevars.in --replace "--release" "--release --offline"
+''"""
+preConfigure= "''export NOT_CRAN=true\n''"
+CargoLockInSource = "''string2path/src/rust/Cargo.lock''"
+
+#add_nativeBuildInputs =  "(importCargo { lockFile = \"./rust/Cargo.lock\"; inherit pkgs; }).cargoHome"
+
+[salso]
+postPatch = """
+	''substituteInPlace tools/cargo.R --replace "env <- c(env, CARGO_HOME=n(cargo_home))" ""''
+"""
+CargoLockInSource = "''salso/src/rustlib/Cargo.lock''"
+
+[ymd]
+# postPatch = """''
+# 'substituteInPlace configure --replace "env <- c(env, CARGO_HOME=n(cargo_home))" ""''
+# ''"""
+CargoLockInSource = "''ymd/src/rust/Cargo.lock''"
+NOT_CRAN="''true''"
+
+
+#add_nativeBuildInputs =  "(importCargo { lockFile = ./../cargos/{pkg}/Cargo.lock; inherit pkgs; }).cargoHome"
+
+[precautionary]
+#add_nativeBuildInputs =  "(importCargo { lockFile = ./../cargos/{pkg}/Cargo.lock; inherit pkgs; }).cargoHome"
+
+
+[acs]
+postPatch = "''patchShebangs configure''"
+
+[keyring]
+postPatch = "''patchShebangs configure''"
+
+[cuml4r]
+postPatch = "''patchShebangs configure''"
+
+[ijtiff]
+postPatch = "''patchShebangs configure''"
+
+["data.table"]
+postPatch = "''patchShebangs configure''"
+
+[ps]
+postPatch = "''patchShebangs configure''"
+
+["cuda.ml"]
+postPatch = "''patchShebangs configure''"
+
+[NxtIRFcore]
+postPatch = "''patchShebangs configure''"
+
+["arrow_6.0.0.2"]
+postPatch = """''
+	patchShebangs configure inst/build_arrow_static.sh
+	''"""
+NOT_CRAN="''true''"
+ARROW_R_DEV="''true''"
+add_nativeBuildInputs = "[ pkgconfig ( pkgs.callPackage ../nix/packages/arrow_6.0.0/default.nix { })]"
+
+
+["arrow_7.0.0"]
+postPatch = """''
+	patchShebangs configure inst/build_arrow_static.sh
+	''"""
+NOT_CRAN="''true''"
+ARROW_R_DEV="''true''"
+add_nativeBuildInputs = "[(pkgs.callPackage ../nix/packages/arrow_7.0.0/default.nix {})]"
+
+["arrow_8.0.0"]
+postPatch = """''
+	patchShebangs configure inst/build_arrow_static.sh
+	''"""
+NOT_CRAN="''true''"
+ARROW_R_DEV="''true''"
+add_nativeBuildInputs = "[(pkgs.callPackage ../nix/packages/arrow_8.0.0/default.nix {})]"
+
+
+
+[Rmpi]
+add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
+configureFlags = """[
+	"--with-Rmpi-type=OPENMPI"
+	"--with-Rmpi-include=${pkgs.openmpi}/include"
+	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
+]"""
+
+[bigGP]
+add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
+configureFlags = """[
+	"--with-Rmpi-type=OPENMPI"
+	"--with-Rmpi-include=${pkgs.openmpi}/include"
+	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
+]"""
+
+[httpuv]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+
+
+[RcppCNPy]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[sparkwarc]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+
+[divest]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[affyio]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+preConfigure = """''
+export CFLAGS="-I${pkgs.zlib.dev}/include"
+''"""
+
+["vapour_0.8.5.."]
+# preConfigure = """
+# ''
+# substituteInPlace configure --replace "2> errors.txt" ""
+# ''
+# """
+add_nativeBuildInputs = "[pkgconfig pkgs.sqlite.dev pkgs.sqlite pkgs.geos]"
+add_buildInputs = "[pkgs.sqlite.out pkgs.sqlite pkgs.geos]"
+
+
+["RNifti_1.4.0"]
+patches = "[../nix/patches/Rnifti_1.4.0_zlib_objects.patch]"
+
+
+[tkrplot]
+add_nativeBuildInputs = "[tk]"
+add_buildInputs = "[tk]"
+
+[island]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+[SPARSEMODr]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+
+[crandep]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+
+[fingerPro]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+
+[diseq]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+
+[SymTS]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+[CLVTools]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+[dynr]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+
+[RCPPGsl]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+[RcppZiggurat]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+[BNSP]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+
+[RPostgreSQL]
+add_nativeBuildInputs = "[postgresql]"
+
+[HiCseg]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+[KFKSDS]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+[OpenCL]
+add_nativeBuildInputs = "[opencl-headers]"
+add_buildInputs = "[ocl-icd opencl-clhpp]"
+PKG_CPPFLAGS='"-I${pkgs.opencl-headers}/include"'
+
+[RSclient]
+add_nativeBuildInputs = "[pkgconfig openssl]"
+add_buildInputs= "[openssl]"
+PKG_CPPFLAGS='"-I${pkgs.openssl.dev}/include"'
+
+[RcppCWB]
+add_nativeBuildInputs = "[ pkgconfig pcre glib ncurses which bison util-linux flex]"
+add_buildInputs = "[ pcre glib ncurses]"
+
+[RcppParallel]
+postPatch = "''patchShebangs configure''"
+
+[DeLorean]
+postPatch = "''patchShebangs configure''"
+
+[RcppGetconf]
+postPatch = "''patchShebangs configure''"
+
+["Rhdf5lib"]
+add_nativeBuildInputs = "[zlib hdf5.dev]"
+add_buildInputs = "[zlib hdf5]"
+
+[rtk]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[Rsymphony]
+add_nativeBuildInputs = "[pkgconfig doxygen graphviz subversion]"
+
+[RcppCGAL]
+add_nativeBuildInputs = "[pkgconfig cgal]"
+CGAL_DIR='"${pkgs.cgal}/lib/"'
+add_buildInputs = "[cgal]"
+
+
+[BayesSAE]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+
+[hSDM]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+[mBvs]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+[pbdMPI]
+add_nativeBuildInputs = "[pkgconfig openmpi openssh]"
+
+[hicseg]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+[bbl]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+[catSurv]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+[ltable]
+add_nativeBuildInputs = "[pkgconfig gsl]"
+add_buildInputs = "[gsl]"
+
+
+[mvabund]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+[mixcat]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+[mashr]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+
+[loon]
+add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
+add_buildInputs = "[x11 tk tcl]"
+propagatedNativeBuildInputs = "[x11 tk tcl]"
+
+[diveR]
+add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
+add_buildInputs = "[x11 tk tcl]"
+propagatedNativeBuildInputs = "[x11 tk tcl]"
+
+
+[JFE]
+add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
+add_buildInputs = "[x11 tk tcl]"
+propagatedNativeBuildInputs = "[x11 tk tcl]"
+
+["loon.ggplot"]
+add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
+add_buildInputs = "[x11 tk tcl]"
+propagatedNativeBuildInputs = "[x11 tk tcl]"
+
+["loon.shiny"]
+add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
+add_buildInputs = "[x11 tk tcl]"
+propagatedNativeBuildInputs = "[x11 tk tcl]"
+
+["loon.tourr"]
+add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
+add_buildInputs = "[x11 tk tcl]"
+propagatedNativeBuildInputs = "[x11 tk tcl]"
+
+[rfviz]
+add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
+add_buildInputs = "[x11 tk tcl]"
+
+
+["bio3d"]
+add_nativeBuildInputs = "[zlib]"
+add_buildInputs = "[zlib]"
+
+[unrtf]
+add_nativeBuildInputs = "[pkgconfig zlib bzip2 lzma pcre icu]"
+add_buildInputs = "[zlib bzip2 lzma pcre icu]"
+
+[SemiCompRisks]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+[psbcGroup]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl]"
+
+[littler]
+add_nativeBuildInputs = "[pkgconfig bzip2 zlib lzma icu]"
+add_buildInputs = "[bzip2 zlib lzma icu]"
+
+
+[RVowpalWabbit]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+configureFlags = """[
+                "--with-boost=${pkgs.boost.dev}"
+                "--with-boost-libdir=${pkgs.boost.out}/lib"
+]"""
+
+[rJava]
+add_nativeBuildInputs = "[pkgconfig zlib bzip2 icu lzma pcre jdk libzip ]"
+add_buildInputs = "[pkgconfig zlib bzip2 icu lzma pcre jdk libzip ]"
+JAVA_CPPFLAGS='"-I${pkgs.jdk}/include/"'
+JAVA_HOME='"${pkgs.jdk}"'
+
+[optbdmaeAT]
+add_nativeBuildInputs = "[x11 tk]"
+
+[soptdmaeA]
+add_nativeBuildInputs = "[x11 tk]"
+
+[optrcdmaeAT]
+add_nativeBuildInputs = "[x11 tk]"
+
+[qpdf]
+add_nativeBuildInputs = "[pkgconfig zlib libjpeg]"
+add_buildInputs = "[zlib libjpeg]"
+
+[hipread]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[rmumps]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[vcfR]
+add_nativeBuildInputs = "[zlib]"
+add_buildInputs = "[zlib]"
+
+
+[valse]
+add_nativeBuildInputs = "[gsl]"
+add_buildInputs = "[gsl]"
+patches = "[../nix/patches/valse.patch]"
+add_r_dependencies = '["RcppGSL"]'
+
+
+[nloptr]
+add_nativeBuildInputs = "[pkgconfig which cmake nlopt]"
+
+["gWidgets2tcltk"]
+add_nativeBuildInputs = "[x11 tcl tk]"
+add_buildInputs = "[x11 tcl tk]"
+add_r_dependencies = '["codetools"]'
+
+["clustermq_..0.8.95.1"]
+postPatch = "''patchShebangs configure''"
+add_nativeBuildInputs = "[pkgconfig zeromq]"
+
+[clustermq]
+add_nativeBuildInputs = "[pkgconfig zeromq]"
+
+[rrd]
+add_nativeBuildInputs = "[pkgconfig rrdtool]"
+add_buildInputs = "[rrdtool]"
+
+["rrd_..0.2.2"]
+add_nativeBuildInputs = "[pkgconfig rrdtool]"
+add_buildInputs = "[rrdtool]"
+postPatch = "''patchShebangs configure''"
+
+
+[RmecabKo]
+add_nativeBuildInputs = "[mecab]"
+
+[RcppMeCab]
+add_nativeBuildInputs = "[mecab]"
+
+[exifr]
+add_nativeBuildInputs = "[exiftool]"
+
+[registr]
+add_nativeBuildInputs = "[pkgconfig zlib bzip2 lzma icu]"
+add_buildInputs = "[zlib bzip2 lzma icu]"
+
+[trajeR]
+postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
+
+[iriR]
+patches = "[../nix/patches/iriR.patch]"
+
+["RKEELjars_1.0.19..1.0.20"]
+patches = "[../nix/patches/RKEELJARS_1.0.20.patch]"
+
+# [RKEELjars]
+# patches = "[../nix/patches/RKEELjars.patch]"
+
+[spiR]
+patches = "[../nix/patches/spiR.patch]"
+
+["x13binary_1.1.57-2.."]
+patches = "[../nix/patches/x13binary_1.57.patch]"
+X13BINARY= """builtins.fetchurl{
+url = "https://github.com/x13org/x13prebuilt/raw/master/v1.1.57/linux/64/x13ashtml";
+sha256 = "0lpn41lvj4k38ld1w2v9q99gm4bs35ja2zygrndax12rk2a6qjf4";
+}"""
+
+
+[googleformr]
+patches = "[../nix/patches/googleformr.patch]"
+
+[packagefinder]
+patches = "[../nix/patches/packagefinder.patch]"
+
+[RPostgres]
+# postPatch = """''patchShebangs configure
+# 	substituteInPlace configure --replace "/bin/bash" "${pkgs.bash}/bin/bash"
+# ''"""
+add_nativeBuildInputs = "[pkgconfig postgresql]"
+
+
+[writexl]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[ulid]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+
+[XVector]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[snpStats]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[largeList]
+add_nativeBuildInputs = "[zlib]"
+add_buildInputs = "[zlib]"
+
+[apsimx]
+add_nativeBuildInputs = "[mono which]"
+
+[Rhtslib]
+add_nativeBuildInputs = "[pkgconfig zlib bzip2 lzma curl autoconf]"
+add_buildInputs = "[zlib bzip2 lzma curl]"
+
+[tiledb]
+add_nativeBuildInputs = "[pkgconfig tiledb]"
+add_buildInputs = "[tiledb]"
+
+[symengine]
+add_nativeBuildInputs = "[cmake which]"
+
+# I can't get this to correctly find proj
+["terra_1.5-21.."]
+#CFLAGS='"-I${pkgs.zlib.dev}/include"'
+IgnoreSystemRequirement="true"
+add_nativeBuildInputs = "[pkgconfig proj gdal geos sqlite]"
+add_buildInputs = "[gettext sqlite proj]"
+
+[TTAinterfaceTrendAnalysis]
+add_nativeBuildInputs = "[x11]"
+
+[spectralGraphTopology]
+add_r_dependencies = '["CVXR"]'
+
+["rhdf5lib"]
+add_nativeBuildInputs = "[hdf5-cpp which zlib]"
+
+
+["hdf5r"]
+add_nativeBuildInputs = "[pkgconfig hdf5.dev zlib.dev]"
+add_buildInputs = "[hdf5 zlib]"
+
+
+["commonsMath_1.2.5"]
+patches = "[../nix/patches/commonsMath.patch]"
+SCALA_JAR = """builtins.fetchurl {
+   url = "https://search.maven.org/remotecontent?filepath=org/scala-lang/modules/scala-parallel-collections_2.13/0.2.0/scala-parallel-collections_2.13-0.2.0.jar";
+   sha256 = "1lbf4hqz8l2svz5ic49bhmnqsm1db26srld3aanfk64b63qj4pyi";
+}"""
+COMMONS_MATH_JAR = """builtins.fetchurl {
+   url = "https://search.maven.org/remotecontent?filepath=org/apache/commons/commons-math3/3.6.1/commons-math3-3.6.1.jar";
+   sha256 = "025ky9z9rfqwgp6l7yl8sp0p9dl57274bf2nsamnb2yjb2qdfmhy";
+}"""
+
+
+[gifski]
+CargoLockInSource = "''gifski/src/myrustlib/Cargo.lock''"
+postPatch= """''
+substituteInPlace src/Makevars --replace "cargo build" "cargo build --offline"
+substituteInPlace src/Makevars --replace "export CARGO_HOME=\\$(PWD)/.cargo" ""
+''
+"""
+
+
+[rbedrock]
+add_nativeBuildInputs = "[which]"
+
+
+[rcrypt]
+add_nativeBuildInputs = "[gnupg]"
+
+[xslt]
+add_nativeBuildInputs = "[pkgconfig libxml2]"
+add_buildInputs = "[libxml2]"
+preConfigure = """''
+  export LIBXML_CFLAGS=`pkg-config --cflags libxml-2.0`
+  export LIBXML_LIBS=`pkg-config --libs libxml-2.0`
+''"""
+
+[RMariaDB]
+add_nativeBuildInputs = '[pkgs.zlib pkgs.libmysqlclient pkgs.openssl]'
+
+
+[Cairo]
+add_nativeBuildInputs = "[pkgconfig libtiff libjpeg cairo x11 pkgs.fontconfig.lib xorg.libXt.dev]"
+add_buildInputs = "[pkgconfig libtiff libjpeg cairo x11 pkgs.fontconfig.lib xorg.libXt.dev]"
+PKG_CPPFLAGS='"-I${pkgs.xorg.libXt}/include"'
+#strictDeps = "false"
+
+[RoBMA]
+add_nativeBuildInputs = "[lapack]"
+add_buildInputs = "[lapack]"
+
+
+["V8"]
+add_nativeBuildInputs = "[pkgconfig v8]"
+add_buildInputs = "[pkgconfig v8]"
+postPatch = """''
+  substituteInPlace configure \
+     --replace " -lv8_libplatform" ""
+''"""
+preConfigure = """''
+ export INCLUDE_DIR=${pkgs.v8}/include
+ export LIB_DIR=${pkgs.v8}/lib
+ patchShebangs configure
+''"""
+
+
+[bigsnpr]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[MedianaDesigner]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[spFW]
+add_nativeBuildInputs = "[pkgconfig fftw]"
+add_buildInputs = "[fftw]"
+
+[redland]
+add_nativeBuildInputs = "[redland pkgconfig librdf_raptor2 librdf_rasqal]"
+add_buildInputs = "[pkgconfig redland librdf_raptor2 librdf_rasqal]"
+patches = "[../nix/patches/redland.patch]"
+
+["pcalL1"]
+add_nativeBuildInputs = "[which pkgconfig]"
+#add_buildInputs = "[pkgconfig redland librdf_raptor2 librdf_rasqal]"
+
+[pexm]
+add_nativeBuildInputs = "[pkgconfig jags]"
+
+[BALD]
+add_nativeBuildInputs = "[pkgconfig jags lzma bzip2 zlib icu]"
+add_buildInputs = "[jags lzma bzip2 zlib icu]"
+
+[GMMAT]
+add_nativeBuildInputs = "[pkgconfig bzip2]"
+add_buildInputs = "[bzip2]"
+
+[magick]
+add_nativeBuildInputs = "[pkgconfig imagemagick]"
+add_buildInputs = "[imagemagick]"
+
+[iplots]
+add_nativeBuildInputs = "[x11]"
+add_buildInputs = "[x11]"
+
+["gsl_2.1-7"]
+IgnoreSystemRequirement="true"
+add_nativeBuildInputs = "[pkgconfig gsl]"
+add_buildInputs = "[gsl]"
+
+[gdalcubes]
+add_nativeBuildInputs = "[pkgconfig gdal proj sqlite]"
+add_buildInputs = "[gdal proj sqlite]"
+
+
+
+[glpkAPI]
+add_nativeBuildInputs = "[pkgconfig glpk gmp]"
+add_buildInputs = "[glpk gmp]"
+
+[textshaping]
+add_nativeBuildInputs = "[pkgconfig glpk]"
+add_buildInputs = "[glpk]"
+
+
+[rgdal]
+add_nativeBuildInputs = "[pkgconfig proj gdal]"
+add_buildInputs = "[proj gdal]"
+
+["proj4_1.0-10.1"]
+add_nativeBuildInputs = "[pkgconfig sqlite.dev proj]"
+add_buildInputs = "[proj sqlite]"
+PROJ_LIB = '"${pkgs.proj.dev}"'
+
+
+[proj4]
+add_nativeBuildInputs = "[pkgconfig proj ]"
+add_buildInputs = "[proj]"
+
+
+
+[doMPI]
+add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
+configureFlags = """[
+	"--with-Rmpi-type=OPENMPI"
+	"--with-Rmpi-include=${pkgs.openmpi}/include"
+	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
+]"""
+
+[pbdSLAP]
+add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
+configureFlags = """[
+	"--with-Rmpi-type=OPENMPI"
+	"--with-Rmpi-include=${pkgs.openmpi}/include"
+	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
+]"""
+
+
+[pbdPROF]
+add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
+configureFlags = """[
+	"--with-Rmpi-type=OPENMPI"
+	"--with-Rmpi-include=${pkgs.openmpi}/include"
+	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
+]"""
+
+
+[pbdBASE]
+add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
+configureFlags = """[
+	"--with-Rmpi-type=OPENMPI"
+	"--with-Rmpi-include=${pkgs.openmpi}/include"
+	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
+]"""
+
+
+
+
+[kazaam]
+add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
+configureFlags = """[
+	"--with-Rmpi-type=OPENMPI"
+	"--with-Rmpi-include=${pkgs.openmpi}/include"
+	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
+]"""
+
+[metaMix]
+add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
+configureFlags = """[
+	"--with-Rmpi-type=OPENMPI"
+	"--with-Rmpi-include=${pkgs.openmpi}/include"
+	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
+]"""
+[regRSM]
+add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
+configureFlags = """[
+	"--with-Rmpi-type=OPENMPI"
+	"--with-Rmpi-include=${pkgs.openmpi}/include"
+	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
+]"""
+
+[pmclust]
+add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
+configureFlags = """[
+	"--with-Rmpi-type=OPENMPI"
+	"--with-Rmpi-include=${pkgs.openmpi}/include"
+	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
+]"""
+
+
+[tesseract]
+patches = "[../nix/patches/tesseract_4.1.2.patch]"
+#PKG_CFLAGS='"-I${pkgs.tesseract}/include -I${pkgs.leptonica}/include"'
+add_nativeBuildInputs = "[pkgconfig tesseract leptonica]"
+add_buildInputs = "[tesseract leptonica]"
+
+[oolong]
+add_r_dependencies = '["mlapi" "text2vec"]'
+
+[dmdScheme]
+patches = "[../nix/patches/dmdScheme.patch]"
+
+[frailtypack]
+NIX_BUILD_CORES='1'
+failureHook = """''
+env
+''"""
+
+[zenplots]
+add_nativeBuildInputs = "[x11 tk tcl]"
+add_buildInputs = "[x11 tk tcl]"
+
+[mongolite]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+patches = "[../nix/patches/mongolite.patch]"
+
+["mongolite_..2.3.1"]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+patches = "[../nix/patches/mongolite.patch]"
+postPatch = "''patchShebangs configure''"
+
+
+["mongolite.ggplot"]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+
+["nfl4th"]
+patches = "[../nix/patches/nfl4th.patch]"
+
+[pathfindR]
+add_nativeBuildInputs = "[jdk]"
+
+
+[avidaR]
+patches = "[../nix/patches/avidaR.patch]"
+
+[happign]
+patches = "[../nix/patches/happign.patch]"
+
+[worldfootballR]
+patches = "[../nix/patches/worldfootballR.patch]"
+
+
+["nanonext_0.4.0"]
+add_nativeBuildInputs = "[cmake]"
+NNG_SRC= """
+pkgs.fetchurl {
+	url = "https://github.com/nanomsg/nng/archive/refs/tags/v1.5.2.tar.gz";
+	sha256 = "sha256-+LJauGc4hksfLjEo6LratYFRD6gIX/XKm7mA0xczTEY=";
+	}
+"""
+patches = "[../nix/patches/nanonext_0.4.0.patch]"
+
+["nanonext_0.5.0"]
+add_nativeBuildInputs = "[cmake]"
+NNG_SRC= """
+pkgs.fetchurl {
+	url = "https://api.github.com/repos/nanomsg/nng/tarball/169221d";
+	sha256 = "sha256-0cp7AlK/m6djmJ3Lezttgo4SFk2qs746k2O4TjMoATk=";
+	}
+"""
+patches = "[../nix/patches/nanonext_0.5.0.patch]"
+
+
+
+["elbird_0.2.3"]
+add_nativeBuildInputs = "[cmake pkgconfig (pkgs.callPackage ../nix/packages/libKiwi_0.11.2.nix {})]"
+add_buildInputs = "[(pkgs.callPackage ../nix/packages/libKiwi_0.11.2.nix {})]"
+
+[gaston]
+add_nativeBuildInputs = "[zlib]"
+add_buildInputs = "[zlib]"
+
+["rflsgen_1.0.0.."]
+JAR_SRC = """fetchurl {
+	url = "https://github.com/dimitri-justeau/flsgen/releases/download/v1.1.0/flsgen-1.1.0.jar";
+	sha256 = "sha256-MN3UZQnNPakIqbMHUrL77VB6cRnWiI1jNT5edcJgRp8=";
+}"""
+patches = "[../nix/patches/rflsgen.patch]"
+
+[robis]
+patches = "[../nix/patches/robis.patch]"
+
+[mined]
+patches = "[../nix/patches/mined.patch]"
+
+[fctbases]
+patches = "[../nix/patches/fctbases.patch]"
+[waddR]
+patches = "[../nix/patches/waddR.patch]"
+
+[RKHSMetaMod]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+[mixlink]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+
+
+[leidenAlg]
+add_nativeBuildInputs = "[pkgconfig gmp]"
+add_buildInputs = "[gmp]"
+
+
+
+# bioconductors
+[bgx]
+#add_nativeBuildInputs = "[cmake pkgconfig]"
+postConfigure = """''
+substituteInPlace src/Makevars --replace "rm -r ../boostIncl" ""
+substituteInPlace src/Makevars.in --replace "rm -r ../boostIncl" ""
+''"""
+
+["networkBMA_2.34.0..2.35.0"]
+postConfigure = """''
+ substituteInPlace src/fastBMA.hpp --replace "boost::uintmax_t" "std::uintmax_t"
+ ''"""
+
+[BGmix]
+postConfigure = """''
+substituteInPlace src/Makevars --replace "rm -r ../boostIncl" ""
+substituteInPlace src/Makevars.in --replace "rm -r ../boostIncl" ""
+''"""
+
+
+[RJMCMCNucleosomes]
+add_nativeBuildInputs = '[pkgconfig gsl_1]'
+add_buildInputs = '[gsl_1]'
+
+[ccfindR]
+add_nativeBuildInputs = '[pkgconfig gsl_1]'
+add_buildInputs = '[gsl_1]'
+
+[PICS]
+add_nativeBuildInputs = '[pkgconfig gsl_1]'
+add_buildInputs = '[gsl_1]'
+
+[immunoClust]
+add_nativeBuildInputs = '[pkgconfig gsl_1]'
+add_buildInputs = '[gsl_1]'
+
+[infercnv]
+add_nativeBuildInputs = '[pkgconfig python]'
+add_buildInputs = '[python]'
+PYTHON='"${pkgs.python}/bin/python"'
+
+[MSGFplus]
+add_nativeBuildInputs = '[which jdk]'
+add_buildInputs = '[jdk]'
+
+["MSGFplus_1.16.0..1.28.0"]
+add_nativeBuildInputs = '[which jdk]'
+add_buildInputs = '[jdk]'
+patches = "[../nix/patches/MSGFplus_1.28.0.patch]"
+
+
+[ArrayExpressHTS]
+add_nativeBuildInputs = "[which]"
+
+[ChemmineOB]
+OPEN_BABEL_INCDIR= '"${pkgs.openbabel}/include/openbabel3/"'
+add_nativeBuildInputs = '[openbabel]'
+add_buildInputs = '[openbabel]'
+preInstall= """''substituteInPlace src/Makevars.in --replace "/usr/local/include/eigen3" "${pkgs.eigen}/include/eigen3"
+''"""
+
+[DeepBlueR]
+patches = "[../nix/patches/DeepBlueR.patch]"
+
+[MACPET]
+patches = "[../nix/patches/MACPET.patch]"
+[snapcount]
+patches = "[../nix/patches/snapcount.patch]"
+[gpart]
+patches = "[../nix/patches/gpart.patch]"
+["ReactomeContentService4R"]
+patches = "[../nix/patches/ReactomeContentService4R.patch]"
+[immunotation]
+patches = "[../nix/patches/immunotation.patch]"
+[multiMiR]
+patches = "[../nix/patches/multiMiR.patch]"
+[rfaRm]
+patches = "[../nix/patches/rfaRm.patch]"
+
+[HilbertVisGUI]
+add_nativeBuildInputs = '[pkgconfig opencl-headers gtkmm2 gtk2 which]'
+add_buildInputs = '[ocl-icd opencl-clhpp gtkmm2 gtk2]'
+
+[gpuMagic]
+add_nativeBuildInputs = '[pkgconfig opencl-headers which]'
+add_buildInputs = '[ocl-icd opencl-clhpp]'
+
+[universalmotif]
+add_nativeBuildInputs = '[binutils]'
+postPatch= """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
+
+
+
+
+[Rgin]
+add_r_dependencies = '["Rcpp"]'
+#PKG_CPPFLAGS="""''-I"/nix/store/qr840krk71z8l00pgyy8lix2bajqz0sc-r-Rcpp-1.0.8.3/library/Rcpp/include"''"""
+# we need to set the right include path, but we need to do it later,
+# when we actually know the full Rcpp path
+preConfigure ="""''
+IFS=' '
+
+# Read the split words into an array
+# based on space delimiter
+read -ra newarr <<< "$buildInputs"
+
+# Print each value of the array by using
+# the loop
+for val in "''${newarr[@]}";
+do
+	if [[ "$val" == *"r-Rcpp-"* ]]; then
+	  echo "It's there." $val
+	  export PKG_CPPFLAGS="-I$val/library/Rcpp/include"
+	fi
+done
+''"""
+
+[martini]
+add_r_dependencies = '["memoise"]'
+
+[Rbowtie]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[Rsubread]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+CFLAGS='"-I${pkgs.zlib.dev}/include"'
+
+
+
+[Travel]
+add_nativeBuildInputs = "[pkgconfig fuse]"
+add_buildInputs = "[fuse]"
+
+[tofsims]
+add_nativeBuildInputs = "[lapack]"
+add_buildInputs = "[lapack]"
+
+[CytoML]
+add_nativeBuildInputs = "[pkgconfig libxml2]"
+add_buildInputs = "[libxml2]"
+
+
+
+
+
+["Rhisat2"]
+add_nativeBuildInputs = "[which nettools]"
+patches = "[../nix/patches/Rhisat2.patch]"
+#add_buildInputs = "[zlib]"
+
+
+
+[SICtools]
+add_nativeBuildInputs = "[ncurses]"
+add_buildInputs = "[ncurses]"
+postPatch = """''
+substituteInPlace src/Makefile \
+      --replace "CFLAGS = " "CFLAGS = -I${pkgs.ncurses.dev}/include " \
+      --replace "LDFLAGS = " "LDFLAGS = -L${pkgs.ncurses.out}/lib " \
+      --replace "-lcurses" "-lncurses"
+      ''"""
+
+[lpsymphony]
+postPatch = "''patchShebangs configure''"
+
+[libsoc]
+postPatch = "''patchShebangs configure''"
+
+
+[seqTools]
+add_nativeBuildInputs = "[zlib]"
+add_buildInputs = "[zlib]"
+
+[PECA]
+HOME = '"$TMPDIR"'
+
+[OmnipathR]
+HOME = '"$TMPDIR"'
+
+[paxtoolsr]
+HOME = '"$TMPDIR"'
+[biocthis]
+HOME = '"$TMPDIR"'
+
+[SCATE]
+#doCheck = "false" # wants to talk to experimentHub
+# it loads SCATEData, which talks to the experimentHub,
+# even if you say doCheck=false
+# and experimentHub stuff  does not like HOME pointing to $TMPDIR
+# but then it doesn't work anyway..
+broken = "true"
+
+[fgga]
+HOME = '"$TMPDIR"'
+
+[TIN]
+HOME = '"$TMPDIR"'
+[systemPipeShiny]
+HOME = '"$TMPDIR"'
+
+[SpatialDecon]
+HOME = '"$TMPDIR"'
+[wppi]
+HOME = '"$TMPDIR"'
+[APAlyzer]
+HOME = '"$TMPDIR"'
+
+
+[affxparser]
+# the one in bioconductor does not rebuild it's fusion.o files,
+# IDK how they built it in the first place...
+src = """fetchFromGitHub {
+	owner = "HenrikBengtsson";
+	repo = "affxparser";
+	rev="1.66.0";
+	sha256 ="sha256-/TgixgwJkx4BekexHCWkVUl5mxZkFfLIIYql4mbIvXM=";
+}
+"""
+
+[interactiveDisplay]
+patches = "[../nix/patches/interactiveDisplay.patch]"
+
+[SharedObject]
+patches = "[../nix/patches/SharedObject.patch]"
+
+[rsbml]
+add_nativeBuildInputs = "[pkgconfig  (pkgs.callPackage ../nix/packages/libSBML.nix {})]"
+preConfigure = """''
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${(pkgs.callPackage ../nix/packages/libSBML.nix {})}/lib/pkgconfig
+env
+''"""
+
+
+
+# bc 3.15
+[Rbwa]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+#PKG_CPPFLAGS='"-I${pkgs.zlib}/include/"'
+
+[float]
+add_nativeBuildInputs = "[lapack]"
+add_buildInputs = "[lapack]"
+
+[rolog]
+add_nativeBuildInputs = "[pkg-config cmake expat lzma zlib bzip2 zstd swiProlog]"
+add_buildInputs = "[expat lzma zlib bzip2 zstd swiProlog]"
+HOME = '"$TMPDIR"'
+
+[rgoslin]
+NIX_BUILD_CORES='1'
+#patches = "[../nix/patches/rgoslin.patch]"
+preConfigure = """''
+mkdir /tmp/home
+''"""
+HOME = '"/tmp/home"'
+
+
+[ifultools]
+add_nativeBuildInputs = "[pkg-config lapack]"
+add_buildInputs = "[pkg-config lapack]"
+
+preConfigure = """''
+mkdir /tmp/home
+''"""
+HOME = '"/tmp/home"'
+
+
+[SPONGE]
+preConfigure = """''
+mkdir /tmp/home
+''"""
+HOME = '"/tmp/home"'
+
+["JASPAR2022"]
+preConfigure = """''
+mkdir /tmp/home
+''"""
+HOME = '"/tmp/home"'
+doCheck = "false" # wants to talk to experimentHub
+
+[PhIPData]
+HOME = '"$TMPDIR"'
+
+["tenXplore_1.17.1.."]
+preConfigure = """''
+mkdir /tmp/home
+''"""
+HOME = '"/tmp/home"'
+
+[ISAnalytics]
+HOME = '"$TMPDIR"'
+add_r_dependencies = '["DT"]'
+
+[protGear]
+HOME = '"$TMPDIR"'
+
+[beer]
+HOME = '"$TMPDIR"'
+
+
+["MicrobiotaProcess_1.4.4..1.6.0"]
+HOME = '"$TMPDIR"'
+add_r_dependencies = '["phyloseq" "ggnewscale"]'
+
+["MicrobiotaProcess_1.6.6"]
+HOME = '"$TMPDIR"'
+add_r_dependencies = '["plyr"]'
+
+[MicrobiotaProcess]
+HOME = '"$TMPDIR"'
+add_r_dependencies = '["phyloseq"]'
+
+["groHMM_1.29.1"]
+patches = "[../nix/patches/groHMM_1.29.1.patch]"
+
+["bigmemory_4.6.1.."]
+add_nativeBuildInputs = "[pkg-config libuuid]"
+add_buildInputs = "[libuuid]"
+
+[crisprScore]
+preConfigure = """''
+mkdir /tmp/home
+''"""
+HOME = '"/tmp/home"'
+doCheck = "false"
+
+[riot]
+HOME = '"$TMPDIR"'
+VTK_SRC = """fetchurl {
+url = "https://www.vtk.org/files/release/9.0/VTK-9.0.1.tar.gz";
+sha256 = "sha256-Gzml4ZHCgoYeevQQHqqFhZaaLeBfVkbJGZoWEhOmIsc=";
+}"""
+add_nativeBuildInputs = "[which cmake]"
+patches = "[../nix/patches/riot_1.0.0.patch]"
+
+[MAGeCKFlute]
+preConfigure = """''
+mkdir /tmp/home
+''"""
+HOME = '"/tmp/home"'
+doCheck = "false" # wants to talk to experimentHub
+
+[ssdtools]
+HOME = '"$TMPDIR"'
+
+[gastempt]
+HOME = '"$TMPDIR"'
+add_r_dependencies = '["rstantools"]'
+
+[qmix]
+add_r_dependencies = '["rstantools"]'
+
+[densEstBayes]
+add_r_dependencies = '["rstantools"]'
+
+[bayesZIB]
+add_r_dependencies = '["rstantools"]'
+
+[BINtools]
+add_r_dependencies = '["rstantools"]'
+
+
+
+[briskaR]
+postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
+
+[MatchIt]
+postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
+
+[kgrams]
+postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
+
+["prospectr"]
+postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
+
+["strucchangeRcpp"]
+postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
+
+["resemble"]
+postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
+
+
+[tkImgR]
+add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
+add_buildInputs = "[x11 tk tcl]"
+propagatedNativeBuildInputs = "[x11 tk tcl]"
+
+
+
+["aphid_1.3.3"]
+LD_LIBRARY_PATH = "''${pkgs.openssl.out}/lib''"
+add_nativeBuildInputs = "[pkgconfig lzma bzip2 zlib icu]"
+add_buildInputs = "[lzma bzip2 zlib icu]"
+["credentials_1.3.1"]
+#LD_LIBRARY_PATH = "''${pkgs.openssl.out}/lib''"
+
+["rGEDI"]
+add_nativeBuildInputs = "[pkgconfig libgeotiff szip]"
+add_buildInputs= "[libgeotiff szip]"
+
+["cairoDevice"]
+add_nativeBuildInputs = "[pkgconfig gtk2]"
+add_buildInputs= "[gtk2]"
+
+["RGtk2"]
+add_nativeBuildInputs = "[pkgconfig gtk2]"
+add_buildInputs= "[gtk2]"
+
+
+[bnpmr]
+add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
+
+
+[gwsem]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[GroupSeq]
+add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
+add_buildInputs = "[x11 tk tcl]"
+propagatedNativeBuildInputs = "[x11 tk tcl]"
+
+["HierO_..0.2"]
+add_nativeBuildInputs = "[pkgconfig x11 tk tcl bwidget]"
+add_buildInputs = "[x11 tk tcl bwidget]"
+postPatch = """''
+sed -i '3iaddTclPath\\("${pkgs.bwidget}/lib"\\)' /build/HierO/R/HierO.R
+''"""
+
+propagatedNativeBuildInputs = "[x11 tk tcl]"
+
+[cartogramR]
+add_nativeBuildInputs = "[pkgconfig fftw]"
+add_buildInputs = "[fftw]"
+
+
+["RDieHarder_0.2.1"]
+add_nativeBuildInputs = "[ pkgconfig ( pkgs.callPackage ../nix/packages/dieharder/default.nix { })]"
+add_buildInputs = "[ ( pkgs.callPackage ../nix/packages/dieharder/default.nix { })]"
+#add_buildInputs = "[dieharder]"
+
+[redux]
+postPatch = "''patchShebangs configure''"
+
+
+[Rhpc]
+add_nativeBuildInputs = "[pkgconfig openssh openmpi zlib bzip2 lzma icu]"
+add_buildInputs = "[openssh openmpi zlib bzip2 lzma icu]"
+configureFlags = """[
+	"--with-Rmpi-type=OPENMPI"
+	"--with-Rmpi-include=${pkgs.openmpi}/include"
+	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
+]"""
+
+
+[vdiffr]
+add_nativeBuildInputs = "[pkgconfig libpng]"
+add_buildInputs = "[libpng]"
+
+[webp]
+postPatch = "''patchShebangs configure''"
+
+
+
+[fulltext]
+HOME = '"$TMPDIR"'
+
+["signatureSearch_1.8.0"]
+# blacklisted on 2021-10-27
+preConfigure = """''
+mkdir /tmp/home
+''"""
+HOME = '"/tmp/home"'
+
+doCheck = "false"
+
+[nearfar]
+patches = "[../nix/patches/nearfar.patch]"
+
+[sismonr]
+add_nativeBuildInputs = "[pkgconfig julia which]"
+add_buildInputs = "[julia]"
+#patches = "[../nix/patches/sismon.pach]"
+_notes = """''on nixpkgs 21.5 (e.g. 2021-10-27), needs 
+	```nixpkgs..config.permittedInsecurePackages = [
+                "libgit2-0.27.10"
+              ];
+    ``` on import nixpkgs
+to build julia''"""
+
+# deeper problem
+ ["Rbowtie2_..1.14.0"]
+PKG_CPPFLAGS='"-I${pkgs.zlib}/include/"'
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+
+
+[affyPara]
+add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
+add_buildInputs = "[x11 tk tcl]"
+propagatedNativeBuildInputs = "[x11 tk tcl]"
+
+["cbpManager_1.0.2"]
+add_r_dependencies = '["markdown"]'
