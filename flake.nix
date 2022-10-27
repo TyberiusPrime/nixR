@@ -39,6 +39,11 @@
     import-cargo,
   }: let
     lib = nixpkgs_22_05.lib;
+
+    unfree_predicate = pkg:
+      builtins.elem (lib.getName pkg) [
+        "szip"
+      ];
     inherit (import-cargo.builders) importCargo;
 
     system = "x86_64-linux";
@@ -50,10 +55,13 @@
       "19.3" = import nixpkgs_19_03 {inherit system;};
       "19.9" = import nixpkgs_19_09 {inherit system;};
       "20.3" = import nixpkgs_20_03 {inherit system;};
-      "20.9" = import nixpkgs_20_09 {inherit system;};
+      "20.9" = import nixpkgs_20_09 {
+        inherit system;
+        config.allowUnfreePredicate = unfree_predicate;
+      };
       "21.5" = import nixpkgs_21_05 {
         inherit system;
-        config.allowUnfree = true;
+        config.allowUnfreePredicate = unfree_predicate;
         config.permittedInsecurePackages = [
           # to build sismonr
           "libgit2-0.27.10"
@@ -61,7 +69,7 @@
       };
       "21.11" = import nixpkgs_21_11 {
         inherit system;
-        config.allowUnfree = true;
+        config.allowUnfreePredicate = unfree_predicate;
       };
       "22.5" = import nixpkgs_22_05 {inherit system;};
     };
@@ -79,7 +87,7 @@
     }: let
       # the per date data (ie nixpkgs, R, bioc versions, map of package name -> pkg version
       entry = r_by_date_data.${date};
-      pkgs = entry.nixpkgs;
+      pkgs = builtins.trace ("nixpkgs version: " + entry.nixpkgs.lib.version) entry.nixpkgs;
 
       package_info_cran = import generated/cran.nix {
         inherit pkgs;
@@ -280,15 +288,71 @@
           }
         ))
     r_by_date_data)
-    // { # for debugging why these sets are not buildng
+    // {
+      # for debugging why these sets are not buildng
       debug_set = R_by_date {
-        date = "2021-10-26";
+        date = "2021-05-20";
         r_pkg_names = [
-          "MSGFplus"
-          "Rbowtie2"
-          "cbpManager"
-          "CSTools"
-          "MicrobiotaProcess"
+          "GeneBook"
+          #"IDSpatialStats"
+          "RBesT"
+          "RoBMA"
+          "DEploid"
+          "gpg"
+          #"expp"
+         # "freetypeharfbuzz"
+          "libproj"
+          "gsl"
+          "h2o"
+          "lwgeom"
+          "mlbstatsR"
+          "moc.gapbk"
+          "protolite"
+          "robis"
+          "rpanel"
+        #  "salso"
+         # "rLiDAR"
+          "s2"
+          "sodium"
+         # "sbw"
+         # "spANOVA"
+          #"spsur"
+          "stockfish"
+          "sdcTable"
+          "terra"
+          "mashr"
+          "gdalcubes"
+          #"vapour"
+          "collapse"
+          "whitebox"
+          "dfpk"
+          "websocket"
+          "OncoBayes2"
+          "bmlm"
+          "tmbstan"
+          "visit"
+          "CausalQueries"
+          "qmix"
+          "hsstan"
+          "cbq"
+          "ubms"
+          "eggCounts"
+          "artemis"
+          "beanz"
+          "bayesdfa"
+          "FlexReg"
+          # "spsurv"
+          "fishflux"
+          "metaBMA"
+          "MetaStan"
+          "mrbayes"
+          "EpiNow2"
+          "baggr"
+          "DCPO"
+          "LMMELSM"
+          "MIRES"
+          "rstap"
+          "ctsem"
         ];
       };
     };

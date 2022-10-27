@@ -1,0 +1,44 @@
+diff --git a/R/AFND_interface.R b/R/AFND_interface.R
+index 1d2c886..3501aa4 100644
+--- a/R/AFND_interface.R
++++ b/R/AFND_interface.R
+@@ -273,7 +273,7 @@ get_valid_geographics <- function() {
+         valid_ethnic = valid_ethnic)
+ }
+ 
+-valid_geographics <- get_valid_geographics()
++try(valid_geographics <- get_valid_geographics())
+ 
+ #' check_geographics, stops if input not adequate
+ #' @param country country used for allele frequency selection
+diff --git a/R/external_resources_input.R b/R/external_resources_input.R
+index 8e2593d..114bde2 100644
+--- a/R/external_resources_input.R
++++ b/R/external_resources_input.R
+@@ -74,12 +74,17 @@ getURL <- function(URL, N.TRIES=2L,
+ # MHC I
+ # netmhcI_input_template is an internal variable containing list of valid 
+ # NetMHCpan input alleles
++
++try(
+ netmhcI_input_template <- getURL(
+     URL="https://services.healthtech.dtu.dk/services/NetMHCpan-4.1/allele.list",
+     read_method = "delim", delim = "\t",
+     col_names = c("netmhc_input", "hla_chain_name", "HLA_gene"))
++)
+ 
+ # MHC II
++try(
++	{
+ lines <- getURL(
+     URL = paste0("https://services.healthtech.dtu.dk/services/",
+     "NetMHCIIpan-4.0/alleles_name.list"),
+@@ -94,6 +99,8 @@ all_netmhcII_template <- c(netmhcII_input_template$DR,
+ # all_netmhcII_template is an internal variable containing list of valid 
+ # NetMHCIIpan input alleles
+ all_netmhcII_template <- all_netmhcII_template[!is.na(all_netmhcII_template)]
++	}
++)
+ 
+ 
+ #

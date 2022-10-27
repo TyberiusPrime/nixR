@@ -42,7 +42,7 @@ pub fn parse_desc(raw: &str, fields_to_keep: &HashSet<&str>) -> Result<HashMap<S
         Some(lk) => {
             if fields_to_keep.contains(&lk[..]) {
                 let value = std::str::from_utf8(&rb[last_data_start..]).unwrap().trim();
-                out.insert(lk.to_owned(), value.to_owned());
+                out.insert(lk, value.to_owned());
             }
         }
         None => {}

@@ -11,6 +11,7 @@ use std::{
     collections::HashSet,
     path::{Path, PathBuf},
 };
+use std::str::FromStr;
 
 pub mod dates;
 pub mod desc_parser;
@@ -78,27 +79,30 @@ fn load_derivation_args(override_path: &Path) -> Result<DerivationArgs> {
             let pkg = &parsed[1];
             let start: Option<Version> = match parsed.get(2) {
                 Some(x) => Some(
-                    Version::from_str(x.as_str()).with_context(|| format!("Parsing start of {}", k))?,
+                    Version::from_str(x.as_str())
+                        .with_context(|| format!("Parsing start of {}", k))?,
                 ),
                 None => None,
             };
             let stop: Option<Version> = match parsed.get(3) {
                 Some(x) => Some(
-                    Version::from_str(x.as_str()).with_context(|| format!("Parsing stop of {}", k))?,
+                    Version::from_str(x.as_str())
+                        .with_context(|| format!("Parsing stop of {}", k))?,
                 ),
                 None => None,
             };
             (pkg.to_string(), start, stop)
-        } else if k.contains("_") // single version
-		{
-			let (pkg, version) = k.split_once("_").unwrap();
-			let version = Version::from_str(version).with_context(|| format!("Parsing version of {}", k))?;
-			(pkg.to_string(), Some(version.clone()), Some(version))
-		}
-		else {
+        } else if k.contains('_')
+        // single version
+        {
+            let (pkg, version) = k.split_once('_').unwrap();
+            let version =
+                Version::from_str(version).with_context(|| format!("Parsing version of {}", k))?;
+            (pkg.to_string(), Some(version.clone()), Some(version))
+        } else {
             (k.to_string(), None, None)
         };
-        let entry = out.entry(pkg).or_insert_with(|| Vec::new());
+        let entry = out.entry(pkg).or_insert_with(Vec::new);
         entry.push((start, stop, v));
     }
 
@@ -209,21 +213,21 @@ impl Config {
         date_paths
     }
 
-    fn load_blacklist(path: &Path) -> Result<HashSet<String>> {
-        let raw: HashMap<String, String> = load_toml(path, false).with_context(||format!("Loading {:?}", path))?;
-        Ok(raw.into_iter().map(|(k, _)| k).collect())
+    fn load_blacklist(path: &Path) -> Result<HashMap<String, String>> {
+        let raw: HashMap<String, String> =
+            load_toml(path, false).with_context(|| format!("Loading {:?}", path))?;
+        Ok(raw.into_iter().collect())
     }
 
     pub fn extra_dates(&self) -> Result<HashMap<NaiveDate, String>> {
-        Ok(load_toml(&self.override_path.join("output_dates.toml"), false)?)
-
+        load_toml(&self.override_path.join("output_dates.toml"), false)
     }
 
-    pub fn get_input_blacklist(&self) -> Result<HashSet<String>> {
+    pub fn get_input_blacklist(&self) -> Result<HashMap<String, String>> {
         Config::load_blacklist(&self.override_path.join("input_blacklist.toml"))
     }
 
-    pub fn get_output_blacklist(&self) -> Result<HashSet<String>> {
+    pub fn get_output_blacklist(&self) -> Result<HashMap<String, String>> {
         Config::load_blacklist(&self.override_path.join("output_blacklist.toml"))
     }
 
@@ -231,7 +235,7 @@ impl Config {
         &self,
         pkg: &str,
         version: &Version,
-        r_deps: &Vec<String>,
+        r_deps: &[String],
     ) -> Option<HashMap<String, String>> {
         //this really needs a fully recursive query to be 100% sucessful.
         //But it's a lot of work to save some repetition in overrides/derivation_args
@@ -266,7 +270,7 @@ impl Config {
         match self.derivation_args_.get(pkg) {
             None => None,
             Some(entries) => {
-				let (mut prio_out, mut out) = (10, None);
+                let (mut prio_out, mut out) = (10, None);
 
                 for (start_ver, stop_ver, dv) in entries.iter() {
                     let after_start = match start_ver {
@@ -281,21 +285,24 @@ impl Config {
                     if after_start && before_end {
                         let temp_out: HashMap<String, String> =
                             dv.iter().map(|(k, v)| (k.to_string(), v.clone())).collect();
-						let prio = match (start_ver, stop_ver) {
-							(Some(x), Some(y)) => {
-								if x == y { 0 } else { 1 }
-								}, 
-							(Some(_), None) | (None, Some(_)) => 2,
-							(None, None) => 3
-						};
-						if prio < prio_out  {
-							prio_out = prio;
-							out = Some(temp_out);
-						}
-
+                        let prio = match (start_ver, stop_ver) {
+                            (Some(x), Some(y)) => {
+                                if x == y {
+                                    0
+                                } else {
+                                    1
+                                }
+                            }
+                            (Some(_), None) | (None, Some(_)) => 2,
+                            (None, None) => 3,
+                        };
+                        if prio < prio_out {
+                            prio_out = prio;
+                            out = Some(temp_out);
+                        }
                     }
                 }
-				return out;
+                out
             }
         }
     }
@@ -352,7 +359,7 @@ impl<T: Ord + Clone> DateRangePlus<T> {
         !(match end_date {
             Some(x) => x < &self.start_date,
             None => false,
-        }) && !(start_date > &self.end_date)
+        }) && (start_date <= &self.end_date)
         /*
         return !t1.end.isBefore(t2.begin) && !t1.begin.isAfter(t2.end);
         self.contains(start_date)
@@ -367,8 +374,20 @@ impl<T: Ord + Clone> DateRangePlus<T> {
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Serialize, Deserialize, Hash)]
 pub struct Version(pub Vec<u32>);
+
 impl Version {
-    pub fn from_str(input: &str) -> Result<Version> {
+    pub fn is_prefix(&self, other: &Version) -> bool {
+        for (a, b) in self.0.iter().zip(other.0.iter()) {
+            if a != b {
+                return false;
+            }
+        }
+        true
+    }
+}
+impl std::str::FromStr for Version {
+    type Err = anyhow::Error;
+    fn from_str(input: &str) -> Result<Version> {
         let parts: Result<Vec<u32>> = input
             .split(&['.', '-'])
             .map(|x| -> Result<u32> {
@@ -377,15 +396,6 @@ impl Version {
             })
             .collect();
         Ok(Version(parts?))
-    }
-
-    pub fn is_prefix(&self, other: &Version) -> bool {
-        for (a, b) in self.0.iter().zip(other.0.iter()) {
-            if a != b {
-                return false;
-            }
-        }
-        true
     }
 }
 
@@ -425,7 +435,7 @@ impl BioconductorRelease {
         let bioc_packages = dates::parse_package_dates(
             bioc_packages,
             //Repo::BiocSoftware(self.element.version.to_owned()),
-            &manual_date_overrides,
+            manual_date_overrides,
             &self.end_date,
             HashMap::new(), // bioconductor doesn't archive/eol within a release. I hope.
         )?;
@@ -459,7 +469,7 @@ impl BioconductorRelease {
     /// the x.y prefix bioconductor specified
     pub fn r_minor_versions(
         &self,
-        r_releases: &Vec<DateRangePlus<Version>>,
+        r_releases: &[DateRangePlus<Version>],
     ) -> Vec<DateRangePlus<Version>> {
         let mut filtered: Vec<_> = r_releases
             .iter()
@@ -467,7 +477,7 @@ impl BioconductorRelease {
                 self.element.r_major_version.is_prefix(&x.element)
                     && x.intervals_overlap(&self.start_date, Some(&self.end_date))
             })
-            .map(|entry| entry.clone())
+            .cloned()
             .collect();
         let mut last = filtered
             .iter_mut()
@@ -589,7 +599,7 @@ pub static REGEXPS_MIN_R_VERSION_SEARCH: Lazy<Regex> = lazy_regex!("R \\(>= ([0-
 pub fn parse_r_dependencies(input: Option<&String>) -> Result<Vec<String>> {
     let mut res = Vec::new();
     if let Some(input) = input {
-        for entry in input.split(",") {
+        for entry in input.split(',') {
             if !entry.is_empty() {
                 let entry = entry.trim();
                 match REGEXPS_PACKAGE_NAME.captures(entry) {
@@ -665,13 +675,13 @@ impl PackageInfoWithSource {
         Ok(None)
     }
 
-    pub fn system_deps(&self, lookup: &Vec<(String, String)>) -> Result<Vec<String>> {
+    pub fn system_deps(&self, lookup: &[(String, String)]) -> Result<Vec<String>> {
         let desc_reqs = self.desc.get("SystemRequirements");
         let mut res = HashSet::new();
         if let Some(desc_reqs) = desc_reqs {
             for (query, out_value) in lookup.iter() {
                 if desc_reqs.contains(query) {
-                    for pkg in out_value.split(" ") {
+                    for pkg in out_value.split(' ') {
                         res.insert(pkg.to_string());
                     }
                 }

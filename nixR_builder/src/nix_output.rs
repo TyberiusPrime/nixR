@@ -78,7 +78,7 @@ impl From<HashMap<&str, NixValue>> for NixValue {
     }
 }
 
-impl<'a> FromIterator<NixValue> for NixValue {
+impl FromIterator<NixValue> for NixValue {
     fn from_iter<I: IntoIterator<Item = NixValue>>(iter: I) -> Self {
         let mut res: Vec<NixValue> = Vec::new();
         for v in iter {
@@ -96,7 +96,7 @@ impl<'a> FromIterator<(&'a str, NixValue)> for NixValue {
         NixValue::AttrSet(res)
     }
 }
-impl<'a> FromIterator<(String, NixValue)> for NixValue {
+impl FromIterator<(String, NixValue)> for NixValue {
     fn from_iter<I: IntoIterator<Item = (String, NixValue)>>(iter: I) -> Self {
         let mut res: HashMap<String, NixValue> = HashMap::new();
         for (k, v) in iter {
@@ -105,10 +105,10 @@ impl<'a> FromIterator<(String, NixValue)> for NixValue {
         NixValue::AttrSet(res)
     }
 }
-fn format_nix_list(entries: &Vec<NixValue>) -> String {
+fn format_nix_list(entries: &[NixValue]) -> String {
     let mut res = format!("[ {} ]", entries.iter().map(|x| format!("{}", x)).join(" "));
     if res.len() > 88 {
-        res = res.replace(" ", "\n")
+        res = res.replace(' ', "\n")
     }
 
     res

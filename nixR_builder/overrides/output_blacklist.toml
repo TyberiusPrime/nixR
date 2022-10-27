@@ -52,3 +52,22 @@ cplexAPI = "unfree, cplex not in nixpkgs"
 "affyPara::2021-10-26" = "cannot add binding of '.affyParaInternalEnv' to the base environment"
 "ppmlasso::2021-10-26" = "must supply a function skeleton for 'envelope', explicitly or via an existing function"
 
+
+"sismonr::2021-05-20" = "julia is broken in nixpkgs 20.9"
+"IDSpatialStats::2021-05-20" = "Error: object 'bounding.box.xy' is not exported by 'namespace:spatstat'"
+"Deducer::2021-05-20" = "Cannot find JRI native library!"
+"ppmlasso::2021-05-20" = "must supply a function skeleton for 'envelope', explicitly or via an existing function"
+"expp::2021-05-20" = "Error: object 'ripras' is not exported by 'namespace:spatstat'"
+"freetypeharfbuzz::2021-05-20" = "configure: error: cannot run C compiled programs. when configuraing patched harfbuzz"
+"spANOVA::2021-05-20" = "object 'anova.sarlm' is not exported by 'namespace:spatialreg'"
+"rLiDAR::2021-05-20" = "object 'disc' is not exported by 'namespace:spatstat'"
+"sbw::2021-05-20" = "object 'disc' is not exported by 'namespace:spatstat'"
+"salso::2021-05-20" = "needs rust 1.49, but 1.45.1 is in nixpkgs at this date"
+"spsur::2021-05-20" = "namespace 'sparseMVN' 0.2.1 is being loaded, but >= 0.2.1.1 is required"
+"vapour::2021-05-20" = "upgrade GDAL to 2.2.2 or later (though we have 2.4.0?..)"
+"affyPara::2021-05-20" = "cannot add binding of '.affyParaInternalEnv' to the base environment"
+"ChemmineOB::2021-05-20" = "nixpkgs openbabel 2.4.1, but 3.0+ required"
+
+"string2path_0.1.1" = "Cargo.lock references extendr-api github revision that no longer exists"
+
+

@@ -1,0 +1,17 @@
+diff --git a/R/GeneCard_Search_System_copy.r b/R/GeneCard_Search_System_copy.r
+index bc03cb4..4b000ca 100644
+--- a/R/GeneCard_Search_System_copy.r
++++ b/R/GeneCard_Search_System_copy.r
+@@ -38,7 +38,11 @@
+ # rio::export(genecard_id, "./data/genecard_id.rda")
+ 
+ requireNamespace("repmis")
+-repmis::source_data("https://github.com/siyanc/GeneBook-Package/blob/master/GeneBook/R/sysdata.rda?raw=True")
++tryCatch ({
++	repmis::source_data("https://github.com/siyanc/GeneBook-Package/blob/master/GeneBook/R/sysdata.rda?raw=True")
++	},
++	error = function (e) { print(c("Failed to download data. No internet? Ignored.", e));}
++)
+ #genecard_description_summary$gene = as.character(genecard_description_summary$gene)
+ GeneCard_ID_Convert = function(x){
+ # library(RMySQL)

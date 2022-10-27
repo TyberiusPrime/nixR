@@ -1,0 +1,39 @@
+diff --git a/R/get_png_logos.R b/R/get_png_logos.R
+index 0119c8c..87d2158 100644
+--- a/R/get_png_logos.R
++++ b/R/get_png_logos.R
+@@ -50,4 +50,8 @@
+ return(dm)
+ }
+ 
++tryCatch ( 
++		  {
+ pr <- get_png_logos()
++		  }, error = function (e) {print(e)}
++)
+diff --git a/R/get_reference_players_mlb.R b/R/get_reference_players_mlb.R
+index e8f3d2e..2a24b5a 100644
+--- a/R/get_reference_players_mlb.R
++++ b/R/get_reference_players_mlb.R
+@@ -164,4 +164,8 @@ get_reference_players_mlb <- function(year = year_actual,  stats = "batting", ty
+ 
+ 
+ }
++tryCatch ( 
++		  {
+ get_reference_players_mlb(1950, "batting", "value")
++		  }, error = function (e) {print(e)}
++)
+diff --git a/R/mlb_player_full.R b/R/mlb_player_full.R
+index 8983617..fe34aad 100644
+--- a/R/mlb_player_full.R
++++ b/R/mlb_player_full.R
+@@ -93,4 +93,8 @@ mlb_player_full <- function(year = year_actual, stats= "hitting", season_type =
+ 
+ }
+ 
++
++tryCatch ({
+ mlb_player_full(1990, "hitting", "playoffs")
++}, error = function (e) {print(e)}
++)

@@ -1,0 +1,22 @@
+diff --git a/tools/Makefile b/tools/Makefile
+index f406545..5dad055 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -16,13 +16,15 @@ $(FT)-vanilla.tar.gz:
+ 	./download.sh "https://github.com/lionel-/freetypeharfbuzz/raw/v$(FTHB_VERSION)/tools/$(FT)-vanilla.tar.gz" $(FT)-vanilla.tar.gz
+ 
+ $(FT)-patched.tar.gz:
+-	./download.sh "https://github.com/lionel-/freetypeharfbuzz/raw/v$(FTHB_VERSION)/tools/$(FT)-patched.tar.gz" $(FT)-patched.tar.gz
++	#./download.sh "https://github.com/lionel-/freetypeharfbuzz/raw/v$(FTHB_VERSION)/tools/$(FT)-patched.tar.gz" $(FT)-patched.tar.gz
++	cp $(freetypeSRC) $(FT)-patched.tar.gz
+ 
+ $(HB)-vanilla.tar.gz:
+ 	./download.sh "https://github.com/lionel-/freetypeharfbuzz/raw/v$(FTHB_VERSION)/tools/$(HB)-vanilla.tar.gz" $(HB)-vanilla.tar.gz
+ 
+ $(HB)-patched.tar.gz:
+-	./download.sh "https://github.com/lionel-/harfbuzz/archive/$(HB_VERSION)-CRAN.tar.gz" $(HB)-patched.tar.gz
++	#./download.sh "https://github.com/lionel-/harfbuzz/archive/$(HB_VERSION)-CRAN.tar.gz" $(HB)-patched.tar.gz
++	cp $(harfbuzzSRC) $(HB)-patched.tar.gz
+ 
+ 
+ .PHONY: tarballs

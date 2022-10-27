@@ -22,6 +22,7 @@ use std::{
     collections::HashSet,
     path::{Path, PathBuf},
 };
+use std::str::FromStr;
 
 pub static PACKAGE_REGEXPS: Lazy<Regex> = lazy_regex!(
     //misnomer, doesn't capture date
@@ -71,7 +72,7 @@ pub fn update_cran(
         // blacklist had been filtered
         // but changes  would require rebuilding
         // so we do it agian
-        .filter(|pi| !(blacklist.contains(&pi.tag())))
+        .filter(|pi| !(blacklist.contains_key(&pi.tag())))
         .map(|pi| PackageInfoWithSource::new_from_package_info(pi, Repo::Cran))
         .collect();
     //trust is ok, paranoia is better...
@@ -435,7 +436,7 @@ fn fetch_package_infos(
 
     let current_info: Vec<Result<PackageInfo>> = current
         .par_iter()
-        .filter(|&tag| !(blacklist.contains(tag)))
+        .filter(|&tag| !(blacklist.contains_key(tag)))
         .map(|tag| {
             match download_hash_and_desc(
                 base_url,
@@ -460,7 +461,7 @@ fn fetch_package_infos(
 
     let archived_info: Vec<Result<PackageInfo>> = archived
         .par_iter()
-        .filter(|&tag| !(blacklist.contains(tag)))
+        .filter(|&tag| !(blacklist.contains_key(tag)))
         .filter(|&tag| !current.contains(tag))
         .map(|tag| {
             match download_hash_and_desc(
@@ -948,7 +949,8 @@ fn fetch_archive<
         info!("downloaded archive");
         let mut result: Vec<String> = Vec::new();
         for package_name in archive_entries.iter().map(|x| &x.0) {
-            let entries: Vec<String> = load_json(&archive_dir.join(package_name), false)?;
+            let entries: Vec<String> = load_json(&archive_dir.join(package_name), false)
+				.with_context(||format!("Loading {:?}",archive_dir.join(package_name), ))?;
             result.extend(entries.into_iter())
         }
         Ok(result)
@@ -1052,7 +1054,7 @@ fn cran_fetch_final_archival_dates(
                     }
                 }
             }
-            if let Some(_) = package {
+            if package.is_some() {
                 bail!("package was still set at the end of parsing PACKAGES.in");
             }
             Ok(out)

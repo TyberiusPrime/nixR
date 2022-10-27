@@ -335,7 +335,7 @@ fn _parse_package_infos_for_dates(
                                 .or_else(|| package_info.desc.get("Date").or(None))
                         });
                     match str_date {
-                        Some(str_date) => parse_cursed_date(&str_date, parse_option)
+                        Some(str_date) => parse_cursed_date(str_date, parse_option)
                             .with_context(|| format!("source {:?}", &package_info)),
                         None => Err(anyhow!("Could not find date field in {:?}", package_info)),
                     }

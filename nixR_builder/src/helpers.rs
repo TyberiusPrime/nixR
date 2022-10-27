@@ -88,16 +88,14 @@ pub fn write_bincode<S: serde::ser::Serialize>(
 
 pub fn load_bincode<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool) -> Result<T> {
     //info!("Loading {:?} gz: {}", &filename, do_gz);
-    let res = if do_gz {
+    if do_gz {
         let mut file = BufReader::new(ex::fs::File::open(filename)?);
         let d = GzDecoder::new(&mut file);
         Ok(bincode::deserialize_from(d)?)
     } else {
         let file = BufReader::new(ex::fs::File::open(filename)?);
         Ok(bincode::deserialize_from(file)?)
-    };
-    //info!("done loading");
-    res
+    }
 }
 pub fn load_toml<T: serde::de::DeserializeOwned>(filename: &Path, do_gz: bool) -> Result<T> {
     //info!("Loading {:?} gz: {}", &filename, do_gz);
@@ -116,16 +114,15 @@ pub fn load_toml<T: serde::de::DeserializeOwned>(filename: &Path, do_gz: bool) -
 
 pub fn load_json<T: serde::de::DeserializeOwned>(filename: &PathBuf, do_gz: bool) -> Result<T> {
     //info!("Loading {:?} gz: {}", &filename, do_gz);
-    let res = if do_gz {
+    if do_gz {
         let mut file = BufReader::new(ex::fs::File::open(filename)?);
         let d = GzDecoder::new(&mut file);
         Ok(serde_json::from_reader(d)?)
     } else {
         let file = BufReader::new(ex::fs::File::open(filename)?);
         Ok(serde_json::from_reader(file)?)
-    };
+    }
     //info!("done loading");
-    res
 }
 
 pub fn write_json<S: serde::ser::Serialize>(
@@ -201,7 +198,21 @@ where
     Ok(())
 }
 
-
+pub fn write_from_string_iter<'a, I>(path: &Path, strs: I) -> Result<()>
+where
+    I: Iterator<Item = &'a str>,
+{
+    let tmp_file = path.with_extension("tmp");
+    {
+        let file = ex::fs::File::create(&tmp_file)?;
+        let mut buf = BufWriter::new(file);
+        for some_str in strs {
+            buf.write_all(some_str.as_bytes())?;
+        }
+    }
+    ex::fs::rename(tmp_file, path)?;
+    Ok(())
+}
 pub fn fetch_url_to_vec(url: &str) -> Result<Vec<u8>> {
     fetch_url_to_vec_with_retries(url, 2)
 }

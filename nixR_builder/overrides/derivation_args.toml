@@ -46,6 +46,16 @@ preConfigure = """''
 substituteInPlace configure --replace 'PKG_LIBS="''${PKG_LIBS_VERSIONED}"' 'PKG_LIB="''${PKG_LIBS_VERSIONED}"';
 ''"""
 
+["websocket_1.4.0.."]
+add_nativeBuildInputs = "[pkgconfig]"
+add_buildInputs = "[]"
+PKGCONFIG_CFLAGS = '"-I${pkgs.openssl.dev}/include"'
+PKGCONFIG_LIBS = '"-Wl,-rpath,${pkgs.openssl.out}/lib -L${pkgs.openssl.out}/lib -lssl -lcrypto"'
+RPATH = "''${pkgs.openssl.out}/lib''"
+preConfigure = """''
+substituteInPlace configure --replace 'PKG_LIBS="''${PKG_LIBS_VERSIONED}"' 'PKG_LIB="''${PKG_LIBS_VERSIONED}"';
+''"""
+
 
 
 
@@ -106,7 +116,7 @@ HOME = '"$TMPDIR"'
 [TreeSearch]
 HOME = '"$TMPDIR"'
 
-["h2o_3.36.0.4.."]
+["h2o_3.36.0.4"]
 preInstall= """''
 	ls /build
 	mkdir /build/h2o/inst/java
@@ -118,7 +128,8 @@ jarSource= """
         sha256="07kkh1px0naq2g0718y1y0khydivsi80v63kdy1frxls1c5ky3kf";
 	}
 	"""
-["h2o_3.34.0.3.."]
+
+["h2o_3.34.0.3"]
 JARSOURCE = """
 	pkgs.fetchurl{
         url="https://s3.amazonaws.com/h2o-release/h2o/rel-zizler/3/Rjar/h2o.jar";
@@ -126,6 +137,16 @@ JARSOURCE = """
 	}
 	"""
 patches = "[../nix/patches/h2o_3.34.0.3.patch]"
+
+["h2o_3.32.1.2"]
+JARSOURCE = """
+	pkgs.fetchurl{
+        url="https://s3.amazonaws.com/h2o-release/h2o/rel-zipf/2/Rjar/h2o.jar.md5";
+		sha256 = "sha256-hPIJFeUqdZ7TVN7Pke87K21KFKx49TwoGIvF+wMcUTs=";
+	}
+	"""
+patches = "[../nix/patches/h2o-3.32.1.2.patch]"
+
 
 [string2path]
 postPatch = """''
@@ -135,6 +156,10 @@ preConfigure= "''export NOT_CRAN=true\n''"
 CargoLockInSource = "''string2path/src/rust/Cargo.lock''"
 
 #add_nativeBuildInputs =  "(importCargo { lockFile = \"./rust/Cargo.lock\"; inherit pkgs; }).cargoHome"
+
+["salso_..0.2.22"]
+CargoLockInSource = "''salso/src/rustlib/Cargo.lock''"
+
 
 [salso]
 postPatch = """
@@ -336,7 +361,7 @@ add_buildInputs= "[openssl]"
 PKG_CPPFLAGS='"-I${pkgs.openssl.dev}/include"'
 
 [RcppCWB]
-add_nativeBuildInputs = "[ pkgconfig pcre glib ncurses which bison util-linux flex]"
+add_nativeBuildInputs = "[ pkgconfig pcre glib ncurses which bison (pkgs.util-linux or pkgs.utillinux) flex]"
 add_buildInputs = "[ pcre glib ncurses]"
 
 [RcppParallel]
@@ -407,41 +432,42 @@ add_buildInputs = "[gsl_1]"
 
 [mashr]
 add_nativeBuildInputs = "[pkgconfig gsl_1]"
+add_buildInputs = "[gsl_1]"
 
 [loon]
-add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
-add_buildInputs = "[x11 tk tcl]"
-propagatedNativeBuildInputs = "[x11 tk tcl]"
+add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
+add_buildInputs = "[xlibsWrapper tk tcl]"
+propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
 
 [diveR]
-add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
-add_buildInputs = "[x11 tk tcl]"
-propagatedNativeBuildInputs = "[x11 tk tcl]"
+add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
+add_buildInputs = "[xlibsWrapper tk tcl]"
+propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
 
 
 [JFE]
-add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
-add_buildInputs = "[x11 tk tcl]"
-propagatedNativeBuildInputs = "[x11 tk tcl]"
+add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
+add_buildInputs = "[xlibsWrapper tk tcl]"
+propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
 
 ["loon.ggplot"]
-add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
-add_buildInputs = "[x11 tk tcl]"
-propagatedNativeBuildInputs = "[x11 tk tcl]"
+add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
+add_buildInputs = "[xlibsWrapper tk tcl]"
+propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
 
 ["loon.shiny"]
-add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
-add_buildInputs = "[x11 tk tcl]"
-propagatedNativeBuildInputs = "[x11 tk tcl]"
+add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
+add_buildInputs = "[xlibsWrapper tk tcl]"
+propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
 
 ["loon.tourr"]
-add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
-add_buildInputs = "[x11 tk tcl]"
-propagatedNativeBuildInputs = "[x11 tk tcl]"
+add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
+add_buildInputs = "[xlibsWrapper tk tcl]"
+propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
 
 [rfviz]
-add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
-add_buildInputs = "[x11 tk tcl]"
+add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
+add_buildInputs = "[xlibsWrapper tk tcl]"
 
 
 ["bio3d"]
@@ -480,13 +506,13 @@ JAVA_CPPFLAGS='"-I${pkgs.jdk}/include/"'
 JAVA_HOME='"${pkgs.jdk}"'
 
 [optbdmaeAT]
-add_nativeBuildInputs = "[x11 tk]"
+add_nativeBuildInputs = "[xlibsWrapper tk]"
 
 [soptdmaeA]
-add_nativeBuildInputs = "[x11 tk]"
+add_nativeBuildInputs = "[xlibsWrapper tk]"
 
 [optrcdmaeAT]
-add_nativeBuildInputs = "[x11 tk]"
+add_nativeBuildInputs = "[xlibsWrapper tk]"
 
 [qpdf]
 add_nativeBuildInputs = "[pkgconfig zlib libjpeg]"
@@ -516,8 +542,8 @@ add_r_dependencies = '["RcppGSL"]'
 add_nativeBuildInputs = "[pkgconfig which cmake nlopt]"
 
 ["gWidgets2tcltk"]
-add_nativeBuildInputs = "[x11 tcl tk]"
-add_buildInputs = "[x11 tcl tk]"
+add_nativeBuildInputs = "[xlibsWrapper tcl tk]"
+add_buildInputs = "[xlibsWrapper tcl tk]"
 add_r_dependencies = '["codetools"]'
 
 ["clustermq_..0.8.95.1"]
@@ -622,14 +648,14 @@ add_buildInputs = "[tiledb]"
 add_nativeBuildInputs = "[cmake which]"
 
 # I can't get this to correctly find proj
-["terra_1.5-21.."]
+["terra_1.2-10.."]
 #CFLAGS='"-I${pkgs.zlib.dev}/include"'
 IgnoreSystemRequirement="true"
 add_nativeBuildInputs = "[pkgconfig proj gdal geos sqlite]"
 add_buildInputs = "[gettext sqlite proj]"
 
 [TTAinterfaceTrendAnalysis]
-add_nativeBuildInputs = "[x11]"
+add_nativeBuildInputs = "[xlibsWrapper]"
 
 [spectralGraphTopology]
 add_r_dependencies = '["CVXR"]'
@@ -684,14 +710,19 @@ add_nativeBuildInputs = '[pkgs.zlib pkgs.libmysqlclient pkgs.openssl]'
 
 
 [Cairo]
-add_nativeBuildInputs = "[pkgconfig libtiff libjpeg cairo x11 pkgs.fontconfig.lib xorg.libXt.dev]"
-add_buildInputs = "[pkgconfig libtiff libjpeg cairo x11 pkgs.fontconfig.lib xorg.libXt.dev]"
+add_nativeBuildInputs = "[pkgconfig libtiff libjpeg cairo xlibsWrapper pkgs.fontconfig.lib xorg.libXt.dev]"
+add_buildInputs = "[pkgconfig libtiff libjpeg cairo xlibsWrapper pkgs.fontconfig.lib xorg.libXt.dev]"
 PKG_CPPFLAGS='"-I${pkgs.xorg.libXt}/include"'
 #strictDeps = "false"
 
-[RoBMA]
+["RoBMA_2.1.0.."]
 add_nativeBuildInputs = "[lapack]"
 add_buildInputs = "[lapack]"
+
+["RoBMA_..1.2.1"]
+add_nativeBuildInputs = "[pkgconfig jags lapack]"
+add_buildInputs = "[jags lapack]"
+
 
 
 ["V8"]
@@ -745,10 +776,10 @@ add_nativeBuildInputs = "[pkgconfig imagemagick]"
 add_buildInputs = "[imagemagick]"
 
 [iplots]
-add_nativeBuildInputs = "[x11]"
-add_buildInputs = "[x11]"
+add_nativeBuildInputs = "[xlibsWrapper]"
+add_buildInputs = "[xlibsWrapper]"
 
-["gsl_2.1-7"]
+["gsl_2.1-6..2.1-7.1"]
 IgnoreSystemRequirement="true"
 add_nativeBuildInputs = "[pkgconfig gsl]"
 add_buildInputs = "[gsl]"
@@ -872,8 +903,8 @@ env
 ''"""
 
 [zenplots]
-add_nativeBuildInputs = "[x11 tk tcl]"
-add_buildInputs = "[x11 tk tcl]"
+add_nativeBuildInputs = "[xlibsWrapper tk tcl]"
+add_buildInputs = "[xlibsWrapper tk tcl]"
 
 [mongolite]
 add_nativeBuildInputs = "[pkgconfig zlib]"
@@ -946,7 +977,7 @@ JAR_SRC = """fetchurl {
 }"""
 patches = "[../nix/patches/rflsgen.patch]"
 
-[robis]
+["robis_2.6.0.."]
 patches = "[../nix/patches/robis.patch]"
 
 [mined]
@@ -1045,8 +1076,14 @@ patches = "[../nix/patches/snapcount.patch]"
 patches = "[../nix/patches/gpart.patch]"
 ["ReactomeContentService4R"]
 patches = "[../nix/patches/ReactomeContentService4R.patch]"
-[immunotation]
+
+["immunotation_1.0.1.."]
 patches = "[../nix/patches/immunotation.patch]"
+
+["immunotation_..1.0.0"]
+patches = "[../nix/patches/immunotation_1.0.0.patch]"
+
+
 [multiMiR]
 patches = "[../nix/patches/multiMiR.patch]"
 [rfaRm]
@@ -1342,10 +1379,10 @@ add_r_dependencies = '["rstantools"]'
 [briskaR]
 postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
 
-[MatchIt]
+["MatchIt_4.3.0"]
 postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
 
-[kgrams]
+["kgrams_..0.1.0"]
 postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
 
 ["prospectr"]
@@ -1359,9 +1396,9 @@ postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "stri
 
 
 [tkImgR]
-add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
-add_buildInputs = "[x11 tk tcl]"
-propagatedNativeBuildInputs = "[x11 tk tcl]"
+add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
+add_buildInputs = "[xlibsWrapper tk tcl]"
+propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
 
 
 
@@ -1369,6 +1406,7 @@ propagatedNativeBuildInputs = "[x11 tk tcl]"
 LD_LIBRARY_PATH = "''${pkgs.openssl.out}/lib''"
 add_nativeBuildInputs = "[pkgconfig lzma bzip2 zlib icu]"
 add_buildInputs = "[lzma bzip2 zlib icu]"
+
 ["credentials_1.3.1"]
 #LD_LIBRARY_PATH = "''${pkgs.openssl.out}/lib''"
 
@@ -1395,18 +1433,18 @@ add_nativeBuildInputs = "[pkgconfig zlib]"
 add_buildInputs = "[zlib]"
 
 [GroupSeq]
-add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
-add_buildInputs = "[x11 tk tcl]"
-propagatedNativeBuildInputs = "[x11 tk tcl]"
+add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
+add_buildInputs = "[xlibsWrapper tk tcl]"
+propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
 
 ["HierO_..0.2"]
-add_nativeBuildInputs = "[pkgconfig x11 tk tcl bwidget]"
-add_buildInputs = "[x11 tk tcl bwidget]"
+add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl bwidget]"
+add_buildInputs = "[xlibsWrapper tk tcl bwidget]"
 postPatch = """''
 sed -i '3iaddTclPath\\("${pkgs.bwidget}/lib"\\)' /build/HierO/R/HierO.R
 ''"""
 
-propagatedNativeBuildInputs = "[x11 tk tcl]"
+propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
 
 [cartogramR]
 add_nativeBuildInputs = "[pkgconfig fftw]"
@@ -1460,7 +1498,7 @@ patches = "[../nix/patches/nearfar.patch]"
 add_nativeBuildInputs = "[pkgconfig julia which]"
 add_buildInputs = "[julia]"
 #patches = "[../nix/patches/sismon.pach]"
-_notes = """''on nixpkgs 21.5 (e.g. 2021-10-27), needs 
+_notes = """''on nixpkgs 21.5 (e.g. 2021-10-27), needs
 	```nixpkgs..config.permittedInsecurePackages = [
                 "libgit2-0.27.10"
               ];
@@ -1476,9 +1514,125 @@ add_buildInputs = "[zlib]"
 
 
 [affyPara]
-add_nativeBuildInputs = "[pkgconfig x11 tk tcl]"
-add_buildInputs = "[x11 tk tcl]"
-propagatedNativeBuildInputs = "[x11 tk tcl]"
+add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
+add_buildInputs = "[xlibsWrapper tk tcl]"
+propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
 
 ["cbpManager_1.0.2"]
 add_r_dependencies = '["markdown"]'
+
+
+[GeneBook]
+preConfigure = """''
+mkdir /tmp/home
+''"""
+HOME = '"/tmp/home"'
+patches = "[../nix/patches/GeneBook.patch]"
+
+
+[DEploid]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+
+[RBesT]
+add_r_dependencies = '["rstantools"]'
+
+[gpg]
+postPatch = "''patchShebangs configure''"
+
+["mlbstatsR_..0.1.0"]
+patches = "[../nix/patches/mlbstatsR.patch]"
+
+
+
+["moc.gapbk"]
+add_nativeBuildInputs = "[pkgconfig pkgs.openssh pkgs.openmpi]"
+configureFlags = """[
+	"--with-Rmpi-type=OPENMPI"
+	"--with-Rmpi-include=${pkgs.openmpi}/include"
+	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
+]"""
+
+["freetypeharfbuzz_0.2.6"]
+postPatch = "''patchShebangs tools/untar.sh''"
+freetypeSRC = """
+fetchurl {
+	url = "https://github.com/lionel-/freetypeharfbuzz/blob/v0.2.5/tools/freetype-2.9-patched.tar.gz?raw=true";
+	sha256 = "sha256-qrvzqrDLrHymrqGt4yuWtVGSMaXz35UdX1zGW+x2cYU=";
+}
+"""
+
+harfbuzzSRC = """
+fetchurl {
+	url = "https://github.com/lionel-/harfbuzz/archive/1.7.6-CRAN.tar.gz";
+	sha256="sha256-VbGT6d7xCY9mA0VXBmkvfGV/LOONu/dnYl8Xz2v/qlo=";
+}
+"""
+patches = "[../nix/patches/freetypeharfbuzz_0.2.6.patch]"
+
+[lwgeom]
+add_nativeBuildInputs = "[pkgconfig proj sqlite]"
+add_buildInputs = "[proj sqlite]"
+
+["robis_..2.3.9"]
+postPatch = "''patchShebangs configure''"
+add_nativeBuildInputs = "[pkgconfig proj sqlite]"
+add_buildInputs = "[proj sqlite]"
+
+
+[libproj]
+add_nativeBuildInputs = "[pkgconfig proj sqlite]"
+add_buildInputs = "[proj sqlite]"
+postPatch = "''patchShebangs configure''"
+
+[rpanel]
+add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl bwidget]"
+add_buildInputs = "[xlibsWrapper tk tcl bwidget]"
+propagatedNativeBuildInputs = "[xlibsWrapper tk tcl bwidget]"
+postPatch = """''
+ls /build/rpanel/R
+sed -i '3iaddTclPath\\("${pkgs.bwidget}/lib"\\)' /build/rpanel/R/rpanel.r
+''"""
+
+
+[s2]
+add_nativeBuildInputs = "[pkgconfig openssl]"
+add_buildInputs= "[openssl]"
+
+
+[sodium]
+postPatch = "''patchShebangs configure''"
+
+[protolite]
+postPatch = "''patchShebangs configure''"
+
+[sdcTable]
+add_nativeBuildInputs = "[pkgconfig gmp]"
+add_buildInputs = "[gmp]"
+
+["gdalcubes_..0.3.1"]
+add_nativeBuildInputs = "[pkgconfig gdal proj sqlite curl]"
+add_buildInputs = "[gdal proj sqlite curl]"
+
+
+[stockfish]
+postPatch = "''patchShebangs configure''"
+
+["collapse_..1.5.3"]
+postPatch= """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
+
+
+["whitebox_0.1.0"]
+#postPatch = "''patchShebangs tools/untar.sh''"
+patches = "[../nix/patches/whitebox.patch]"
+WhiteBoxTools = """
+fetchurl {
+	url = "http://www.uoguelph.ca/~hydrogeo/WhiteboxTools/WhiteboxTools_linux_amd64.tar.xz";
+	sha256 = "sha256-WUfU8vr5lcGR1AFNBHuqJ77tUz/XmaCiznm9TdD6OmQ=";
+}
+"""
+
+["cbpManager_1.0.0"]
+add_r_dependencies = '["markdown"]'
+
