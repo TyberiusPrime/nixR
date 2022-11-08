@@ -23,17 +23,17 @@ date appropriate R and nixpkgs version.
  - I only spent a small amount of time to get each package to compile. Pull requests welcome.
    
    
-The excluded packgages (and other supplementary information) can be seed in 
-[generated/info_by_date]
+The excluded packgages (and other supplementary information) can be seen in 
+[by date overview](generated/readme.md)
    
 
 ## Usage:
 
  - include the flake by the usual means
- - pick a date from [generated/info_by_date]
+ - pick a date from the [overview](generated/readme.md)
  - the flake exports a date-named function e.g. 2022-04-27 (bioconductor 3.15 release),
-   which when called with a list of strings with of required R packages, will give 
-   you a derivation building R.
+   which when called with a list of strings with required R packages, will give 
+   you a derivation building R with those packages included.
    
 ## Example
 ```
