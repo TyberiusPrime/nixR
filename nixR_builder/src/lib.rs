@@ -6,12 +6,12 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt::Display;
+use std::str::FromStr;
 use std::{
     collections::HashMap,
     collections::HashSet,
     path::{Path, PathBuf},
 };
-use std::str::FromStr;
 
 pub mod dates;
 pub mod desc_parser;
@@ -593,10 +593,28 @@ pub static DEFAULT_DESC_FIELDS_TO_PARSE: Lazy<HashSet<&'static str>> = Lazy::new
     .collect()
 });
 
-pub static REGEXPS_PACKAGE_NAME: Lazy<Regex> = lazy_regex!("^[A-Za-z0-9.]+");
 pub static REGEXPS_MIN_R_VERSION_SEARCH: Lazy<Regex> = lazy_regex!("R \\(>= ([0-9.]+)\\)");
 
 pub fn parse_r_dependencies(input: Option<&String>) -> Result<Vec<String>> {
+    parse_r_dependencies_stack(input) // the stack based parsing is faster than the regex one .
+  }
+pub fn parse_r_dependencies_stack(input: Option<&String>) -> Result<Vec<String>> {
+    let mut res = Vec::new();
+    if let Some(input) = input {
+        for entry in input.split(',') {
+            if !entry.is_empty() {
+                let entry = entry.trim();
+                let trunced = entry.split(|x: char| !(
+                        x.is_alphanumeric() || x == '.')).next().with_context(||format!("Parsing R depenencies failed for {:?}", input))?;
+                res.push(trunced.to_string());
+            }
+        }
+    }
+    Ok(res)
+}
+
+/*pub static REGEXPS_PACKAGE_NAME: Lazy<Regex> = lazy_regex!("^[A-Za-z0-9.]+");
+pub fn parse_r_dependencies_regexp(input: Option<&String>) -> Result<Vec<String>> {
     let mut res = Vec::new();
     if let Some(input) = input {
         for entry in input.split(',') {
@@ -617,6 +635,7 @@ pub fn parse_r_dependencies(input: Option<&String>) -> Result<Vec<String>> {
     }
     Ok(res)
 }
+*/
 
 impl PackageInfoWithSource {
     fn new_from_package_info(pi: PackageInfo, repo: Repo) -> Result<PackageInfoWithSource> {

@@ -41,7 +41,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const BIOCONDUCTOR_URL: &str = "https://bioconductor.org/";
 // const YEAR_TO_EARLY_INT: i32 = 2016;
-const MINIMUM_BIOCONDUCTOR_VERSION: &str = "3.13";
+const MINIMUM_BIOCONDUCTOR_VERSION: &str = "3.12";
 
 fn configure_logging(matches: &ArgMatches<'static>) {
     let verbosity = value_t!(matches, "verbose", usize).unwrap_or(2);
@@ -555,7 +555,7 @@ fn assemble(config: &Config) -> Result<()> {
                 Some(dv) => match dv.get("IgnoreSystemRequirement") {
                     Some(x) => {
                         if x == "true" {
-                            info!("ignoring SystemRequirement for {}", &tag);
+                            debug!("ignoring SystemRequirement for {}", &tag);
                             true
                         } else {
                             false
@@ -740,7 +740,7 @@ fn assemble_packages_during_bioconductor_release(
             if !pi.element.is_archived {
                 warn!("start date == end date, but not archived!? {:#?}", pi);
             }
-            info!(
+            debug!(
                 "Skipping {} - another release later the same day",
                 &pi.element.tag()
             );

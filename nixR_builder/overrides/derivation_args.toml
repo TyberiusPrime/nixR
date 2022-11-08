@@ -720,8 +720,8 @@ add_nativeBuildInputs = "[lapack]"
 add_buildInputs = "[lapack]"
 
 ["RoBMA_..1.2.1"]
-add_nativeBuildInputs = "[pkgconfig jags lapack]"
-add_buildInputs = "[jags lapack]"
+add_nativeBuildInputs = "[pkgconfig jags (pkgs.lapack or pkgs.liblapack)]"
+add_buildInputs = "[jags (pkgs.lapack or pkgs.liblapack)]"
 
 
 
@@ -1146,8 +1146,8 @@ add_nativeBuildInputs = "[pkgconfig fuse]"
 add_buildInputs = "[fuse]"
 
 [tofsims]
-add_nativeBuildInputs = "[lapack]"
-add_buildInputs = "[lapack]"
+add_nativeBuildInputs = "[(pkgs.lapack or pkgs.liblapack)]"
+add_buildInputs = "[(pkgs.lapack or pkgs.liblapack)]"
 
 [CytoML]
 add_nativeBuildInputs = "[pkgconfig libxml2]"
@@ -1237,6 +1237,9 @@ patches = "[../nix/patches/interactiveDisplay.patch]"
 [SharedObject]
 patches = "[../nix/patches/SharedObject.patch]"
 
+["SharedObject_..1.4.0"]
+patches = "[../nix/patches/SharedObject_1.4.0.patch]"
+
 [rsbml]
 add_nativeBuildInputs = "[pkgconfig  (pkgs.callPackage ../nix/packages/libSBML.nix {})]"
 preConfigure = """''
@@ -1253,8 +1256,8 @@ add_buildInputs = "[zlib]"
 #PKG_CPPFLAGS='"-I${pkgs.zlib}/include/"'
 
 [float]
-add_nativeBuildInputs = "[lapack]"
-add_buildInputs = "[lapack]"
+add_nativeBuildInputs = "[(pkgs.lapack or pkgs.liblapack)]"
+add_buildInputs = "[(pkgs.lapack or pkgs.liblapack)]"
 
 [rolog]
 add_nativeBuildInputs = "[pkg-config cmake expat lzma zlib bzip2 zstd swiProlog]"
@@ -1271,8 +1274,8 @@ HOME = '"/tmp/home"'
 
 
 [ifultools]
-add_nativeBuildInputs = "[pkg-config lapack]"
-add_buildInputs = "[pkg-config lapack]"
+add_nativeBuildInputs = "[pkg-config (pkgs.lapack or pkgs.liblapack)]"
+add_buildInputs = "[pkg-config (pkgs.lapack or pkgs.liblapack)]"
 
 preConfigure = """''
 mkdir /tmp/home
@@ -1635,4 +1638,9 @@ fetchurl {
 
 ["cbpManager_1.0.0"]
 add_r_dependencies = '["markdown"]'
+
+[xps]
+
+add_nativeBuildInputs = "[pkgconfig root5]"
+add_buildInputs = "[root5]"
 

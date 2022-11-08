@@ -1,0 +1,19 @@
+diff --git a/src/Makevars.in b/src/Makevars.in
+index f7d2d79..70d9cf7 100644
+--- a/src/Makevars.in
++++ b/src/Makevars.in
+@@ -21,12 +21,12 @@ remove-file:
+ 	 ${MKDIR_P} ../inst/usrlib${R_ARCH}
+ 
+ 
+-copy-files:
++copy-files: make-static
+ 	 ${CP} "sharedMemory.h" "../inst/include/SharedObject/"&&\
+ 	 ${CP} "SharedObject.a" "../inst/usrlib${R_ARCH}/"
+ 
+ 
+-make-static:
++make-static: ${SHLIB}
+ 	 ${AR} -crv SharedObject.a *.o
+ 
+ 

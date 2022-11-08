@@ -2,7 +2,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use chrono::NaiveDate;
 use itertools::Itertools;
 use lazy_regex::{lazy_regex, Regex};
-use log::{error, info, warn};
+use log::{error, info, warn, debug};
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, collections::HashSet};
 
@@ -163,7 +163,7 @@ pub fn parse_package_dates(
 
             result.extend(pplus);
         } else {
-            info!(
+            debug!(
                 "No packages with dates after cutoff and unparsable? {}",
                 name
             );
@@ -174,7 +174,6 @@ pub fn parse_package_dates(
             warn!("please remove unused entry from final dates {}", key);
         }
     }
-    info!("with date {}, wo: {}", count_with_date, count_without_date);
     if no_final_archive_date_error {
         return Err(anyhow!(
             "at least one final archive date missing - see warnings"

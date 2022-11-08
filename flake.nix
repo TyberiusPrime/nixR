@@ -252,6 +252,8 @@
       requested_r_packages_filtered =
         if (builtins.isString r_pkg_names && r_pkg_names == "cran")
         then (lib.filter (v: (!v.broken or false) && v.repo == "cran") requested_r_packages)
+        else if (builtins.isString r_pkg_names && r_pkg_names == "bioc_software")
+        then (lib.filter (v: (!v.broken or false) && v.repo == "bioc_software") requested_r_packages)
         else requested_r_packages;
       r_wrapper = with pkgs;
         callPackage ./nix/r/wrapper.nix {
@@ -291,68 +293,11 @@
     // {
       # for debugging why these sets are not buildng
       debug_set = R_by_date {
-        date = "2021-05-20";
+        date = "2021-05-19";
         r_pkg_names = [
-          "GeneBook"
-          #"IDSpatialStats"
-          "RBesT"
-          "RoBMA"
-          "DEploid"
-          "gpg"
-          #"expp"
-         # "freetypeharfbuzz"
-          "libproj"
-          "gsl"
-          "h2o"
-          "lwgeom"
-          "mlbstatsR"
-          "moc.gapbk"
-          "protolite"
-          "robis"
-          "rpanel"
-        #  "salso"
-         # "rLiDAR"
-          "s2"
-          "sodium"
-         # "sbw"
-         # "spANOVA"
-          #"spsur"
-          "stockfish"
-          "sdcTable"
-          "terra"
-          "mashr"
-          "gdalcubes"
-          #"vapour"
-          "collapse"
-          "whitebox"
-          "dfpk"
-          "websocket"
-          "OncoBayes2"
-          "bmlm"
-          "tmbstan"
-          "visit"
-          "CausalQueries"
-          "qmix"
-          "hsstan"
-          "cbq"
-          "ubms"
-          "eggCounts"
-          "artemis"
-          "beanz"
-          "bayesdfa"
-          "FlexReg"
-          # "spsurv"
-          "fishflux"
-          "metaBMA"
-          "MetaStan"
-          "mrbayes"
-          "EpiNow2"
-          "baggr"
-          "DCPO"
-          "LMMELSM"
-          "MIRES"
-          "rstap"
-          "ctsem"
+          "SharedObject"
+         # "gQTLBase"
+          "xps"
         ];
       };
     };

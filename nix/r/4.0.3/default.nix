@@ -1,7 +1,7 @@
 { stdenv, fetchurl, bzip2, gfortran, libX11, libXmu, libXt, libjpeg, libpng
 , libtiff, ncurses, pango, pcre2, perl, readline, tcl, texLive, tk, xz, zlib
-, less, texinfo, graphviz, icu, pkgconfig, bison, imake, which, jdk, blas, lapack
-, curl, Cocoa, Foundation, libobjc, libcxx, tzdata, fetchpatch
+, less, texinfo, graphviz, icu, pkgconfig, bison, imake, which, jdk, blas, liblapack
+, curl, Cocoa, Foundation, libobjc, libcxx, tzdata, fetchpatch, cf-private
 , withRecommendedPackages ? true
 , enableStrictBarrier ? false
 # R as of writing does not support outputting both .so and .a files; it outputs:
@@ -9,7 +9,7 @@
 , static ? false
 }:
 
-assert (!blas.isILP64) && (!lapack.isILP64);
+#assert (!blas.isILP64) && (!liblapack.isILP64);
 
 stdenv.mkDerivation rec {
   pname = "R";
@@ -25,7 +25,7 @@ stdenv.mkDerivation rec {
   buildInputs = [
     bzip2 gfortran libX11 libXmu libXt libXt libjpeg libpng libtiff ncurses
     pango pcre2 perl readline texLive xz zlib less texinfo graphviz icu
-    pkgconfig bison imake which blas lapack curl tcl tk jdk
+    pkgconfig bison imake which blas liblapack curl tcl tk jdk
   ] ++ stdenv.lib.optionals stdenv.isDarwin [ Cocoa Foundation libobjc libcxx ];
 
   patches = [
@@ -44,7 +44,7 @@ stdenv.mkDerivation rec {
       --disable-lto
       --with${stdenv.lib.optionalString (!withRecommendedPackages) "out"}-recommended-packages
       --with-blas="-L${blas}/lib -lblas"
-      --with-lapack="-L${lapack}/lib -llapack"
+      --with-lapack="-L${liblapack}/lib -llapack"
       --with-readline
       --with-tcltk --with-tcl-config="${tcl}/lib/tclConfig.sh" --with-tk-config="${tk}/lib/tkConfig.sh"
       --with-cairo
