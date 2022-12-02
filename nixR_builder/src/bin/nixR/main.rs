@@ -348,12 +348,11 @@ fn assemble(config: &Config) -> Result<()> {
         //note that the dates are right exclusive, so we want to query the one before...
         let mut dates = Vec::new();
         if !extra_dates.contains_key(&bioc_release.start_date) {
-            dates.push((
-                bioc_release.start_date,
-                format!("Initial release date"),
-            ));
+            dates.push((bioc_release.start_date, format!("Initial release date")));
         }
-        if bioc_release.element.is_finished && !extra_dates.contains_key(&bioc_release.end_date.pred()) {
+        if bioc_release.element.is_finished
+            && !extra_dates.contains_key(&bioc_release.end_date.pred())
+        {
             dates.push((
                 bioc_release.end_date.pred(),
                 format!("Final date of this bioconductor release"),

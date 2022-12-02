@@ -17,12 +17,12 @@ use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use std::borrow::Cow;
 use std::io::{Read, Write};
+use std::str::FromStr;
 use std::{
     collections::HashMap,
     collections::HashSet,
     path::{Path, PathBuf},
 };
-use std::str::FromStr;
 
 pub static PACKAGE_REGEXPS: Lazy<Regex> = lazy_regex!(
     //misnomer, doesn't capture date
@@ -99,6 +99,10 @@ pub fn update_bioconductor(config: &Config) -> Result<Vec<PackageInfoWithSource>
             config,
             &ri.element.version,
             ri.element.is_finished,
+            if ri.element.is_finished {
+                Some(ri.end_date)
+            }else {
+                None},
             &bc_path,
         )?;
         for e in from_this_release.into_iter() {
@@ -113,10 +117,11 @@ pub fn fetch_bioconductor_release(
     config: &Config,
     version: &Version,
     is_finished_release: bool,
+    final_relase_date: Option<NaiveDate>,
     bc_path: &Path,
 ) -> Result<Vec<PackageInfoWithSource>> {
     let mut res =
-        fetch_bioconductor_release_software(config, version, is_finished_release, bc_path)?;
+        fetch_bioconductor_release_software(config, version, is_finished_release, final_relase_date, bc_path)?;
     res.extend(fetch_bioconductor_release_annotation_data(
         config,
         version,
@@ -136,6 +141,7 @@ pub fn fetch_bioconductor_release_software(
     config: &Config,
     version: &Version,
     is_finished_release: bool,
+    final_relase_date: Option<NaiveDate>,
     bc_path: &Path,
 ) -> Result<Vec<PackageInfoWithSource>> {
     let str_version = version.to_string();
@@ -156,7 +162,8 @@ pub fn fetch_bioconductor_release_software(
             if is_finished_release {
                 //we can symlink these for 'done' bioconductor versions. But not for
                 //the current one
-                config.find_file_from_earlier_and_symlink(&target_path)?;
+                //this is only ok if the date found is beyond the final release date...
+                    config.find_file_from_earlier_and_symlink(&target_path, final_relase_date)?;
             }
             let current: Vec<String> = cache_json(&target_path, || {
                 let packages_gz = fetch_url_to_vec(&(base_url.to_owned() + "PACKAGES.gz"))?;
@@ -285,7 +292,7 @@ fn cache_bioc_data_without_archive(
         if is_finished_release {
             // we can symlink these for 'done' bioconductor versions. But not for the
             // current one
-            config.find_file_from_earlier_and_symlink(&target_path)?;
+            config.find_file_from_earlier_and_symlink(&target_path, None)?;
         }
         let current: Vec<String> = cache_json(&target_path, || {
             let packages_gz = fetch_url_to_vec(&(base_url.to_owned() + "PACKAGES.gz"))?;
@@ -405,7 +412,7 @@ fn fetch_package_infos(
     repo: &Repo,
 ) -> Result<Vec<PackageInfo>> {
     if symlink_previous {
-        config.find_file_from_earlier_and_symlink(&out_path.join("parsed.json.gz"))?;
+        config.find_file_from_earlier_and_symlink(&out_path.join("parsed.json.gz"), None)?;
     }
 
     // we store by 'repository'
@@ -864,7 +871,11 @@ fn fetch_archive<
         // not the list of currently available packages,but everything archived...
         // and with a 'last changed on date'
 
-        let (_, post_date_path) = extract_date_relative_path(out_path)?;
+        let post_date_path = match extract_date_relative_path(out_path) {
+            Ok((_, pd)) => Some(pd),
+            Err(_) => None,
+        };
+
         let archive_dir = out_path.join("archive");
         let already_fetched_today = create_and_list_dir(&archive_dir)?;
 
@@ -872,7 +883,9 @@ fn fetch_archive<
             // we symlink our selves here to only scan the folder once, there are a lot of these
             // and more importantly, we also only do it if the date is right!
             //things... 
-            match config.find_file_from_earlier(&format!("{}/archive", post_date_path)) {
+            match post_date_path {
+                Some(post_date_path) => {
+            match config.find_file_from_earlier(&format!("{}/archive", post_date_path), None) {
                 Some(yesterday_archive_path) => {
                     info!("found old archives in {:?}", &yesterday_archive_path);
                     let yesterday_str = yesterday_archive_path.parent().unwrap().parent().unwrap().file_name().unwrap().to_string_lossy().to_string();
@@ -890,7 +903,12 @@ fn fetch_archive<
                 None => {
                     info!("could not find old archives {}", post_date_path);
                     (HashSet::new(), None, None)},
-            };
+            }
+                },
+                None
+                    =>
+                    {(HashSet::new(), None, None)},
+    };
         let to_symlink: HashSet<String> = match yesterday_str {
             Some(yesterday_str) => {
                 archive_entries
@@ -950,7 +968,7 @@ fn fetch_archive<
         let mut result: Vec<String> = Vec::new();
         for package_name in archive_entries.iter().map(|x| &x.0) {
             let entries: Vec<String> = load_json(&archive_dir.join(package_name), false)
-				.with_context(||format!("Loading {:?}",archive_dir.join(package_name), ))?;
+                .with_context(|| format!("Loading {:?}", archive_dir.join(package_name),))?;
             result.extend(entries.into_iter())
         }
         Ok(result)
@@ -1008,12 +1026,15 @@ fn cran_fetch_final_archival_dates(
 
     let out: Result<HashMap<String, NaiveDate>> =
         cache_json(&out_path.join("final_archive_dates.json"), || {
-            let input = fetch_url_to_vec(&(base_url.to_owned() + "PACKAGES.in"))?;
+            let url = base_url.to_owned() + "PACKAGES.in";
+            let input = fetch_url_to_vec(&url)?;
             let input = std::str::from_utf8(&input)?;
             let mut package: Option<String> = None;
             let mut out: HashMap<String, NaiveDate> = HashMap::new();
-            for line in input.split('\n') {
-                if line.starts_with("Package:") {
+            for (line_no, line) in input.split('\n').enumerate() {
+                if line.starts_with("Package:") ||
+					line.starts_with("Packae:") // gotta love typos in semi-machine-readable data.
+					{
                     //info!("found package {}", line);
                     package = Some(line.split_once(':').unwrap().1.trim().to_owned());
                 } else if line.starts_with("X-CRAN-Comment:") && line.contains("rchived") {
@@ -1043,7 +1064,9 @@ fn cran_fetch_final_archival_dates(
                         .expect("date was not actually %Y-%m-%d");
                     let p = package
                         .take()
-                        .ok_or_else(|| anyhow!("No package set but archived-date read"))?;
+                        .ok_or_else(|| anyhow!("No package set but archived-date read"))
+						.with_context(|| format!("parsing line {}, line no {}", line, line_no))
+						.with_context(|| format!("parsing {}", url))?;
                     if let std::collections::hash_map::Entry::Vacant(e) = out.entry(p) {
                         e.insert(date);
                     } else {

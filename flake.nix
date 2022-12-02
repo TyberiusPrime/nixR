@@ -293,11 +293,21 @@
     // {
       # for debugging why these sets are not buildng
       debug_set = R_by_date {
-        date = "2021-05-19";
+        date = "2022-05-10";
         r_pkg_names = [
-          "SharedObject"
-         # "gQTLBase"
-          "xps"
+          "stringi"
+          "diffobj"
+          # "ArrayExpressHTS"
+          # "BitSeq"
+          # #"CancerInSilico"
+          # "Rbwa"
+          # #"SICtools"
+          # "Rhisat2"
+          # #"Travel"
+          # "eds"
+          # "gemma.R"
+          # "signatureSearch"
+          # "BioNAR"
         ];
       };
     };

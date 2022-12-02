@@ -4,7 +4,7 @@
       {
         # TODO: split docs into a separate output
         texLive = texlive.combine {
-          inherit (texlive) scheme-small inconsolata helvetic texinfo fancyvrb cm-super;
+          inherit (texlive) scheme-small inconsolata helvetic texinfo fancyvrb cm-super rsfs;
         };
         withRecommendedPackages = false;
         inherit (darwin.apple_sdk.frameworks) Cocoa Foundation;
@@ -35,6 +35,7 @@
     "4.1.3"
     "4.2.0"
     "4.2.1"
+    "4.2.2"
   ];
 in
   builtins.listToAttrs (

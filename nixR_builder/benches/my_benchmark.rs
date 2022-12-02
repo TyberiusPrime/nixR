@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use criterion::{criterion_group, criterion_main, Criterion};
 use lazy_regex::{lazy_regex, Regex};
 use once_cell::sync::Lazy;
@@ -150,7 +150,7 @@ pub fn parse_desc_fields_to_keep_char(
 ) -> Result<HashMap<String, String>> {
     let mut out: HashMap<String, String> = HashMap::new();
 
-    fn is_valid_key(chars: &[u8]) -> bool{
+    fn is_valid_key(chars: &[u8]) -> bool {
         !(chars.contains(&b' ') || chars.contains(&b'\t'))
     }
 

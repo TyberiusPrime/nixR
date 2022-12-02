@@ -184,7 +184,7 @@ pub fn write_from_bytes(path: &Path, bytes: &[u8]) -> Result<()> {
 }
 pub fn write_from_bytes_iter<'a, I>(path: &Path, bytes: I) -> Result<()>
 where
-    I: Iterator<Item = &'a[u8]>,
+    I: Iterator<Item = &'a [u8]>,
 {
     let tmp_file = path.with_extension("tmp");
     {

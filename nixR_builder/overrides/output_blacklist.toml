@@ -1,4 +1,4 @@
-# these get filtered on *output* 
+# these get filtered on *output*
 # and corretly go down the tree, removing packages that depend on them
 # contrast with input_blacklist.txt
 # acceptable format is <name>|<name>_<version> or <name>::<date>
@@ -85,3 +85,14 @@ cplexAPI = "unfree, cplex not in nixpkgs"
 "gQTLBase::2021-05-19" = "objects 'clone', 'is.factor.ff' are not exported by 'namespace:ff'"
 "Rariant::2021-05-19" = "object 'rbind_all' is not exported by 'namespace:dplyr'"
 "Rcwl::2021-05-19" = "no cwltool in nixpks"
+
+
+"ecospat::2022-11-02" = "namespace 'biomod2' 4.1-2 is being loaded, but < 4.0 is required"
+"vapour::2022-11-02" = "'class GDALDataset' has no member named 'SetSpatialRef'"
+"delaunay::2022-11-02" = " error: 'itedges' was not declared in this scope; did you mean 'nedges'? "
+"GeneTonic::2022-11-02" = "object 'universal' is not exported by 'namespace:backbone'"
+
+"SICtools::2022-11-02"= "Using embedded htslib, error: format not a string literal and no format arguments [-Werror=format-security]"
+"Travel::2022-11-02" = "class_Cache_block.h:10:5: error: 'size_t' does not name a type"
+"CancerInSilico::2022-11-02"= "Tests/catch.h:6524:45: error: size of array 'altStackMem' is not an integral constant-expression"
+

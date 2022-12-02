@@ -165,8 +165,24 @@ impl Config {
         &self.system_requirement_lookups_
     }
 
-    fn find_file_from_earlier(&self, path_below_date: &str) -> Option<PathBuf> {
+    fn find_file_from_earlier(
+        &self,
+        path_below_date: &str,
+        minimum_date_to_accept: Option<NaiveDate>,
+    ) -> Option<PathBuf> {
         for ep in self.yesterday_or_earlier_path() {
+            match minimum_date_to_accept {
+                Some(mdta) => {
+                    dbg!(&ep);
+                    let found_date = ep.split("/").last().unwrap();
+                    let found_date = NaiveDate::parse_from_str(found_date, "%Y-%m-%d")
+                        .expect("found path not dateish");
+                    if found_date <= mdta {
+                        continue;
+                    }
+                }
+                None => {}
+            };
             let fep = self.data_output_path.join(ep).join(path_below_date);
             if fep.exists() {
                 info!("Found {:?}", &fep);
@@ -179,23 +195,27 @@ impl Config {
     fn find_file_from_earlier_and_symlink(
         &self,
         target_path_including_date: &PathBuf,
+        minimum_date_to_accept: Option<NaiveDate>,
     ) -> Result<()> {
         if target_path_including_date.exists() {
             return Ok(());
         }
         let (_target_date_path, path_below_date) =
             extract_date_relative_path(target_path_including_date)?;
-        let found = self.find_file_from_earlier(&path_below_date);
+        let found = self.find_file_from_earlier(&path_below_date, minimum_date_to_accept);
         if let Some(source_path) = found {
-            let relative_last_path: PathBuf =
-                pathdiff::diff_paths(&source_path, &target_path_including_date.parent().unwrap())
-                    .expect("diff_paths failed");
-            info!(
-                "symlinking {:?} {:?}",
-                &source_path, &target_path_including_date,
-            );
-            ex::fs::soft_link(&relative_last_path, &target_path_including_date)?;
-        } else {
+            {
+                let relative_last_path: PathBuf = pathdiff::diff_paths(
+                    &source_path,
+                    &target_path_including_date.parent().unwrap(),
+                )
+                .expect("diff_paths failed");
+                info!(
+                    "symlinking {:?} {:?}",
+                    &source_path, &target_path_including_date,
+                );
+                ex::fs::soft_link(&relative_last_path, &target_path_including_date)?;
+            }
         }
         Ok(())
     }
@@ -425,6 +445,11 @@ impl BioconductorRelease {
             config,
             &self.element.version,
             self.element.is_finished,
+            if self.element.is_finished {
+                Some(self.end_date)
+            } else {
+                None
+            },
             &bc_path,
         )?;
         info!(
@@ -597,15 +622,17 @@ pub static REGEXPS_MIN_R_VERSION_SEARCH: Lazy<Regex> = lazy_regex!("R \\(>= ([0-
 
 pub fn parse_r_dependencies(input: Option<&String>) -> Result<Vec<String>> {
     parse_r_dependencies_stack(input) // the stack based parsing is faster than the regex one .
-  }
+}
 pub fn parse_r_dependencies_stack(input: Option<&String>) -> Result<Vec<String>> {
     let mut res = Vec::new();
     if let Some(input) = input {
         for entry in input.split(',') {
             if !entry.is_empty() {
                 let entry = entry.trim();
-                let trunced = entry.split(|x: char| !(
-                        x.is_alphanumeric() || x == '.')).next().with_context(||format!("Parsing R depenencies failed for {:?}", input))?;
+                let trunced = entry
+                    .split(|x: char| !(x.is_alphanumeric() || x == '.'))
+                    .next()
+                    .with_context(|| format!("Parsing R depenencies failed for {:?}", input))?;
                 res.push(trunced.to_string());
             }
         }
@@ -677,6 +704,7 @@ impl PackageInfoWithSource {
                 }
             }
         }
+        res.sort();
 
         Ok(res)
     }
@@ -695,20 +723,21 @@ impl PackageInfoWithSource {
     }
 
     pub fn system_deps(&self, lookup: &[(String, String)]) -> Result<Vec<String>> {
-        let desc_reqs = self.desc.get("SystemRequirements");
         let mut res = HashSet::new();
-        if let Some(desc_reqs) = desc_reqs {
-            for (query, out_value) in lookup.iter() {
-                if desc_reqs.contains(query) {
-                    for pkg in out_value.split(' ') {
-                        res.insert(pkg.to_string());
+        for what in ["SystemRequirements", "LinkingTo"] {
+            let desc_reqs = self.desc.get(what);
+            if let Some(desc_reqs) = desc_reqs {
+                for (query, out_value) in lookup.iter() {
+                    if desc_reqs.contains(query) {
+                        for pkg in out_value.split(' ') {
+                            res.insert(pkg.to_string());
+                        }
                     }
                 }
             }
         }
         let mut res: Vec<_> = res.into_iter().collect();
         res.sort();
-
         Ok(res)
     }
 }

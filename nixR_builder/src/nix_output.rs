@@ -66,7 +66,10 @@ impl From<HashMap<String, NixValue>> for NixValue {
 }
 impl From<HashMap<String, String>> for NixValue {
     fn from(item: HashMap<String, String>) -> Self {
-        let res: HashMap<String, NixValue> = item.into_iter().map(|(k,v)| (k, NixValue::Str(v))).collect();
+        let res: HashMap<String, NixValue> = item
+            .into_iter()
+            .map(|(k, v)| (k, NixValue::Str(v)))
+            .collect();
         NixValue::AttrSet(res)
     }
 }

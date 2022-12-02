@@ -81,3 +81,5 @@ fontconfig = "fontconfig"
 freetype2 = "freetype"
 harfbuzz = "harfbuzz"
 fribidi = "fribidi"
+
+Rhtslib = "pkgconfig htslib"

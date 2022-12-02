@@ -2,7 +2,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use chrono::NaiveDate;
 use itertools::Itertools;
 use lazy_regex::{lazy_regex, Regex};
-use log::{error, info, warn, debug};
+use log::{debug, error, info, warn};
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, collections::HashSet};
 
