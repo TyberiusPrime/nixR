@@ -221,7 +221,7 @@
         (add_in_pname package_info_bioc_data_experiment));
 
       # now turn it into derivations
-      package_derivations =
+      package_derivations_all_versions =
         # turn the package information
         # keyed by tag, but in seperate files per repository)
         # into actual derivations keyed by tag (=name_version)
@@ -232,36 +232,34 @@
               buildInputs = map (dep: let
                 tagged_dep = dep + "_" + (entry.pkgs.${dep} or (abort ("Missing dep for " + tag + " dep: " + dep)));
               in
-                package_derivations.${tagged_dep})
+                package_derivations_all_versions.${tagged_dep}) # lazy recursino for the win
               ((v.r or []) ++ (v.d.add_r_dependencies or []));
             }))
         package_info_with_src;
-      # what packages (by name) were requested
-      requested_pkg_names =
-        if (builtins.isString r_pkg_names && (r_pkg_names == "cran" || r_pkg_names == "bioc_software"))
-        then (builtins.attrNames entry.pkgs) # that's an attrSet name->version
-        else r_pkg_names;
-      # what package tags do these translate to at that date.
-      r_pkg_tags =
-        builtins.map (pkg_name: pkg_name + "_" + entry.pkgs.${pkg_name})
-        requested_pkg_names;
-      # and what 'entries' (=package infos) are those
-      requested_r_packages = map (x: package_derivations.${x}) r_pkg_tags;
+      # just for the chosen date.
+      package_derivations_this_date =
+        lib.mapAttrs (
+          pkg_name: version: let
+            key = pkg_name + "_" + version;
+          in
+            package_derivations_all_versions.${key}
+        )
+        entry.pkgs;
 
       # now if we're doing '_full', I only want the cran/bioc_software ones.
       requested_r_packages_filtered =
         if (builtins.isString r_pkg_names && r_pkg_names == "cran")
-        then (lib.filter (v: (!v.broken or false) && v.repo == "cran") requested_r_packages)
+        then (lib.filter (v: (!v.broken or false) && v.repo == "cran") package_derivations_this_date)
         else if (builtins.isString r_pkg_names && r_pkg_names == "bioc_software")
-        then (lib.filter (v: (!v.broken or false) && v.repo == "bioc_software") requested_r_packages)
-        else requested_r_packages;
+        then (lib.filter (v: (!v.broken or false) && v.repo == "bioc_software") package_derivations_this_date)
+        else map (x: package_derivations_this_date.${x}) r_pkg_names;
       r_wrapper = with pkgs;
         callPackage ./nix/r/wrapper.nix {
           nixpkgs = pkgs;
           R = R;
           recommendedPackages = [];
           packages = requested_r_packages_filtered;
-          rPackages = package_derivations; # equivalent to nixpkgs.pkgs.rPackages
+          rPackages = package_derivations_this_date; # equivalent to nixpkgs.pkgs.rPackages
         };
     in
       r_wrapper;
