@@ -261,6 +261,7 @@
           R = R;
           recommendedPackages = [];
           packages = requested_r_packages_filtered;
+          rPackages = package_derivations; # equivalent to nixpkgs.pkgs.rPackages
         };
     in
       r_wrapper;
