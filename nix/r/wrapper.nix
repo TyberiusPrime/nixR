@@ -9,6 +9,7 @@
   lib,
   system,
   rPackages,
+  create_r_package_derivation,
 }:
 builtins.derivation {
   # we don't want to use a stdenv
@@ -87,8 +88,7 @@ builtins.derivation {
   # };
 }
 // {
-  recommendedPackages = recommendedPackages;
-  rPackages = rPackages;
+  inherit recommendedPackages rPackages create_r_package_derivation;
 }
 # poor man's passthrough
 

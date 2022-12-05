@@ -229,11 +229,13 @@
         in
           create_r_package_derivation (v
             // {
-              buildInputs = map (dep: let
-                tagged_dep = dep + "_" + (entry.pkgs.${dep} or (abort ("Missing dep for " + tag + " dep: " + dep)));
-              in
-                package_derivations_all_versions.${tagged_dep}) # lazy recursino for the win
-              ((v.r or []) ++ (v.d.add_r_dependencies or []));
+              buildInputs =
+                map (dep: let
+                  tagged_dep = dep + "_" + (entry.pkgs.${dep} or (abort ("Missing dep for " + tag + " dep: " + dep)));
+                in
+                  package_derivations_all_versions.${tagged_dep}) # lazy recursino for the win
+                
+                ((v.r or []) ++ (v.d.add_r_dependencies or []));
             }))
         package_info_with_src;
       # just for the chosen date.
@@ -260,6 +262,7 @@
           recommendedPackages = [];
           packages = requested_r_packages_filtered;
           rPackages = package_derivations_this_date; # equivalent to nixpkgs.pkgs.rPackages
+          inherit create_r_package_derivation;
         };
     in
       r_wrapper;
