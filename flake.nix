@@ -251,16 +251,16 @@
       # now if we're doing '_full', I only want the cran/bioc_software ones.
       requested_r_packages_filtered =
         if (builtins.isString r_pkg_names && r_pkg_names == "cran")
-        then (lib.filter (v: (!v.broken or false) && v.repo == "cran") package_derivations_this_date)
+        then builtins.attrValues (lib.filterAttrs (k: v: (!v.broken or false) && v.repo == "cran") package_derivations_this_date)
         else if (builtins.isString r_pkg_names && r_pkg_names == "bioc_software")
-        then (lib.filter (v: (!v.broken or false) && v.repo == "bioc_software") package_derivations_this_date)
+        then builtins.attrValues (lib.filterAttrs (k: v: (!v.broken or false) && v.repo == "bioc_software") package_derivations_this_date)
         else map (x: package_derivations_this_date.${x}) r_pkg_names;
       r_wrapper = with pkgs;
         callPackage ./nix/r/wrapper.nix {
           nixpkgs = pkgs;
           R = R;
           recommendedPackages = [];
-          packages = requested_r_packages_filtered;
+          packages = builtins.trace (builtins.toJSON requested_r_packages_filtered) requested_r_packages_filtered;
           rPackages = package_derivations_this_date; # equivalent to nixpkgs.pkgs.rPackages
           inherit create_r_package_derivation;
         };
