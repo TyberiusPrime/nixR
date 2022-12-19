@@ -34,6 +34,10 @@ The excluded packgages (and other supplementary information) can be seen in
  - the flake exports a date-named function e.g. 2022-04-27 (bioconductor 3.15 release),
    which when called with a list of strings with required R packages, will give 
    you a derivation building R with those packages included.
+ - ther's also a date-named + '_nixpkgs' function e.g. '2022-11-02_nixpkgs' (bioconductor 3.16)
+ - which takes a list of r package names, and an imported nixpkgs, allowing you to use
+   a different nixpkgs 'below' R and it's packages. This is for example necessary when using rpy2
+   to have matching glibc version
    
 ## Example
 ```

@@ -84,10 +84,15 @@
     R_by_date = {
       date,
       r_pkg_names ? [],
+      nix_pkgs_pkgs ? null,
     }: let
       # the per date data (ie nixpkgs, R, bioc versions, map of package name -> pkg version
       entry = r_by_date_data.${date};
-      pkgs = builtins.trace ("nixpkgs version: " + entry.nixpkgs.lib.version) entry.nixpkgs;
+      pkgs = builtins.trace ("nixpkgs version: " + entry.nixpkgs.lib.version) (
+        if nix_pkgs_pkgs != null
+        then nix_pkgs_pkgs
+        else entry.nixpkgs
+      );
 
       package_info_cran = import generated/cran.nix {
         inherit pkgs;
@@ -272,8 +277,21 @@
       R_by_date {
         date = k;
         inherit r_pkg_names;
+        nix_pkgs_pkgs = null;
       })
     r_by_date_data)
+    # date_nixpkgs is a function taking a list of R packages names and an imported nixpkgs - so you can overwrite it to match your python rpy2 glibc...
+    // (lib.mapAttrs' (
+        k: v: (lib.attrsets.nameValuePair (k + "_nixpkgs") (
+          r_pkg_names: nix_pkgs_pkgs:
+            R_by_date {
+              date = k;
+              inherit r_pkg_names;
+              inherit nix_pkgs_pkgs;
+            }
+        ))
+      )
+      r_by_date_data)
     // (lib.mapAttrs' (k: v:
       # _cran builds all of cran on that date
         lib.attrsets.nameValuePair (k + "_cran") (
@@ -299,6 +317,7 @@
         r_pkg_names = [
           "stringi"
           "diffobj"
+          "arrow"
           # "ArrayExpressHTS"
           # "BitSeq"
           # #"CancerInSilico"
