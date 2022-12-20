@@ -265,7 +265,7 @@
           nixpkgs = pkgs;
           R = R;
           recommendedPackages = [];
-          packages = builtins.trace (builtins.toJSON requested_r_packages_filtered) requested_r_packages_filtered;
+          packages = requested_r_packages_filtered;
           rPackages = package_derivations_this_date; # equivalent to nixpkgs.pkgs.rPackages
           inherit create_r_package_derivation;
         };
@@ -313,7 +313,7 @@
     // {
       # for debugging why these sets are not buildng
       debug_set = R_by_date {
-        date = "2022-05-10";
+        date = "2022-11-02";
         r_pkg_names = [
           "stringi"
           "diffobj"
