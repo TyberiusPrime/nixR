@@ -85,6 +85,7 @@
       date,
       r_pkg_names ? [],
       nix_pkgs_pkgs ? null,
+      packageOverrideAttrs ? {},
     }: let
       # the per date data (ie nixpkgs, R, bioc versions, map of package name -> pkg version
       entry = r_by_date_data.${date};
@@ -248,8 +249,11 @@
         lib.mapAttrs (
           pkg_name: version: let
             key = pkg_name + "_" + version;
-          in
-            package_derivations_all_versions.${key}
+          in (
+            if (builtins.hasAttr pkg_name packageOverrideAttrs)
+            then (package_derivations_all_versions.${key}.overrideAttrs (packageOverrideAttrs.${pkg_name}))
+            else package_derivations_all_versions.${key}
+          )
         )
         entry.pkgs;
 
@@ -273,7 +277,8 @@
       r_wrapper;
   in
     # date is a function taking a list of R package names - e.g. ["httr"]
-    (lib.mapAttrs (k: v: r_pkg_names:
+    {R_by_date = R_by_date;}
+    // (lib.mapAttrs (k: v: r_pkg_names:
       R_by_date {
         date = k;
         inherit r_pkg_names;

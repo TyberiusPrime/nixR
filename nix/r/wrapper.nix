@@ -10,21 +10,8 @@
   system,
   rPackages,
   create_r_package_derivation,
-}: let
-  overridable_derivation = let
-    myDerivation = attrs: builtins.derivation attrs;
-
-    myDerivationWithOverride = originalAttrs: let
-      drv = myDerivation originalAttrs;
-    in
-      drv
-      // {
-        overrideAttrs = newAttrs: myDerivationWithOverride (originalAttrs // newAttrs);
-      };
-  in
-    myDerivationWithOverride;
-in
-  overridable_derivation {
+}: 
+  builtins.derivation {
     # we don't want to use a stdenv
     # for that pulls in setupHooks
     # and at least the cmake hook
