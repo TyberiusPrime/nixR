@@ -45,7 +45,7 @@
 "biOpsGUI" = "2015-01-01" # earlier than earliest MRAN date
 "bise" = "2015-01-01" # earlier than earliest MRAN date
 "biseVec" = "2015-01-01" # earlier than earliest MRAN date
-"bivpois" = "2015-01-01" # earlier than earliest MRAN date
+# "bivpois" = "2015-01-01" # earlier than earliest MRAN date
 "boolfun" = "2015-01-01" # earlier than earliest MRAN date
 "boost" = "2015-01-01" # earlier than earliest MRAN date
 "BootCL" = "2015-01-01" # earlier than earliest MRAN date
@@ -589,7 +589,7 @@
 "verify" = "2015-01-01" # earlier than earliest MRAN date
 "VhayuR" = "2015-01-01" # earlier than earliest MRAN date
 "VR" = "2015-01-01" # earlier than earliest MRAN date
-"Wats" = "2019-07-17" # from MRAN
+# "Wats" = "2019-07-17" # from MRAN
 "WaveCGH" = "2015-01-01" # earlier than earliest MRAN date
 "waveclock" = "2015-01-01" # earlier than earliest MRAN date
 "weathercan" = "2022-01-01" # from MRAN# for they are before our cutoff date anyhow.
@@ -609,9 +609,14 @@
 
 
 # temp?
-BayesianTools = "2022-10-07"
+# BayesianTools = "2022-10-07"
 fellov = "2022-10-07"
 tidylab = "2022-10-07"
 usethat = "2022-10-07"
 Cite = "2022-10-11"
-csodata = "2022-07-19"
+# csodata = "2022-07-19"
+
+clustermq = "2023-10-25"
+historicalborrowlong = "2023-10-25"
+msaeRB = "2023-04-03"
+splot="2023-10-27" # temp, there's a splot 0.5.4.

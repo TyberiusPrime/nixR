@@ -1,6 +1,7 @@
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 #![allow(unused_mut)]
+#![allow(non_snake_case)]
 use anyhow::{anyhow, bail, Context, Result};
 use chrono::{Datelike, NaiveDate, Utc};
 use clap::{value_t, App, AppSettings, Arg, ArgMatches, SubCommand};
@@ -43,6 +44,9 @@ const BIOCONDUCTOR_URL: &str = "https://bioconductor.org/";
 // const YEAR_TO_EARLY_INT: i32 = 2016;
 const MINIMUM_BIOCONDUCTOR_VERSION: &str = "3.12";
 
+//global Config in a once_cell
+static CONFIG: once_cell::sync::OnceCell<Config> = once_cell::sync::OnceCell::new();
+
 fn configure_logging(matches: &ArgMatches<'static>) {
     let verbosity = value_t!(matches, "verbose", usize).unwrap_or(2);
     stderrlog::new()
@@ -57,10 +61,6 @@ fn configure_logging(matches: &ArgMatches<'static>) {
 }
 
 fn main() -> Result<()> {
-    ctrlc::set_handler(move || {
-        panic!("abort");
-    })
-    .expect("Error setting Ctrl-C handler");
     let matches = parse_args();
     configure_logging(&matches);
 
@@ -77,26 +77,42 @@ fn main() -> Result<()> {
         PathBuf::from("./overrides"),
         date,
     )?;
-
+    CONFIG.set(config).unwrap();
+    ctrlc::set_handler(|| {
+        println!("Received Ctrl-C, aborting...");
+        let c = &CONFIG.get().expect("No config set?!");
+        c.abort();
+    })
+    .expect("Error setting Ctrl-C handler");
     match cmd {
         "cran" => {
-            retrieval::update_cran(&config)?;
+            retrieval::update_cran(&CONFIG.get().unwrap())?;
         }
         "bioc" => {
-            retrieval::update_bioconductor(&config)?;
+            retrieval::update_bioconductor(&CONFIG.get().unwrap())?;
         }
         "assemble" => {
-            assemble(&config)?;
+            assemble(&CONFIG.get().unwrap())?;
         }
         "r_versions" => {
-            list_r_versions(&config)?;
+            list_r_versions(&CONFIG.get().unwrap())?;
         }
         "test" => {
-            test_parsing(&config)?;
+            test_parsing(&CONFIG.get().unwrap())?;
+        }
+        "replace_duplicates" => {
+            replace_cached_duplicates_with_symlinks(&CONFIG.get().unwrap())?;
         }
         _ => bail!("unknown command"),
     };
     Ok(())
+}
+
+fn replace_cached_duplicates_with_symlinks(config: &Config)-> Result<()> {
+    let dir = PathBuf::from("cache");
+    println!("running test_dup_symlink");
+    retrieval::symlink_duplicates(&dir, config)
+
 }
 
 fn test_parsing(config: &Config) -> Result<Vec<PackageInfo>> {
@@ -183,6 +199,10 @@ fn parse_args() -> ArgMatches<'static> {
         .subcommand(
             SubCommand::with_name("test").about("testing"),
             )
+        .subcommand(
+            SubCommand::with_name("replace_duplicates").about("replace duplicate files in cache with symlinks"),
+            )
+
         .subcommand(
             SubCommand::with_name("assemble").about("assemble into per_date sets"),
             )

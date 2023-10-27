@@ -48,7 +48,13 @@ pub fn update_cran(
     ex::fs::create_dir_all(&out_path)?;
     let infos: Vec<PackageInfo> = cache_bincode(&out_path.join("parsed.bincode.gz"), || {
         let current: HashSet<String> = cran_fetch_current(config, &base_url)?.into_iter().collect();
+        if config.aborted() {
+            bail!("update_cran aborted after cran_fetch_current");
+        }
         let archived: Vec<String> = cran_fetch_archive(config, &base_url)?;
+        if config.aborted() {
+            bail!("update_cran aborted after cran_fetch_archive");
+        }
 
         info!("entering package fetching");
 
@@ -65,6 +71,9 @@ pub fn update_cran(
         Ok(infos)
     })?;
     let final_archive_dates = cran_fetch_final_archival_dates(config, &base_url)?;
+    if config.aborted() {
+        bail!("update_cran aborted after cran_fetch_final_archival_dates");
+    }
 
     let blacklist = config.get_input_blacklist()?;
     let out: Result<Vec<PackageInfoWithSource>> = infos
@@ -92,6 +101,9 @@ pub fn update_bioconductor(config: &Config) -> Result<Vec<PackageInfoWithSource>
     ex::fs::create_dir_all(&bc_path)?;
 
     let release_infos = bioconductor_fetch_releases(config, base_url)?;
+    if config.aborted() {
+        bail!("update_bioconductor aborted after bioconductor_fetch_releases");
+    }
 
     let mut out = Vec::new();
     for ri in release_infos {
@@ -101,8 +113,9 @@ pub fn update_bioconductor(config: &Config) -> Result<Vec<PackageInfoWithSource>
             ri.element.is_finished,
             if ri.element.is_finished {
                 Some(ri.end_date)
-            }else {
-                None},
+            } else {
+                None
+            },
             &bc_path,
         )?;
         for e in from_this_release.into_iter() {
@@ -120,20 +133,38 @@ pub fn fetch_bioconductor_release(
     final_relase_date: Option<NaiveDate>,
     bc_path: &Path,
 ) -> Result<Vec<PackageInfoWithSource>> {
-    let mut res =
-        fetch_bioconductor_release_software(config, version, is_finished_release, final_relase_date, bc_path)?;
+    let mut res = fetch_bioconductor_release_software(
+        config,
+        version,
+        is_finished_release,
+        final_relase_date,
+        bc_path,
+    )?;
+    if config.aborted() {
+        bail!("fetch_bioconductor_release aborted after fetch_bioconductor_release_software");
+    }
     res.extend(fetch_bioconductor_release_annotation_data(
         config,
         version,
         is_finished_release,
         bc_path,
     )?);
+    if config.aborted() {
+        bail!(
+            "fetch_bioconductor_release aborted after fetch_bioconductor_release_annotation_data"
+        );
+    }
     res.extend(fetch_bioconductor_release_experiment_data(
         config,
         version,
         is_finished_release,
         bc_path,
     )?);
+    if config.aborted() {
+        bail!(
+            "fetch_bioconductor_release aborted after fetch_bioconductor_release_experiment_data"
+        );
+    }
     Ok(res)
 }
 
@@ -163,7 +194,7 @@ pub fn fetch_bioconductor_release_software(
                 //we can symlink these for 'done' bioconductor versions. But not for
                 //the current one
                 //this is only ok if the date found is beyond the final release date...
-                    config.find_file_from_earlier_and_symlink(&target_path, final_relase_date)?;
+                config.find_file_from_earlier_and_symlink(&target_path, final_relase_date)?;
             }
             let current: Vec<String> = cache_json(&target_path, || {
                 let packages_gz = fetch_url_to_vec(&(base_url.to_owned() + "PACKAGES.gz"))?;
@@ -173,21 +204,28 @@ pub fn fetch_bioconductor_release_software(
                 d.read_to_end(&mut s)?;
                 parse_packages_gz(&String::from_utf8_lossy(&s))
             })?;
+            if config.aborted() {
+                bail!("fetch_bioconductor_release_software aborted after parse_packages_gz");
+            }
             let current: HashSet<String> = current.into_iter().collect();
             let min_version_with_archive = Version(vec![3, 6]);
+            let archive_path = if is_finished_release {
+                &non_dated_out_path
+            } else {
+                &out_path
+            };
+            ex::fs::create_dir_all(&archive_path)?;
+
             let archived: Vec<String> = if version >= &min_version_with_archive {
-                fetch_bioconductor_archived(
-                    config,
-                    &str_version,
-                    if is_finished_release {
-                        &non_dated_out_path
-                    } else {
-                        &out_path
-                    },
-                )?
+                fetch_bioconductor_archived(config, &str_version, archive_path)?
             } else {
                 Vec::new()
             };
+            if config.aborted() {
+                bail!(
+                    "fetch_bioconductor_release_software aborted after fetch_bioconductor_archived"
+                );
+            }
             let archived: Vec<String> = archived
                 .into_iter()
                 .filter(|x| !current.contains(x))
@@ -331,9 +369,14 @@ fn fetch_bioconductor_archived(
     // I don't know if we ever get the archived data listings...
     // but this mirror still has them apperantly.
     // note that we can download the files just fine from bioconductor?
+    // we can also see the per-package archive on the bioconductor website
+    // all they did was remove the listing of what files are actually in the archive.
+    // 2023-10-26: They now also have removed 3.15 and 3.16, apparently.
     // See https://support.bioconductor.org/p/9146648/
-    if Version::from_str(str_version).expect("bioconductor version parsing failed")
-        < Version::from_str("3.15").unwrap()
+    //
+    if true
+    //Version::from_str(str_version).expect("bioconductor version parsing failed")
+    //< Version::from_str("3.15").unwrap()
     {
         let base_url_with_archives = format!(
             "https://bioconductor.statistik.tu-dortmund.de/packages/{}/bioc/src/contrib/",
@@ -445,6 +488,9 @@ fn fetch_package_infos(
         .par_iter()
         .filter(|&tag| !(blacklist.contains_key(tag)))
         .map(|tag| {
+            if config.aborted() {
+                return Some(Err(anyhow!("aborted in fetch_package_infos")));
+            }
             match download_hash_and_desc(
                 base_url,
                 tag,
@@ -1032,9 +1078,9 @@ fn cran_fetch_final_archival_dates(
             let mut package: Option<String> = None;
             let mut out: HashMap<String, NaiveDate> = HashMap::new();
             for (line_no, line) in input.split('\n').enumerate() {
-                if line.starts_with("Package:") ||
-					line.starts_with("Packae:") // gotta love typos in semi-machine-readable data.
-					{
+                if line.starts_with("Package:") || line.starts_with("Packae:")
+                // gotta love typos in semi-machine-readable data.
+                {
                     //info!("found package {}", line);
                     package = Some(line.split_once(':').unwrap().1.trim().to_owned());
                 } else if line.starts_with("X-CRAN-Comment:") && line.contains("rchived") {
@@ -1065,8 +1111,8 @@ fn cran_fetch_final_archival_dates(
                     let p = package
                         .take()
                         .ok_or_else(|| anyhow!("No package set but archived-date read"))
-						.with_context(|| format!("parsing line {}, line no {}", line, line_no))
-						.with_context(|| format!("parsing {}", url))?;
+                        .with_context(|| format!("parsing line {}, line no {}", line, line_no))
+                        .with_context(|| format!("parsing {}", url))?;
                     if let std::collections::hash_map::Entry::Vacant(e) = out.entry(p) {
                         e.insert(date);
                     } else {
@@ -1111,4 +1157,100 @@ pub fn get_nixpkgs_releases() -> Result<Vec<DateRangePlus<Version>>> {
         vd?,
         &today().succ(), // right exclusive..
     ))
+}
+
+pub fn symlink_duplicates(dir: &Path, config: &Config) -> Result<()> {
+    //find all .tar.gz  in dir
+    use itertools::Itertools;
+    let mut files = std::fs::read_dir(&dir)
+        .unwrap()
+        .map(|x| x.unwrap().path())
+        .filter(|x| {
+            x.file_name()
+                .unwrap()
+                .to_string_lossy()
+                .ends_with(".tar.gz")
+                && !x.is_symlink()
+        })
+        .map(|x| {
+            let len = x.metadata().unwrap().len();
+            (len, x)
+        })
+        .collect::<Vec<_>>();
+    files.sort();
+    //now group by prefix, prefix is rsplit_once().0
+    for (_key, group) in &files.into_iter().group_by(|x| {
+        (
+            x.1.file_name()
+                .unwrap()
+                .to_string_lossy()
+                .rsplit_once('_')
+                .expect("invalid file name format")
+                .0
+                .to_string(),
+            x.0,
+        )
+    }) {
+        let files: Vec<_> = group.collect();
+        if files.len() > 1 {
+            //they are sorted by filename...
+            let mut hashs_and_files = files
+                .iter()
+                .map(|x| {
+                    if config.aborted() {
+                        bail!("aborted in calculating hashes");
+                    }
+                    //println!("hashing: {:?}", x.1);
+                    let hash = sha256sum(&x.1, config)?;
+                    Ok((hash, x.1.clone()))
+                })
+                .collect::<Result<Vec<_>>>()?;
+            hashs_and_files.sort();
+            for (_key, group) in &hashs_and_files.into_iter().group_by(|x| x.0.clone()) {
+                let group = group.collect::<Vec<_>>();
+                if group.len() > 1 {
+                    //they are sorted by filename...
+                    let mut group = group.into_iter().map(|x| x.1).collect::<Vec<_>>();
+                    let first = group.remove(0);
+                    let first_just_name = first.file_name().unwrap();
+                    for file in group {
+                        //let link = file.with_file_name(file.file_name().unwrap().to_string_lossy().to_string() + ".link");
+                        //std::os::unix::fs::symlink(&first, &link)?;
+                        std::fs::remove_file(&file)?;
+                        println!("unlinking {:?}, replacing with link to {:?}", file, first_just_name);
+                        std::os::unix::fs::symlink(&first_just_name, &file)?;
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+pub fn sha256sum(file_path: &Path, config: &Config) -> Result<String> {
+    use sha2::{Digest, Sha256};
+    use std::fs::File;
+    use std::io::BufReader;
+
+    const BLOCK_SIZE: usize = 50 * 1024 * 1024; // 10 MB
+
+    let file = File::open(file_path)?;
+    let mut reader = BufReader::new(file);
+    let mut hasher = Sha256::new();
+    let mut buffer = vec![0u8; BLOCK_SIZE];
+
+    while let Ok(bytes_read) = reader.read(&mut buffer) {
+        if config.aborted() {
+            bail!("Aborted while calculating hash");
+        }
+        if bytes_read == 0 {
+            break;
+        }
+        hasher.update(&buffer[0..bytes_read]);
+    }
+
+    let result = hasher.finalize();
+    let hexdigest = format!("{:x}", result);
+    Ok(hexdigest)
 }

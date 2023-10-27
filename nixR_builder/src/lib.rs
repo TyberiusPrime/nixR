@@ -53,6 +53,7 @@ fn extract_date_relative_path(path: &PathBuf) -> Result<(PathBuf, String)> {
 type DerivationArgs =
     HashMap<String, Vec<(Option<Version>, Option<Version>, HashMap<String, String>)>>;
 
+#[derive(Debug)]
 pub struct Config {
     pub data_output_path: PathBuf,
     pub nix_output_path: PathBuf,
@@ -61,6 +62,8 @@ pub struct Config {
     build_in_packages_: HashSet<String>,
     system_requirement_lookups_: Vec<(String, String)>,
     derivation_args_: DerivationArgs,
+    //shared bool between threads...
+    _aborted: std::sync::Arc<std::sync::atomic::AtomicBool>,
 }
 
 pub static PKG_AND_VERSION_RANGE_REGEXPS: Lazy<Regex> = lazy_regex!(r"^(.+)_(.+)?\.\.(.+)?$");
@@ -141,10 +144,19 @@ impl Config {
             system_requirement_lookups_: system_requirement_lookups,
             derivation_args_: load_derivation_args(&override_path)?,
             override_path,
+            _aborted: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
         };
         res.mkdirs()?;
 
         Ok(res)
+    }
+
+    pub fn aborted(&self) -> bool {
+        self._aborted.load(std::sync::atomic::Ordering::Relaxed)
+    }   
+
+    pub fn abort(&self) {
+        self._aborted.store(true, std::sync::atomic::Ordering::Relaxed)
     }
 
     pub fn date_path(&self) -> PathBuf {
