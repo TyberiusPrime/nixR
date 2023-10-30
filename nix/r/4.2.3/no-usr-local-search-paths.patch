@@ -1,0 +1,25 @@
+diff --git a/configure b/configure
+index 3dd355f..d7156c2 100755
+--- a/configure
++++ b/configure
+@@ -4332,13 +4332,13 @@ esac
+ : ${LIBnn=$libnn}
+ ## We provide these defaults so that headers and libraries in
+ ## '/usr/local' are found (by the native tools, mostly).
+-if test -f "/sw/etc/fink.conf"; then
+-  : ${CPPFLAGS="-I/sw/include -I/usr/local/include"}
+-  : ${LDFLAGS="-L/sw/lib -L/usr/local/lib"}
+-else
+-  : ${CPPFLAGS="-I/usr/local/include"}
+-  : ${LDFLAGS="-L/usr/local/${LIBnn}"}
+-fi
++# if test -f "/sw/etc/fink.conf"; then
++#   : ${CPPFLAGS="-I/sw/include -I/usr/local/include"}
++#   : ${LDFLAGS="-L/sw/lib -L/usr/local/lib"}
++# else
++#   : ${CPPFLAGS="-I/usr/local/include"}
++#   : ${LDFLAGS="-L/usr/local/${LIBnn}"}
++# fi
+ 
+ ## take care not to  override the command-line setting
+ if test "${libdir}" = '${exec_prefix}/lib'; then

@@ -56,18 +56,17 @@ The excluded packgages (and other supplementary information) can be seen in
 
 - Clone the repo
 - in ./nixR_builder, enter the nix dev shell with `nix develop`
-- For adding a date, edit nixR_builder/overrides/output_dates.toml
+- For adding a date, edit nixR_builder/overrides/output_dates.toml (release & end date of bioconductor releases are included automatically)
 - cargo run --release -- assemble to update the data and build ../generated
 - run the flake in the top level with `nix build --cores <number> --max-jobs auto --keep-going .#<date>`
-- possibly adjust the 'debug_set' in flake.nix to troublesome packages and keep running `nix build --cores <number> --max-jobs auto --keep-going .#debug_set`
-  until you have fixed all build issues (or blacklisted enough packages)
+- possibly adjust the 'debug_set' in flake.nix to troublesome packages and keep running `nix build --cores <number> --max-jobs auto --keep-going .#debug_set` until you have fixed all build issues (or blacklisted enough packages)
 - commit & open a PR.
 
 
 ## Why not just use rPackages from nix?
  - The release cycles of nixpkgs, R and bioconductor don't match.
    With this flake, you're getting the date-approriate bioconductor, R and nixpkgs combination
- - increased reproducibility. Once you've specied a version of this repo and a date, you get an unchanging
+ - increased reproducibility. Once you've specified a version of this repo and a date, you get an unchanging
    set of derivations
  - (hopefully) we'll be able to update bioconductor releases faster than nixpkgs.
  - not all rPackages in nixpkgs actually build.
@@ -76,6 +75,14 @@ The excluded packgages (and other supplementary information) can be seen in
 ## open task:
  - the ability to override R packages with arbitrary earlier versions by just specifying the version you want
  - a nice override facility to replace packages with (for example) dev versions
+ - auto detect R versions from the folder instead of listeng them in nix/r/default.nix
+
+
+## Necessary steps when bioconductor releases 
+  - add newer nixpkgs to flake.nix, (two places), add their release dates to 
+    nixR_builder/overrides/nixpkgs.toml
+  - create an R derivation for the appropriate R version (copy from nixpkgs / start with teh last) in nix/r/<version>, add it to nix/r/default.nix
+  - follow the steps in 'I need another date'
 
 
 

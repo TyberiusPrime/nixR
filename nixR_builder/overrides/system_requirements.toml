@@ -1,7 +1,7 @@
 # a lookup from the strings that appear in SystemRequirements
 # to the actual nix package pkgs.${name}
 # you can seperate multiple with spaces.
-# teh list get's deduped, so don't worry about pkgconfig repetitions
+# the list get's deduped, so don't worry about pkgconfig repetitions
 libcurl = "pkgconfig curl"
 "OpenSSL >= 1.0.1" = "pkgconfig openssl openssl.out"
 "OpenSSL >= 1.0.2" = "pkgconfig openssl openssl.out"

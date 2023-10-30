@@ -1,0 +1,32 @@
+diff --git a/Makefile.in b/Makefile.in
+index a56fc37..1b72eec 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -21,7 +21,7 @@ DISTFILES = $(INSTFILES) \
+ SUBDIRS = m4 tools doc etc share src tests
+ SUBDIRS_WITH_NO_BUILD = po
+ 
+-all: Makefile Makeconf R docs recommended vignettes javaconf
++all: Makefile Makeconf R recommended vignettes javaconf
+ recommended: @USE_RECOMMENDED_PACKAGES_TRUE@ stamp-recommended
+ 
+ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
+@@ -286,12 +286,12 @@ checkdistcomplete:
+ 	diff -r $${dirname} $(srcdir) | grep "^Only in $(srcdir)" | grep -v "^Only in.*[.]svn"; \
+ 	rm -Rf $${dirname}
+ 
+-info pdf:
+-	-@(cd doc && $(MAKE) $@)
+-install-info install-pdf compact-pdf:
+-	-@(cd doc/manual && $(MAKE) $@)
+-uninstall-info uninstall-pdf:
+-	-@(cd doc/manual && $(MAKE) $@)
++# info pdf:
++# 	-@(cd doc && $(MAKE) $@)
++# install-info install-pdf compact-pdf:
++# 	-@(cd doc/manual && $(MAKE) $@)
++# uninstall-info uninstall-pdf:
++# 	-@(cd doc/manual && $(MAKE) $@)
+ 
+ install-tests:
+ 	-@(cd tests && $(MAKE) $@)

@@ -1,0 +1,10 @@
+diff --git a/src/blosc/lib/blosc-1.20.1/Makefile.in b/src/blosc/lib/blosc-1.20.1/Makefile.in
+index 6bf1ac3..b936d33 100755
+--- a/src/blosc/lib/blosc-1.20.1/Makefile.in
++++ b/src/blosc/lib/blosc-1.20.1/Makefile.in
+@@ -1,4 +1,4 @@
+-EXTRA_FLAGS+=-I../lz4-1.9.4 -I../snappy-1.1.1 -I../zstd-1.4.5 @MSSE2@ @MAVX2@
++EXTRA_FLAGS+=-I../lz4-1.9.4 -I../snappy-1.1.1 -I../../zstd @MSSE2@ @MAVX2@
+ FLAGS=$(PKG_CFLAGS) $(PKG_CPICFLAGS) $(PKG_CPPFLAGS) $(EXTRA_FLAGS)
+ 
+ BLOSC_FILES := $(sort $(wildcard *.c))
