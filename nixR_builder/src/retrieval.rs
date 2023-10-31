@@ -23,6 +23,7 @@ use std::{
     collections::HashSet,
     path::{Path, PathBuf},
 };
+use itertools::Itertools;
 
 pub static PACKAGE_REGEXPS: Lazy<Regex> = lazy_regex!(
     //misnomer, doesn't capture date
@@ -985,7 +986,7 @@ fn fetch_archive<
         info!("Have to symlink {} archive-entries", to_symlink.len());
         info!("Have to download {} archive-entries", to_fetch.len());
 
-        let _: Vec<Result<Vec<String>>> = to_fetch
+        let fetch_result: Result<Vec<Vec<String>>> = to_fetch
             .par_iter()
             .map(|archived_package_name| {
                 download_regexs_and_cache_json(
@@ -997,6 +998,7 @@ fn fetch_archive<
                 )
             })
             .collect();
+        fetch_result?; //we want to catch errors.
         info!("symlinked");
 
         if let Some(yesterday_archive_path) = yesterday_archive_path {
@@ -1074,7 +1076,8 @@ fn cran_fetch_final_archival_dates(
         cache_json(&out_path.join("final_archive_dates.json"), || {
             let url = base_url.to_owned() + "PACKAGES.in";
             let input = fetch_url_to_vec(&url)?;
-            let input = std::str::from_utf8(&input)?;
+            let input = String::from_utf8(input)?;
+            let input = apply_package_in_patches(input)?;
             let mut package: Option<String> = None;
             let mut out: HashMap<String, NaiveDate> = HashMap::new();
             for (line_no, line) in input.split('\n').enumerate() {
@@ -1142,6 +1145,57 @@ fn cran_fetch_final_archival_dates(
     Ok(out)
 }
 
+pub fn apply_package_in_patches(package_in: String) -> Result<String> {
+    use std::io::Seek;
+    //all *.patch files in path overrides/PACKAGES.in.patches
+    let mut patches = ex::fs::read_dir("overrides/PACKAGES.in_patches")?
+        .filter_map(|x| {
+            let x = x.ok()?;
+            let path = x.path();
+            if path.extension()? == "patch" {
+                Some(path)
+            } else {
+                None
+            }
+        })
+        .collect_vec();
+    if patches.is_empty() {
+        return Ok(package_in);
+    }
+    patches.sort_by(|a, b| {
+        let a = a.file_name().unwrap();
+        let b = b.file_name().unwrap();
+        a.cmp(b)
+    });
+    let mut input_file = tempfile::NamedTempFile::new()?;
+    input_file.write_all(package_in.as_bytes())?;
+    input_file.flush()?;
+
+    for patch in patches {
+        let output = std::process::Command::new("patch")
+            .arg("-i")
+            .arg(&patch)
+            .arg("-o")
+            .arg("-")
+            .arg(input_file.path())
+            .output()?;
+        if !output.status.success() {
+            bail!(
+                "failed to apply patch {:?} to PACKAGES.in. Message: {:?}",
+                &patch,
+                output.stderr
+            );
+        }
+        input_file.seek(std::io::SeekFrom::Start(0))?;
+        input_file.write_all(&output.stdout)?;
+        input_file.flush()?;
+    }
+    input_file.seek(std::io::SeekFrom::Start(0))?;
+    let mut out = String::new();
+    input_file.read_to_string(&mut out)?;
+    Ok(out)
+}
+
 pub fn get_nixpkgs_releases() -> Result<Vec<DateRangePlus<Version>>> {
     let vd: HashMap<String, String> = load_toml(&PathBuf::from("overrides/nixpkgs.toml"), false)?;
     let vd: Result<Vec<(Version, NaiveDate)>> = vd
@@ -1159,9 +1213,8 @@ pub fn get_nixpkgs_releases() -> Result<Vec<DateRangePlus<Version>>> {
     ))
 }
 
-pub fn symlink_duplicates(dir: &Path, config: &Config) -> Result<()> {
+pub fn symlink_duplicates(dir: &Path, config: &Config) -> Result<()> { // todo: remove?
     //find all .tar.gz  in dir
-    use itertools::Itertools;
     let mut files = std::fs::read_dir(&dir)
         .unwrap()
         .map(|x| x.unwrap().path())
@@ -1217,7 +1270,10 @@ pub fn symlink_duplicates(dir: &Path, config: &Config) -> Result<()> {
                         //let link = file.with_file_name(file.file_name().unwrap().to_string_lossy().to_string() + ".link");
                         //std::os::unix::fs::symlink(&first, &link)?;
                         std::fs::remove_file(&file)?;
-                        println!("unlinking {:?}, replacing with link to {:?}", file, first_just_name);
+                        println!(
+                            "unlinking {:?}, replacing with link to {:?}",
+                            file, first_just_name
+                        );
                         std::os::unix::fs::symlink(&first_just_name, &file)?;
                     }
                 }

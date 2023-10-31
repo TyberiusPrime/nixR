@@ -72,7 +72,7 @@ pub fn write_bincode<S: serde::ser::Serialize>(
     data: &S,
     do_gz: bool,
 ) -> Result<()> {
-    info!("Building {:?}", &filename);
+    info!("Building (bincode) {:?}", &filename);
     let tmp_file = filename.with_extension("tmp");
     let mut file = ex::fs::File::create(&tmp_file)?;
     if do_gz {
@@ -130,7 +130,7 @@ pub fn write_json<S: serde::ser::Serialize>(
     data: &S,
     do_gz: bool,
 ) -> Result<()> {
-    info!("Building {:?}", &filename);
+    info!("Building (write_json) {:?}", &filename);
     let tmp_file = filename.with_extension("tmp");
     let file = ex::fs::File::create(&tmp_file)?;
     if do_gz {

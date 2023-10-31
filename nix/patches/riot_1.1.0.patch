@@ -1,0 +1,26 @@
+diff --git a/src/scripts/vtk_download.sh b/src/scripts/vtk_download.sh
+index c7ce540..bb59935 100755
+--- a/src/scripts/vtk_download.sh
++++ b/src/scripts/vtk_download.sh
+@@ -5,14 +5,16 @@ VERSION=9.2
+ PATCH=4
+ 
+ # Download VTK source
+-${RSCRIPT_BIN} -e "utils::download.file(
+-    url = 'https://www.vtk.org/files/release/${VERSION}/VTK-${VERSION}.${PATCH}.tar.gz',
+-    destfile = 'vtk-src.tar.gz')"
++# ${RSCRIPT_BIN} -e "utils::download.file(
++#     url = 'https://www.vtk.org/files/release/${VERSION}/VTK-${VERSION}.${PATCH}.tar.gz',
++#     destfile = 'vtk-src.tar.gz')"
+ 
+ # Uncompress VTK source
+-${RSCRIPT_BIN} -e "utils::untar(tarfile = 'vtk-src.tar.gz')"
++#${RSCRIPT_BIN} -e "utils::untar(tarfile = 'vtk-src.tar.gz')"
++${RSCRIPT_BIN} -e "utils::untar(tarfile = '${VTK_SRC}')"
++
+ mv VTK-${VERSION}.${PATCH} vtk-src
+-rm -f vtk-src.tar.gz
++#rm -f vtk-src.tar.gz
+ 
+ # Do not check for deprecated-non-prototype and strict-prototypes in vtkzlib
+ # when using LLVM Clang compiler

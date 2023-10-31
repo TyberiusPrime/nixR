@@ -1,0 +1,20 @@
+diff --git a/R/packagefinder.r b/R/packagefinder.r
+index cd799d8..f7efa0d 100755
+--- a/R/packagefinder.r
++++ b/R/packagefinder.r
+@@ -37,6 +37,7 @@ NULL
+ 
+ 
+ .onAttach <- function(libname, pkgname){
++	tryCatch({
+   packageStartupMessage(crayon::blue("You are working with", crayon::bold("\npackagefinder"), "version 0.3.3\n"))
+ 
+   tryCatch(suppressWarnings(pf<-tools::CRAN_package_db()), error = function(e) {})
+@@ -52,6 +53,7 @@ NULL
+   packageStartupMessage(crayon::silver("* Use", crayon::cyan("whatsNew()"),"to check for new packages on CRAN.\n\n"), sep="")
+ 
+   packageStartupMessage(crayon::silver(crayon::cyan("Tip:"), "Check out the online help pages for more parameters as well as interesting functions like go(), packageDetails() or buildIndex().\n"))
++	}, error = function(e) {})
+ }
+ 
+ 

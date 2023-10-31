@@ -22,7 +22,7 @@ stdenv.mkDerivation (finalAttrs: {
     inherit (finalAttrs) pname version;
   in fetchurl {
     url = "https://cran.r-project.org/src/base/R-${lib.versions.major version}/${pname}-${version}.tar.gz";
-    sha256 = "sha256-RdzEi2zyxTYQIPd/3ho5IJ6Ze4FAKzZjyhwBAFampgk=";
+    sha256 = "sha256-jdC/JPECPG9hjDsxc4PSkbSklPQNc7mDrCL/6pnkupk=";
   };
 
   dontUseImakeConfigure = true;
@@ -37,9 +37,6 @@ stdenv.mkDerivation (finalAttrs: {
   patches = [
     ./no-usr-local-search-paths.patch
   ];
-  configurePhase = ''
-  ./configure --verbose
-  '';
 
   # Test of the examples for package 'tcltk' fails in Darwin sandbox. See:
   # https://github.com/NixOS/nixpkgs/issues/146131

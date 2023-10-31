@@ -619,4 +619,5 @@ Cite = "2022-10-11"
 clustermq = "2023-10-25"
 historicalborrowlong = "2023-10-25"
 msaeRB = "2023-04-03"
-splot="2023-10-27" # temp, there's a splot 0.5.4.
+#splot="2023-10-27" # temp, there's a splot 0.5.4.
+GeoFIS="2023-10-31"
