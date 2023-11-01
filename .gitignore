@@ -2,3 +2,4 @@ nixR_builder/data/*
 nixR_builder/cache/*
 nixR_builder/target/*
 result
+dump/*

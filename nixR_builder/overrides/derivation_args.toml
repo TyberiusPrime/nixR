@@ -291,6 +291,21 @@ url = "https://apache.jfrog.io/artifactory/arrow/r/11.0.0/libarrow/bin/ubuntu-22
 sha256 = "sha256-Gdhhh44h1EJJhHq2mRYe0WwyYgbBgjTqXm7e1IyHr14=";
 }"""
 
+["arrow_13.0.0.1"]
+postPatch = """''
+	patchShebangs configure inst/build_arrow_static.sh
+	''"""
+NOT_CRAN="''true''"
+ARROW_R_DEV="''true''"
+add_nativeBuildInputs = "[cmake]"
+ARROW_DOWNLOADED_BINARIES = """pkgs.fetchurl {
+url = "https://apache.jfrog.io/artifactory/arrow/r/13.0.0/libarrow/bin/linux-openssl-3.0/arrow-13.0.0.zip";
+sha256 = "sha256-sInTHhpqKCdWMq+f4C2p8f4gc206XK4ZpFjkIIeAvJ4=";
+}"""
+
+
+
+
 
 
 
@@ -309,10 +324,6 @@ configureFlags = """[
 	"--with-Rmpi-include=${pkgs.openmpi}/include"
 	"--with-Rmpi-libpath=${pkgs.openmpi}/lib"
 ]"""
-
-[httpuv]
-add_nativeBuildInputs = "[pkgconfig zlib]"
-add_buildInputs = "[zlib]"
 
 
 
@@ -502,39 +513,40 @@ add_nativeBuildInputs = "[pkgconfig gsl_1]"
 add_buildInputs = "[gsl_1]"
 
 [loon]
-add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
-add_buildInputs = "[xlibsWrapper tk tcl]"
-propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
+add_nativeBuildInputs = "[pkgconfig freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
 
 [diveR]
-add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
-add_buildInputs = "[xlibsWrapper tk tcl]"
-propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
+add_nativeBuildInputs = "[pkgconfig freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
 
 
 [JFE]
-add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
-add_buildInputs = "[xlibsWrapper tk tcl]"
-propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
+add_nativeBuildInputs = "[pkgconfig freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
 
 ["loon.ggplot"]
-add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
-add_buildInputs = "[xlibsWrapper tk tcl]"
-propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
+add_nativeBuildInputs = "[pkgconfig freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
 
 ["loon.shiny"]
-add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
-add_buildInputs = "[xlibsWrapper tk tcl]"
-propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
+add_nativeBuildInputs = "[pkgconfig freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
 
 ["loon.tourr"]
-add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
-add_buildInputs = "[xlibsWrapper tk tcl]"
-propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
+add_nativeBuildInputs = "[pkgconfig freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
 
 [rfviz]
-add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
-add_buildInputs = "[xlibsWrapper tk tcl]"
+add_nativeBuildInputs = "[pkgconfig freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
 
 
 ["bio3d"]
@@ -573,13 +585,16 @@ JAVA_CPPFLAGS='"-I${pkgs.jdk}/include/"'
 JAVA_HOME='"${pkgs.jdk}"'
 
 [optbdmaeAT]
-add_nativeBuildInputs = "[xlibsWrapper tk]"
+add_nativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
 
 [soptdmaeA]
-add_nativeBuildInputs = "[xlibsWrapper tk]"
+add_nativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
 
 [optrcdmaeAT]
-add_nativeBuildInputs = "[xlibsWrapper tk]"
+add_nativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
 
 [qpdf]
 add_nativeBuildInputs = "[pkgconfig zlib libjpeg]"
@@ -609,9 +624,10 @@ add_r_dependencies = '["RcppGSL"]'
 add_nativeBuildInputs = "[pkgconfig which cmake nlopt]"
 
 ["gWidgets2tcltk"]
-add_nativeBuildInputs = "[xlibsWrapper tcl tk]"
-add_buildInputs = "[xlibsWrapper tcl tk]"
+add_nativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tcl tk]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tcl tk]"
 add_r_dependencies = '["codetools"]'
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
 
 ["clustermq_..0.8.95.1"]
 postPatch = "''patchShebangs configure''"
@@ -723,7 +739,8 @@ add_nativeBuildInputs = "[pkgconfig proj gdal geos sqlite]"
 add_buildInputs = "[gettext sqlite proj]"
 
 [TTAinterfaceTrendAnalysis]
-add_nativeBuildInputs = "[xlibsWrapper]"
+add_nativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
 
 [spectralGraphTopology]
 add_r_dependencies = '["CVXR"]'
@@ -778,9 +795,10 @@ add_nativeBuildInputs = '[pkgs.zlib pkgs.libmysqlclient pkgs.openssl]'
 
 
 [Cairo]
-add_nativeBuildInputs = "[pkgconfig libtiff libjpeg cairo xlibsWrapper pkgs.fontconfig.lib xorg.libXt.dev]"
-add_buildInputs = "[pkgconfig libtiff libjpeg cairo xlibsWrapper pkgs.fontconfig.lib xorg.libXt.dev]"
+add_nativeBuildInputs = "[pkgconfig libtiff libjpeg cairo freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE pkgs.fontconfig.lib xorg.libXt.dev]"
+add_buildInputs = "[pkgconfig libtiff libjpeg cairo freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE pkgs.fontconfig.lib xorg.libXt.dev]"
 PKG_CPPFLAGS='"-I${pkgs.xorg.libXt}/include"'
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
 #strictDeps = "false"
 
 ["RoBMA_2.1.0.."]
@@ -838,8 +856,9 @@ add_buildInputs = "[jags lzma bzip2 zlib icu]"
 ["GMMAT_..1.4.1"]
 add_nativeBuildInputs = "[pkgconfig bzip2]"
 add_buildInputs = "[bzip2]"
+
 ["GMMAT_1.4.1.."]
-add_nativeBuildInputs = "[pkgconfig bzip2 zlib]"
+add_nativeBuildInputs = "[pkgconfig bzip2 zlib cmake]"
 add_buildInputs = "[bzip2 zlib]"
 
 
@@ -848,8 +867,9 @@ add_nativeBuildInputs = "[pkgconfig imagemagick]"
 add_buildInputs = "[imagemagick]"
 
 [iplots]
-add_nativeBuildInputs = "[xlibsWrapper]"
-add_buildInputs = "[xlibsWrapper]"
+add_nativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
 
 ["gsl_2.1-6..2.1-7.1"]
 IgnoreSystemRequirement="true"
@@ -975,8 +995,9 @@ env
 ''"""
 
 [zenplots]
-add_nativeBuildInputs = "[xlibsWrapper tk tcl]"
-add_buildInputs = "[xlibsWrapper tk tcl]"
+add_nativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
 
 [mongolite]
 add_nativeBuildInputs = "[pkgconfig zlib]"
@@ -995,7 +1016,7 @@ add_nativeBuildInputs = "[pkgconfig zlib]"
 add_buildInputs = "[zlib]"
 
 
-["nfl4th"]
+["nfl4th_..1.0.3"]
 patches = "[../nix/patches/nfl4th.patch]"
 
 [pathfindR]
@@ -1115,9 +1136,9 @@ add_nativeBuildInputs = '[pkgconfig gsl_1]'
 add_buildInputs = '[gsl_1]'
 
 [infercnv]
-add_nativeBuildInputs = '[pkgconfig python]'
-add_buildInputs = '[python]'
-PYTHON='"${pkgs.python}/bin/python"'
+add_nativeBuildInputs = '[pkgconfig python3]'
+add_buildInputs = '[python3]'
+python3='"${pkgs.python3}/bin/python3"'
 
 [MSGFplus]
 add_nativeBuildInputs = '[which jdk]'
@@ -1228,16 +1249,17 @@ add_nativeBuildInputs = "[pkgconfig libxml2]"
 add_buildInputs = "[libxml2]"
 
 
-
-
-
 ["Rhisat2"]
 add_nativeBuildInputs = "[which nettools]"
 patches = "[../nix/patches/Rhisat2.patch]"
 #add_buildInputs = "[zlib]"
-["Rhisat2_1.14.0.."]
+["Rhisat2_1.14.0"]
 add_nativeBuildInputs = "[which nettools]"
-#
+
+["Rhisat2_1.15.0.."]
+add_nativeBuildInputs = "[which nettools]"
+patches = "[../nix/patches/Rhisat2_1.16.0.patch]"
+
 
 
 [SICtools]
@@ -1249,62 +1271,74 @@ substituteInPlace src/Makefile \
 					  --replace "LDFLAGS = " "LDFLAGS = -L${pkgs.ncurses.out}/lib " \
 					  --replace "-lcurses" "-lncurses"
 					  ''"""
+					  
+["SICtools_1.30.0"]
+add_nativeBuildInputs = "[ncurses]"
+add_buildInputs = "[ncurses]"
+postPatch = """''
+substituteInPlace src/Makefile \
+					  --replace "CFLAGS = " "CFLAGS = -I${pkgs.ncurses.dev}/include " \
+					  --replace "LDFLAGS = " "LDFLAGS = -L${pkgs.ncurses.out}/lib " \
+					  --replace "-lcurses" "-lncurses"
+					  ''"""
 
-					  [lpsymphony]
-					  postPatch = "''patchShebangs configure''"
+patches = "[../nix/patches/SICTools_1.30.0.patch]"
 
-					  [libsoc]
-					  postPatch = "''patchShebangs configure''"
+[lpsymphony]
+postPatch = "''patchShebangs configure''"
+
+[libsoc]
+postPatch = "''patchShebangs configure''"
 
 
-					  [seqTools]
-					  add_nativeBuildInputs = "[zlib]"
-					  add_buildInputs = "[zlib]"
+[seqTools]
+add_nativeBuildInputs = "[zlib]"
+add_buildInputs = "[zlib]"
 
-					  [PECA]
-					  HOME = '"$TMPDIR"'
+[PECA]
+HOME = '"$TMPDIR"'
 
-					  [OmnipathR]
-					  HOME = '"$TMPDIR"'
+[OmnipathR]
+HOME = '"$TMPDIR"'
 
-					  [paxtoolsr]
-					  HOME = '"$TMPDIR"'
-					  [biocthis]
-					  HOME = '"$TMPDIR"'
+[paxtoolsr]
+HOME = '"$TMPDIR"'
+[biocthis]
+HOME = '"$TMPDIR"'
 
-					  [SCATE]
+[SCATE]
 #doCheck = "false" # wants to talk to experimentHub
 # it loads SCATEData, which talks to the experimentHub,
 # even if you say doCheck=false
 # and experimentHub stuff  does not like HOME pointing to $TMPDIR
 # but then it doesn't work anyway..
-					  broken = "true"
+broken = "true"
 
-					  [fgga]
-					  HOME = '"$TMPDIR"'
+[fgga]
+HOME = '"$TMPDIR"'
 
-					  [TIN]
-					  HOME = '"$TMPDIR"'
-					  [systemPipeShiny]
-					  HOME = '"$TMPDIR"'
+[TIN]
+HOME = '"$TMPDIR"'
+[systemPipeShiny]
+HOME = '"$TMPDIR"'
 
-					  [SpatialDecon]
-					  HOME = '"$TMPDIR"'
-					  [wppi]
-					  HOME = '"$TMPDIR"'
-					  [APAlyzer]
-					  HOME = '"$TMPDIR"'
+[SpatialDecon]
+HOME = '"$TMPDIR"'
+[wppi]
+HOME = '"$TMPDIR"'
+[APAlyzer]
+HOME = '"$TMPDIR"'
 
 
-					  [affxparser]
+[affxparser]
 # the one in bioconductor does not rebuild it's fusion.o files,
 # IDK how they built it in the first place...
-					  src = """fetchFromGitHub {
-						  owner = "HenrikBengtsson";
-						  repo = "affxparser";
-						  rev="1.66.0";
-						  sha256 ="sha256-/TgixgwJkx4BekexHCWkVUl5mxZkFfLIIYql4mbIvXM=";
-					  }
+src = """fetchFromGitHub {
+  owner = "HenrikBengtsson";
+  repo = "affxparser";
+  rev="1.66.0";
+  sha256 ="sha256-/TgixgwJkx4BekexHCWkVUl5mxZkFfLIIYql4mbIvXM=";
+}
 """
 
 [interactiveDisplay]
@@ -1330,11 +1364,17 @@ env
 add_nativeBuildInputs = "[pkgconfig zlib]"
 add_buildInputs = "[zlib]"
 #PKG_CPPFLAGS='"-I${pkgs.zlib}/include/"'
-["Rbwa_1.2.0.."]
+
+["Rbwa_1.2.0..1.3.99"]
 add_nativeBuildInputs = "[pkgconfig zlib]"
 add_buildInputs = "[zlib]"
 patches = "[../nix/patches/Rbwa_1.2.0.patch]"
-#
+
+["Rbwa_1.4.0.."]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+patches = "[../nix/patches/Rbwa_1.4.0.patch]"
+
 [float]
 add_nativeBuildInputs = "[(pkgs.lapack or pkgs.liblapack)]"
 add_buildInputs = "[(pkgs.lapack or pkgs.liblapack)]"
@@ -1404,9 +1444,12 @@ add_r_dependencies = '["phyloseq" "ggnewscale"]'
 HOME = '"$TMPDIR"'
 add_r_dependencies = '["plyr"]'
 
-[MicrobiotaProcess]
+["MicrobiotaProcess_..1.11.0"]
 HOME = '"$TMPDIR"'
 add_r_dependencies = '["phyloseq"]'
+
+[MicrobiotaProcess]
+HOME = '"$TMPDIR"'
 
 ["groHMM_1.29.1"]
 patches = "[../nix/patches/groHMM_1.29.1.patch]"
@@ -1497,9 +1540,9 @@ postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "stri
 
 
 [tkImgR]
-add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
-add_buildInputs = "[xlibsWrapper tk tcl]"
-propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
+add_nativeBuildInputs = "[pkgconfig freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
 
 
 
@@ -1534,18 +1577,18 @@ add_nativeBuildInputs = "[pkgconfig zlib]"
 add_buildInputs = "[zlib]"
 
 [GroupSeq]
-add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
-add_buildInputs = "[xlibsWrapper tk tcl]"
-propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
+add_nativeBuildInputs = "[pkgconfig freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
 
 ["HierO_..0.2"]
-add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl bwidget]"
-add_buildInputs = "[xlibsWrapper tk tcl bwidget]"
+add_nativeBuildInputs = "[pkgconfig freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl bwidget]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl bwidget]"
 postPatch = """''
 sed -i '3iaddTclPath\\("${pkgs.bwidget}/lib"\\)' /build/HierO/R/HierO.R
 ''"""
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
 
-propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
 
 [cartogramR]
 add_nativeBuildInputs = "[pkgconfig fftw]"
@@ -1615,9 +1658,9 @@ add_buildInputs = "[zlib]"
 
 
 [affyPara]
-add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl]"
-add_buildInputs = "[xlibsWrapper tk tcl]"
-propagatedNativeBuildInputs = "[xlibsWrapper tk tcl]"
+add_nativeBuildInputs = "[pkgconfig freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl]"
 
 ["cbpManager_1.0.2"]
 add_r_dependencies = '["markdown"]'
@@ -1688,9 +1731,9 @@ add_buildInputs = "[proj sqlite]"
 postPatch = "''patchShebangs configure''"
 
 [rpanel]
-add_nativeBuildInputs = "[pkgconfig xlibsWrapper tk tcl bwidget]"
-add_buildInputs = "[xlibsWrapper tk tcl bwidget]"
-propagatedNativeBuildInputs = "[xlibsWrapper tk tcl bwidget]"
+add_nativeBuildInputs = "[pkgconfig freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl bwidget]"
+add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl bwidget]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk tcl bwidget]"
 postPatch = """''
 ls /build/rpanel/R
 sed -i '3iaddTclPath\\("${pkgs.bwidget}/lib"\\)' /build/rpanel/R/rpanel.r
@@ -1839,6 +1882,9 @@ add_buildInputs = "[zlib]"
 [BioNAR]
 doCheck = "false" # wants to talk to experimentHub
 HOME = '"$TMPDIR"'
+preConfigure = """''
+mkdir /tmp/home
+''"""
 
 
 [IP]
@@ -1962,9 +2008,9 @@ HOME = '"$TMPDIR"'
 
 
 [deeptrafo]
-add_nativeBuildInputs = '[pkgconfig python]'
-add_buildInputs = '[python]'
-PYTHON='"${pkgs.python}/bin/python"'
+add_nativeBuildInputs = '[pkgconfig python3]'
+add_buildInputs = '[python3]'
+python3='"${pkgs.python3}/bin/python3"'
 
 
 [Cyclops]
@@ -1996,11 +2042,94 @@ add_buildInputs = "[zlib]"
 [instantiate]
 postPatch = "''patchShebangs configure''"
 
-[htppuv]
+[httpuv]
 postPatch = "''patchShebangs configure''"
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
 
 [jack]
 add_nativeBuildInputs = '[pkgconfig]'
 
 [bbmix]
 add_r_dependencies = '["rstantools"]'
+
+[TriDimRegression]
+add_r_dependencies = '["rstantools"]'
+
+[rmsb]
+add_r_dependencies = '["rstantools"]'
+
+
+[MetaboSignal]
+preConfigure = """''
+mkdir /tmp/home
+''"""
+HOME = '"/tmp/home"'
+doCheck = "false" # wants to talk to experimentHub
+
+["hpar_1.42.0.."]
+patches = "[../nix/patches/hpar_1.42.0.patch]"
+
+
+
+
+[multiGSEA]
+preConfigure = """''
+mkdir /tmp/home
+''"""
+HOME = '"/tmp/home"'
+doCheck = "false" # wants to talk to annotationHub
+
+["metaboliteIDmapping_1.0.0.."]
+# disable hub loading on import so multiGSEA builds
+patches = "[../nix/patches/metaboliteIDmapping_1.0.0.patch]"
+
+
+[crc32]
+add_nativeBuildInputs = '[cmake]'
+
+[tok]
+CargoLockInSource = "''tok/src/rust/Cargo.lock''"
+
+[rshift]
+CargoLockInSource = "''rshift/src/rust/Cargo.lock''"
+
+[rsgeo]
+postPatch = "''patchShebangs configure''"
+
+[surtvep]
+postPatch = "''patchShebangs configure''"
+
+[ocf]
+postPatch = "''patchShebangs configure''"
+
+[gmailr]
+postPatch = "''patchShebangs configure''"
+
+[pkgdepends]
+postPatch = "''patchShebangs configure''"
+
+[bayesWatch]
+add_nativeBuildInputs = "[boost.dev]"
+add_buildInputs = "[]"
+CFLAGS='"-I${pkgs.boost.dev}/include"'
+CPPFLAGS='"-I${pkgs.boost.dev}/include"'
+#
+
+[vol2birdR]
+add_nativeBuildInputs = "[pkgconfig hdf5.dev proj gsl]"
+
+[zlib]
+add_nativeBuildInputs = '[pkgconfig zlib]'
+
+[ECOSolveR]
+MAKE='"${pkgs.gnumake}/bin/make"'
+
+
+[Rarr]
+add_nativeBuildInputs = "[zlib]"
+PKG_CPPFLAGS='"-I${pkgs.zlib.dev}/include"'
+
+
+

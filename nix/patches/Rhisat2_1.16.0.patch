@@ -1,0 +1,13 @@
+diff --git a/src/Makefile b/src/Makefile
+index 19d9843..34c7c7e 100755
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -562,7 +562,7 @@ hisat2-bin: $(BIN_PKG_LIST) $(HISAT2_BIN_LIST) $(HISAT2_BIN_LIST_AUX)
+ #
+ # installation instructions
+ #
+-../inst/hisat2: $(BIN_LIST)
++../inst/hisat2: $(HISAT2_BIN_LIST)
+ 	mkdir -p ../inst
+ 	cp hisat2-align-s ../inst/hisat2
+ 	cp hisat2-build-s ../inst/hisat2-build

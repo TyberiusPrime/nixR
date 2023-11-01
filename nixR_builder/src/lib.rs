@@ -260,7 +260,13 @@ impl Config {
     }
 
     pub fn get_output_blacklist(&self) -> Result<HashMap<String, String>> {
-        Config::load_blacklist(&self.override_path.join("output_blacklist.toml"))
+        let blacklist = Config::load_blacklist(&self.override_path.join("output_blacklist.toml"))?;
+        for key in blacklist.keys() {
+            if key.contains('-') && !(key.contains('_') || key.contains("::")) {
+                bail!("malformed blacklist entry, apperantly had version ('-') but no version seperator '_' or date seperator '::': '{}'", key);
+            }
+        }
+        Ok(blacklist)
     }
 
     pub fn get_derivation_args(

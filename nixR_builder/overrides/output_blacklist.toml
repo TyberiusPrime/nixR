@@ -134,16 +134,28 @@ cplexAPI = "unfree, cplex not in nixpkgs"
 "CaseBasedReasoning_0.1" = "compilation error: mismatched types 'const T2*' and 'int' 75 |   arma::uvec order = arma::sort_index(x, sortDirection) + 1;"
 "worldriskpollr_0.7.4" = "downloads from github master upon package load. Reproducibility = no"
 "symengine::2023-04-26" = "undefined symbol: basic_abs?"
+"OmicsLonDA::2023-04-26" = ": object 'colMeans' is not exported by 'namespace:BiocGenerics'"
 
 
 "ymd_0.1.0" = "Cargo.lock references extendr-api github: Unsupported crate source 'git+https://github.com/extendr/extendr?rev=refs/pull/627/head#ab1a319e6916995fc10ea3841ecec1ddaf54c9d"
 "string2path_0.1.5" = "Cargo.lock references extendr-api github: Unsupported crate source 'git+https://github.com/extendr/extendr?rev=refs/pull/627/head#ab1a319e6916995fc10ea3841ecec1ddaf54c9d"
 "rswipl_9.1.17" = "Cmake can't find ZLIB"
-
 "salso::2023-04-27" = "Needs rust 1.65, but 1.64 is in nixpkgs"
 "symengine::2023-04-27" = "undefined symbol: basic_abs?"
 "dsfa_2.0.0" = "fails to find boost"
 "prqlr::2023-04-27" = "Needs rust 1.65, but 1.64 is in nixpkgs"
-
-
-
+"RBioFormats_1.0.0" = "Tries to download a jar on load and store in in user cache. Could be patched to actually store it in the build package, I suppose."
+"dsfa_2.0.2" = "fails to find boost"
+"ragt2ridges::2023-10-24" = "/nix/store/1ajmz5c76f7xi5fanhsfba5srg73hx6f-r-vol2birdR-1.0.1.drv"
+"coursekata::2023-10-24" = "Cannot load glue from the private libr"
+"tiledb::2023-10-24" = "'TILEDB_BLOB' was not declared in this scope; did you mean 'TILEDB_OR'?"
+"BGmix_1.59.0" = "error: reference to 'beta' is ambiguousttps://git.bioconductor.org/packages/BGmix, and deprecated in 3.18"
+"Rhdf5lib::2023-10-24" = "We need __func__ or __FUNCTION__ to test function names! compile error"
+"OmicsLonDA::2023-10-24" = ": object 'colMeans' is not exported by 'namespace:BiocGenerics'"
+"INSPEcT::2023-10-24" = "Error: object 'read.xls' is not exported by 'namespace:gdata"
+"BioNAR_1.2.5" = "Tries to talk to experimentHub, can't find the spot"
+"multiGSEA_1.10.0" = "Tries to talk to annotationHub, even though metaboliteIDmapping is patched"
+"MetaboSignal_1.30.3" = "Tries to talk to annotationHub, even though hpar is patched"
+"Rbwa_1.4.0" = "still can't find kthread.o. See 1.0"
+"Rarr_1.0.3" = "can't find zlib"
+"rshift_3.0.0" = "Missing Cargo.lock"

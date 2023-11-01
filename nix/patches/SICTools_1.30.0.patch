@@ -1,0 +1,13 @@
+diff --git a/src/bam_tview_curses.c b/src/bam_tview_curses.c
+index 4fdd1fb..747e2fc 100755
+--- a/src/bam_tview_curses.c
++++ b/src/bam_tview_curses.c
+@@ -63,7 +63,7 @@ static void curses_mvprintw(struct AbstractTview* tv,int y ,int x,const char* fm
+   	va_start(argptr, fmt);
+ 	vsnprintf(str,size, fmt, argptr);
+ 	va_end(argptr);
+-	mvprintw(y,x,str);
++	mvprintw(y,x,"%s",str);
+ 	free(str);
+ 	}
+ 

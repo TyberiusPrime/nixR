@@ -1,0 +1,12 @@
+diff --git a/R/zzz.R b/R/zzz.R
+index 4f05b8f..5cb6009 100755
+--- a/R/zzz.R
++++ b/R/zzz.R
+@@ -15,5 +15,7 @@
+ .onLoad <- function(libname, pkgname) {
++   tryCatch({
+    fl <- system.file("extdata", "metadata.csv", package = pkgname)
+    titles <- read.csv(fl, stringsAsFactors = FALSE)$Title
+    ExperimentHub::createHubAccessors(pkgname, titles)
++   }, error = function(e) { print(e)})
+ }

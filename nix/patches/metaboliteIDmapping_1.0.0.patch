@@ -1,0 +1,21 @@
+diff --git a/R/zzz.R b/R/zzz.R
+index 12d6ed2..bc77180 100755
+--- a/R/zzz.R
++++ b/R/zzz.R
+@@ -3,6 +3,7 @@
+ ##
+ 
+ .onLoad <- function(libname, pkgname) {
++	tryCatch ({
+     
+     ns <- asNamespace( pkgname)
+     ah <- AnnotationHub::AnnotationHub()
+@@ -11,5 +12,6 @@
+     assign( "metabolitesMapping", metabolitesMapping, envir = ns)
+     
+     namespaceExport( ns, "metabolitesMapping")
++	}, error = function (e) {print('hub connect error', e)})
+     
+-}
+\ No newline at end of file
++}

@@ -108,11 +108,10 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn replace_cached_duplicates_with_symlinks(config: &Config)-> Result<()> {
+fn replace_cached_duplicates_with_symlinks(config: &Config) -> Result<()> {
     let dir = PathBuf::from("cache");
     println!("running test_dup_symlink");
     retrieval::symlink_duplicates(&dir, config)
-
 }
 
 fn test_parsing(config: &Config) -> Result<Vec<PackageInfo>> {
@@ -643,6 +642,11 @@ fn assemble(config: &Config) -> Result<()> {
         [
             "#s = sha256; r=r packages; b=non r build inputs; c=compile, d=derivation arguments; \n".as_bytes(),
             "{pkgs, importCargo}:\nwith pkgs;\n".as_bytes(),
+            "let gdal_2 = pkgs.gdal_2 or pkgs.gdal;\n".as_bytes(),
+            "g = builtins.tryEval(pkgs.gsl_1);\n".as_bytes(),
+            "gsl_1 = if g.success then g.value else pkgs.gsl;\n".as_bytes(),
+            "\tin\n".as_bytes(),
+
             NixValue::AttrSet(out_packages_bioc_software)
                 .to_string()
                 .as_bytes(),

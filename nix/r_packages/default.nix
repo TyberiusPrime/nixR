@@ -24,9 +24,9 @@ package_info: let
   name = package_info.pname;
   patches = package_info.patches or [];
   requireX = (
-    (builtins.any (pkg: pkg.name == pkgs.xlibsWrapper.name) (package_info.b or []))
+    (builtins.any (pkg: pkg.name == pkgs.xorg.libX11.name) (package_info.b or []))
     || (builtins.any (r_pkg: r_pkg == "tcltk2" || r_pkg == "tkrplot") (package_info.r or [])) # otherwise you run into endlees loops
-    || (builtins.any (pkg: pkg.name == pkgs.xlibsWrapper.name) (package_info.d.add_nativeBuildInputs or []))
+    || (builtins.any (pkg: pkg.name == pkgs.xorg.libX11.name) (package_info.d.add_nativeBuildInputs or []))
   );
   doCheck = package_info.d.doCheck or true;
   installFlags = ["--no-multiarch"] ++ (package_info.installFlags or []);
