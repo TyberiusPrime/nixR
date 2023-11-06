@@ -1,0 +1,33 @@
+diff --git a/R/zzz.R b/R/zzz.R
+index 13970cd..2b0c3b2 100755
+--- a/R/zzz.R
++++ b/R/zzz.R
+@@ -15,15 +15,19 @@ MPO_dbschema <- function(file="", show.indices=FALSE) dbschema(datacache,
+     file=file, show.indices=show.indices)
+ MPO_dbInfo <- function() dbInfo(datacache)
+ .onLoad <- function(libname, pkgname) {
+-    ns <- asNamespace(pkgname)
+-    makeCachedActiveBinding("MPO.db", make_MPO.db, env=ns)
+-    namespaceExport(ns, "MPO.db")
+-    ah <- suppressMessages(AnnotationHub())
+-    dbfile <- ah[["AH111553", verbose=FALSE]]  
+-    dbconn <- AnnotationDbi::dbFileConnect(dbfile)
+-    assign("dbconn", dbconn, envir=datacache)
+-    ann_objs <- createAnnObjs.MPO_DB("MPO", "MPO", dbconn, datacache)
+-    mergeToNamespaceAndExport(ann_objs, "MPO.db")
++	tryCatch({
++		ns <- asNamespace(pkgname)
++		makeCachedActiveBinding("MPO.db", make_MPO.db, env=ns)
++		namespaceExport(ns, "MPO.db")
++		ah <- suppressMessages(AnnotationHub())
++		dbfile <- ah[["AH111553", verbose=FALSE]]  
++		dbconn <- AnnotationDbi::dbFileConnect(dbfile)
++		assign("dbconn", dbconn, envir=datacache)
++		ann_objs <- createAnnObjs.MPO_DB("MPO", "MPO", dbconn, datacache)
++		mergeToNamespaceAndExport(ann_objs, "MPO.db")
++	}, error = function(e) {
++		message("MPO.db cannot be loaded (Connection to AnnotationHub failed). Namespace empty ")
++	})
+ 
+ }
+ 

@@ -1,0 +1,24 @@
+diff --git a/R/statcan_search.R b/R/statcan_search.R
+index 642943d..0a84596 100755
+--- a/R/statcan_search.R
++++ b/R/statcan_search.R
+@@ -32,6 +32,7 @@ statcan_search <- function(keywords,lang) {
+   
+   # Get the whole list of available tables from statCan into a temp forlder
+   url <- paste0("https://warin.ca/datalake/statcanR/statcan_data.qs")
++  tryCatch({
+   
+   if (httr::http_error(url)) 
+   { # network is down = message (not an error anymore)
+@@ -77,6 +78,9 @@ statcan_search <- function(keywords,lang) {
+       filtered_data <- statcandata[matches, ]
+       return(datatable(filtered_data,options = list(pageLength = 5)))  
+   }
++  }, error = function(e) {
++	message("could not download data")
++  })
+ } 
+ 
+-  
+\ No newline at end of file
++  

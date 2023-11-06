@@ -1,0 +1,13 @@
+diff --git a/src/Makevars b/src/Makevars
+index bb8a793..003e211 100755
+--- a/src/Makevars
++++ b/src/Makevars
+@@ -10,7 +10,7 @@
+ ##        $ install_name_tool -delete_rpath ${__OLD_LC_RPATH__} ./Rlibs/rlibkriging/libs/rlibkriging.so
+ 
+ MAKE_SHARED_LIBS=off
+-export LIBKRIGING_PATH=${PWD}/../inst/
++export LIBKRIGING_PATH=$(shell pwd)/../inst/
+ 
+ ifneq ("${MAKE_SHARED_LIBS}","off")
+ 	EXTRA_PKG_LIBS= -Wl,-rpath,"${LIBKRIGING_PATH}"/lib

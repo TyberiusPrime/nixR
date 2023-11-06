@@ -1,0 +1,40 @@
+diff --git a/R/zzz.R b/R/zzz.R
+index 75f07a3..ee921d6 100755
+--- a/R/zzz.R
++++ b/R/zzz.R
+@@ -16,15 +16,19 @@ HPO_dbschema <- function(file="", show.indices=FALSE) dbschema(datacache,
+     file=file, show.indices=show.indices)
+ HPO_dbInfo <- function() dbInfo(datacache)
+ .onLoad <- function(libname, pkgname) {
+-    ns <- asNamespace(pkgname)
+-    makeCachedActiveBinding("HPO.db", make_HPO.db, env=ns)
+-    namespaceExport(ns, "HPO.db")
+-    ah <- suppressMessages(AnnotationHub())
+-    dbfile <- ah[["AH111587", verbose=FALSE]]  
+-    dbconn <- AnnotationDbi::dbFileConnect(dbfile)
+-    assign("dbconn", dbconn, envir=datacache)
+-    ann_objs <- createAnnObjs.HPO_DB("HPO", "HPO", dbconn, datacache)
+-    mergeToNamespaceAndExport(ann_objs, "HPO.db")
++	tryCatch({
++		ns <- asNamespace(pkgname)
++		makeCachedActiveBinding("HPO.db", make_HPO.db, env=ns)
++		namespaceExport(ns, "HPO.db")
++		ah <- suppressMessages(AnnotationHub())
++		dbfile <- ah[["AH111587", verbose=FALSE]]  
++		dbconn <- AnnotationDbi::dbFileConnect(dbfile)
++		assign("dbconn", dbconn, envir=datacache)
++		ann_objs <- createAnnObjs.HPO_DB("HPO", "HPO", dbconn, datacache)
++		mergeToNamespaceAndExport(ann_objs, "HPO.db")
++	}, error = function(e) {
++		message("Error in .onLoad. Namespace empty ")
++	})
+ 
+ }
+ 
+@@ -34,4 +38,4 @@ HPO_dbInfo <- function() dbInfo(datacache)
+ 
+ .onUnload <- function(libpath) {
+     HPO.db$finalize()
+-}
+\ No newline at end of file
++}

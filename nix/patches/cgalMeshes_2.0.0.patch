@@ -1,0 +1,15 @@
+diff --git a/configure b/configure
+index a6c52ad..ae0742a 100755
+--- a/configure
++++ b/configure
+@@ -27,8 +27,8 @@ if [ $? -ne 0 ]; then
+ fi
+ 
+ ## get compiler flags and libs
+-pkgcflags=`pkg-config --cflags gmp mpfr`
+-pkglibs=`pkg-config --libs gmp mpfr`
++pkgcflags=`pkg-config --cflags gmp mpfr` $PKG_CFLAGS
++pkglibs=`pkg-config --libs gmp mpfr` $PKG_LIBS
+ 
+ ## substitute them in
+ sed -e "s|@PKG_CXXFLAGS@|$pkgcflags|" -e "s|@PKG_LIBS@|$pkglibs|" src/Makevars.in > src/Makevars

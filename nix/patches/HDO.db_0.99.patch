@@ -1,0 +1,22 @@
+diff --git a/R/zzz.R b/R/zzz.R
+index e702e42..2c0f5e9 100755
+--- a/R/zzz.R
++++ b/R/zzz.R
+@@ -10,6 +10,7 @@ HDO_dbInfo <- function() dbInfo(datacache)
+ 
+ .onLoad <- function(libname, pkgname)
+ {
++	tryCatch({
+     dbfile <- system.file("extdata", "HDO.sqlite", package=pkgname,
+         lib.loc=libname)
+     assign("dbfile", dbfile, envir=datacache)
+@@ -31,6 +32,9 @@ HDO_dbInfo <- function() dbInfo(datacache)
+     ## Create the AnnObj instances
+     ann_objs <- createAnnObjs.HDO_DB("HDO", "HDO", dbconn, datacache)
+     mergeToNamespaceAndExport(ann_objs, pkgname)
++	}, error=function(e) {
++		message("Error loading HDO package. Namespace will be empty.")
++	})
+ }
+ 
+ .onUnload <- function(libpath)

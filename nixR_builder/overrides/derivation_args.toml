@@ -160,8 +160,8 @@ patches = "[../nix/patches/h2o_3.34.0.3.patch]"
 ["h2o_3.32.1.2"]
 JARSOURCE = """
 	pkgs.fetchurl{
-        url="https://s3.amazonaws.com/h2o-release/h2o/rel-zipf/2/Rjar/h2o.jar.md5";
-		sha256 = "sha256-hPIJFeUqdZ7TVN7Pke87K21KFKx49TwoGIvF+wMcUTs=";
+        url="https://s3.amazonaws.com/h2o-release/h2o/rel-zipf/2/Rjar/h2o.jar";
+		sha256 = "sha256-hPIJFeUqdZ7TVN7Pke87Kx1KFKx49TwoGIvF+wMcUTs=";
 	}
 	"""
 patches = "[../nix/patches/h2o-3.32.1.2.patch]"
@@ -169,8 +169,8 @@ patches = "[../nix/patches/h2o-3.32.1.2.patch]"
 ["h2o_3.40.0.1"]
 JARSOURCE = """
 	pkgs.fetchurl{
-        url="https://s3.amazonaws.com/h2o-release/h2o/rel-zz_kurka/1/Rjar/h2o.jar.md5";
-		sha256 = "sha256-cUzF0EpI8hzpGU7Fs3uNQ4D806BtTk8yIGYFADGH6Wk=";
+        url="https://s3.amazonaws.com/h2o-release/h2o/rel-zz_kurka/1/Rjar/h2o.jar";
+		sha256 = "sha256-+IFElzAqpK9SG+ijGNo9+bUqpuuybOOume9/0CxTmRo=";
 	}
 	"""
 patches = "[../nix/patches/h2o-3.40.0.1.patch]"
@@ -178,11 +178,11 @@ patches = "[../nix/patches/h2o-3.40.0.1.patch]"
 ["h2o_3.42.0.2"]
 JARSOURCE = """
 	pkgs.fetchurl{
-        url="https://s3.amazonaws.com/h2o-release/h2o/rel-3.42.0/2/Rjar/h2o.jar.md5";
-		sha256 = "sha256-cUzF0EpI8hzpGU7Fs3uNQ4D806BtTk8yIGYxADGH6Wk=";
+        url="https://s3.amazonaws.com/h2o-release/h2o/rel-3.42.0/2/Rjar/h2o.jar";
+		sha256 = "sha256-sXc7P6XqkJdoQm41nN9rYFD3tqCF53dDhIq7qwUs6Yc=";
 	}
 	"""
-patches = "[../nix/patches/h2o-3.40.0.1.patch]"
+patches = "[../nix/patches/h2o-3.42.0.2.patch]"
 
 
 
@@ -685,11 +685,15 @@ X13BINARY= """builtins.fetchurl{
 [googleformr]
 patches = "[../nix/patches/googleformr.patch]"
 
-["packagefinder_..0.3.3"]
-patches = "[../nix/patches/packagefinder.patch]"
+["packagefinder_..0.3.2"]
+["packagefinder_0.3.3"]
+patches = "[../nix/patches/packagefinder_0.3.3.patch]"
 
-["packagefinder_0.3.4.."]
+["packagefinder_0.3.4"]
 patches = "[../nix/patches/packagefinder_0.3.4.patch]"
+
+["packagefinder_0.3.5.."]
+patches = "[../nix/patches/packagefinder_0.3.5.patch]"
 
 
 [RPostgres]
@@ -744,9 +748,6 @@ propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 x
 
 [spectralGraphTopology]
 add_r_dependencies = '["CVXR"]'
-
-["rhdf5lib"]
-add_nativeBuildInputs = "[hdf5-cpp which zlib]"
 
 
 ["hdf5r"]
@@ -853,13 +854,16 @@ add_nativeBuildInputs = "[pkgconfig jags]"
 add_nativeBuildInputs = "[pkgconfig jags lzma bzip2 zlib icu]"
 add_buildInputs = "[jags lzma bzip2 zlib icu]"
 
-["GMMAT_..1.4.1"]
+["GMMAT_..1.4.0"]
 add_nativeBuildInputs = "[pkgconfig bzip2]"
 add_buildInputs = "[bzip2]"
 
 ["GMMAT_1.4.1.."]
 add_nativeBuildInputs = "[pkgconfig bzip2 zlib cmake]"
 add_buildInputs = "[bzip2 zlib]"
+postPatch = """''
+	substituteInPlace src/Makevars.in --replace "-lz" "-lz -I${pkgs.zlib.dev}/include"
+''"""
 
 
 [magick]
@@ -869,7 +873,7 @@ add_buildInputs = "[imagemagick]"
 [iplots]
 add_nativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt]"
 add_buildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt]"
-propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
+propagatedNativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE]"
 
 ["gsl_2.1-6..2.1-7.1"]
 IgnoreSystemRequirement="true"
@@ -1253,10 +1257,8 @@ add_buildInputs = "[libxml2]"
 add_nativeBuildInputs = "[which nettools]"
 patches = "[../nix/patches/Rhisat2.patch]"
 #add_buildInputs = "[zlib]"
-["Rhisat2_1.14.0"]
-add_nativeBuildInputs = "[which nettools]"
 
-["Rhisat2_1.15.0.."]
+["Rhisat2_1.14.0.."]
 add_nativeBuildInputs = "[which nettools]"
 patches = "[../nix/patches/Rhisat2_1.16.0.patch]"
 
@@ -1271,8 +1273,8 @@ substituteInPlace src/Makefile \
 					  --replace "LDFLAGS = " "LDFLAGS = -L${pkgs.ncurses.out}/lib " \
 					  --replace "-lcurses" "-lncurses"
 					  ''"""
-					  
-["SICtools_1.30.0"]
+
+["SICtools_1.28.0.."]
 add_nativeBuildInputs = "[ncurses]"
 add_buildInputs = "[ncurses]"
 postPatch = """''
@@ -1281,7 +1283,6 @@ substituteInPlace src/Makefile \
 					  --replace "LDFLAGS = " "LDFLAGS = -L${pkgs.ncurses.out}/lib " \
 					  --replace "-lcurses" "-lncurses"
 					  ''"""
-
 patches = "[../nix/patches/SICTools_1.30.0.patch]"
 
 [lpsymphony]
@@ -1628,6 +1629,7 @@ HOME = '"$TMPDIR"'
 
 ["signatureSearch_1.8.0..1.12.0"]
 # blacklisted on 2021-10-27 (1.8.0)
+
 preConfigure = """''
 mkdir /tmp/home
 ''"""
@@ -1862,9 +1864,12 @@ add_buildInputs = "[gsl]"
 
 ["ArrayExpressHTS_1.47.0.."]
 add_nativeBuildInputs = "[which htslib pkgconfig]"
+add_r_dependencies = '["Rhtslib"]'
+
 
 ["BitSeq_1.41.0.."]
 add_nativeBuildInputs = "[which htslib pkgconfig]"
+add_r_dependencies = '["Rhtslib"]'
 
 
 
@@ -1896,16 +1901,12 @@ add_nativeBuildInputs = '[pkgconfig]'
 [cgalPolygons]
 add_nativeBuildInputs = '[pkgconfig]'
 
-[cgalMeshes]
-add_nativeBuildInputs = "[pkgconfig cgal boost.dev]"
-CGAL_DIR='"${pkgs.cgal}/lib/"'
-add_buildInputs = "[cgal]"
-configureFlags = """[
-	"--with-boost=${pkgs.boost.dev}"
-	"--with-boost-libdir=${pkgs.boost.out}/lib"
-]"""
-
-
+# [cgalMeshes]
+# add_nativeBuildInputs = "[pkgconfig cgal boost.dev mpfr gmp boost]"
+# CGAL_DIR='"${pkgs.cgal}/lib/"'
+# add_buildInputs = "[cgal]"
+# patches = "[../nix/patches/cgalMeshes_2.0.0.patch]"
+# PKG_CFLAGS = '"-I${pkgs.boost}/include"'
 
 [SimInf]
 add_nativeBuildInputs = "[pkgconfig gsl]"
@@ -1922,6 +1923,14 @@ postPatch = "''patchShebangs configure''"
 
 [purrr]
 postPatch = "''patchShebangs configure''"
+
+["rlibkriging_..0.7.0"]
+postPatch = """''
+patchShebangs configure tools/*.sh src/libK/travis-ci/common/*.sh src/libK/travis-ci/linux-macos/*.sh src/libK/travis-ci/r-linux-macos/*.sh
+''"""
+add_nativeBuildInputs = '[which coreutils-full]'
+patches = "[ ../nix/patches/rlibkriging_0.7.0.patch ]"
+
 
 [rlibkriging]
 postPatch = "''patchShebangs configure tools/*.sh src/libK/travis-ci/common/*.sh src/libK/travis-ci/linux-macos/*.sh src/libK/travis-ci/r-linux-macos/*.sh ''"
@@ -1971,8 +1980,11 @@ add_nativeBuildInputs = '[gfortran]'
 [ganDataModel]
 postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
 
-[statcanR]
+["statcanR_0.2.4"]
 patches = "[../nix/patches/statcanR_0.2.4.patch]"
+
+["statcanR_0.2.6"]
+patches = "[../nix/patches/statcanR_0.2.6.patch]"
 
 [spocc]
 add_nativeBuildInputs = "[pkgconfig openssl]"
@@ -2018,11 +2030,8 @@ postPatch = "''patchShebangs configure''"
 
 # 3.17 patches...
 
-["RGN_1.0.0"]
-preConfigure = """''mv src/constantsMod.f90 src/constantsmod.f90''"""
-
 ["NetCDF_2.8-1.."]
-MAKE='"${pkgs.gnumake}/bin/make"'
+MAKE='${pkgs.gnumake}/bin/make'
 
 [caviarpd]
 CargoLockInSource = "''caviarpd/src/rust/Cargo.lock''"
@@ -2091,6 +2100,7 @@ add_nativeBuildInputs = '[cmake]'
 
 [tok]
 CargoLockInSource = "''tok/src/rust/Cargo.lock''"
+add_nativeBuildInputs = "[rustc cargo libclang]"
 
 [rshift]
 CargoLockInSource = "''rshift/src/rust/Cargo.lock''"
@@ -2115,13 +2125,21 @@ add_nativeBuildInputs = "[boost.dev]"
 add_buildInputs = "[]"
 CFLAGS='"-I${pkgs.boost.dev}/include"'
 CPPFLAGS='"-I${pkgs.boost.dev}/include"'
+PKG_CFLAGS='"-I${pkgs.boost.dev}/include"'
+PKG_CPPFLAGS='"-I${pkgs.boost.dev}/include"'
 #
 
 [vol2birdR]
 add_nativeBuildInputs = "[pkgconfig hdf5.dev proj gsl]"
+HOME = '"/tmp/home"'
+PROJ_LIB = '"${pkgs.proj.dev}"'
 
 [zlib]
-add_nativeBuildInputs = '[pkgconfig zlib]'
+add_nativeBuildInputs = '[zlib]'
+PKG_CFLAGS='"-I${pkgs.zlib.dev}/include"'
+PKG_CPPFLAGS='"-I${pkgs.zlib.dev}/include"'
+PKG_LIBS = '"-lz -L${pkgs.zlib.out}/lib"'
+patches = "[../nix/patches/zlib_1.0.3.patch]"
 
 [ECOSolveR]
 MAKE='"${pkgs.gnumake}/bin/make"'
@@ -2133,3 +2151,40 @@ PKG_CPPFLAGS='"-I${pkgs.zlib.dev}/include"'
 
 
 
+[SpliceWiz]
+postPatch = "''patchShebangs configure''"
+
+[crc32c]
+add_nativeBuildInputs = '[cmake which]'
+
+["teal.code"]
+HOME = '"$TMPDIR"'
+
+["RNetCDF_2.8-1"]
+patches = "[../nix/patches/RNetCDF_2.8-1.patch]"
+
+[DOSE]
+HOME = '"$TMPDIR"'
+doCheck = "false"
+patches = "[../nix/patches/DOSE_3.28.patch]"
+
+[GNOSIS]
+HOME = '"$TMPDIR"'
+
+[cfdnakit]
+HOME = '"$TMPDIR"'
+
+# we need the older hdf5 lib...
+["Rhdf5lib_1.22.0.."]
+add_nativeBuildInputs = "[zlib hdf5_1_10.dev]"
+add_buildInputs = "[zlib hdf5_1_10]"
+
+
+["HPO.db"]
+patches = "[../nix/patches/HPO.db_0.99.patch]"
+
+["MPO.db"]
+patches = "[../nix/patches/MPO.db_0.99.patch]"
+
+["HDO.db"]
+patches = "[../nix/patches/HDO.db_0.99.patch]"

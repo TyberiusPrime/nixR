@@ -1,0 +1,12 @@
+diff --git a/src/Makevars b/src/Makevars
+index 7082d63..45c2d29 100755
+--- a/src/Makevars
++++ b/src/Makevars
+@@ -3,7 +3,6 @@
+ # All include directories of renv libraries (e.g. Rcpp) and also Rinternals
+ all:
+     PKG_CXXFLAGS = -I$(R_HOME)/include -I../inst/include -I./  `$(R_HOME)/bin/Rscript -e "Rcpp:::CxxFlags()"`
+-	PKG_LIBS = -lz
+ 	CC=gcc
+ 	CXX=g++
+ 	CXX_STD = CXX17

@@ -1,0 +1,11 @@
+diff --git a/tools/make-recursive.sh b/tools/make-recursive.sh
+index 17bfb29..2d904d2 100755
+--- a/tools/make-recursive.sh
++++ b/tools/make-recursive.sh
+@@ -58,5 +58,5 @@ set -- "$@" RNetCDF_all
+ 
+ # Run make:
+ echo "$MAKE" "$@"
+-"$MAKE" "$@"
++$MAKE "$@"
+ 

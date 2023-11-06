@@ -135,10 +135,10 @@ pub fn write_json<S: serde::ser::Serialize>(
     let file = ex::fs::File::create(&tmp_file)?;
     if do_gz {
         let mut encoder = flate2::write::GzEncoder::new(file, flate2::Compression::default());
-        serde_json::to_writer(&mut encoder, data)?;
+        serde_json::to_writer_pretty(&mut encoder, data)?;
         encoder.finish()?;
     } else {
-        serde_json::to_writer(file, data)?;
+        serde_json::to_writer_pretty(file, data)?;
     }
 
     ex::fs::rename(tmp_file, filename)?;
