@@ -110,9 +110,52 @@
       r_pkg_names ? [],
       nix_pkgs_pkgs ? null,
       packageOverrideAttrs ? {},
+      r_dependency_overrides ? {},
+      additional_packages ? {},
     }: let
       # the per date data (ie nixpkgs, R, bioc versions, map of package name -> pkg version
-      entry = r_by_date_data.${date};
+      additional_package_information_plus = let
+        r_builtin_packages = import generated/build_in_packages.nix;
+      in
+        # add in repo = "override"
+        builtins.mapAttrs (name: pkg:
+          pkg
+          // {
+            repo = "override";
+            r = builtins.filter (
+              r_dep: !builtins.elem r_dep r_builtin_packages
+            ) (pkg.r or []);
+          })
+        additional_packages;
+      additional_packages_name_to_version = let
+        # map the name_version keys into an attrset
+        split_list = (
+          map
+          (name_version: let
+            split = lib.strings.splitString "_" name_version;
+          in {
+            "name" = builtins.elemAt split 0;
+            "value" = builtins.elemAt split 1;
+          })
+          (builtins.attrNames additional_package_information_plus)
+        );
+        attrified = builtins.listToAttrs split_list;
+      in
+        # make sure there are no duplicate entries
+        lib.trivial.throwIfNot (
+          (builtins.length (builtins.attrNames additional_package_information_plus))
+          == (builtins.length (builtins.attrNames attrified))
+        ) "There were duplicate packages (with different versions) in additional_packages, remove until only one remains."
+        attrified;
+
+      _entry = r_by_date_data.${date};
+      entry =
+        _entry
+        // {
+          # this also means the user supplied version always wins
+          pkgs = _entry.pkgs // additional_packages_name_to_version;
+        };
+
       pkgs = builtins.trace ("nixpkgs version: " + entry.nixpkgs.lib.version) (
         if nix_pkgs_pkgs != null
         then nix_pkgs_pkgs
@@ -248,7 +291,18 @@
             };
             repo = "bioc_data_experiment";
           }))
-        (add_in_pname package_info_bioc_data_experiment));
+        (add_in_pname package_info_bioc_data_experiment))
+        // (add_in_pname additional_package_information_plus);
+
+      get_r_dependencies = v: let
+        org = (v.r or []) ++ (v.d.add_r_dependencies or []);
+      in
+        if (builtins.hasAttr v.pname r_dependency_overrides)
+        then let
+          out = r_dependency_overrides.${v.pname} org;
+        in
+          out
+        else org;
 
       # now turn it into derivations
       package_derivations_all_versions =
@@ -263,9 +317,9 @@
                 map (dep: let
                   tagged_dep = dep + "_" + (entry.pkgs.${dep} or (abort ("Missing dep for " + tag + " dep: " + dep)));
                 in
-                  package_derivations_all_versions.${tagged_dep}) # lazy recursino for the win
+                  package_derivations_all_versions.${tagged_dep}) # lazy recursion for the win
                 
-                ((v.r or []) ++ (v.d.add_r_dependencies or []));
+                (get_r_dependencies v);
             }))
         package_info_with_src;
       # just for the chosen date.
@@ -341,11 +395,87 @@
     r_by_date_data)
     // {
       # for debugging why these sets are not buildng
-      debug_set = R_by_date {
-        date = "2023-04-26";
-        r_pkg_names = [
-          "loon"
-        ];
-      };
+      debug_set = let
+        pkgs = nix-pkgs."23.5";
+      in
+        R_by_date {
+          date = "2023-10-24";
+          r_pkg_names = ["AsyK"];
+          # this overrides package attributes,
+          # right before the actual derivation is constructed.
+          # just like nixpkgs.
+          packageOverrideAttrs = {
+            #  we're going to use an old version of AsyK (picked at random)
+            AsyK = old: {
+              version = "1.5.3";
+              src = builtins.fetchurl {
+                url = "https://cran.r-project.org/src/contrib/Archive/AsyK/AsyK_1.5.3.tar.gz";
+                # you can use pkgs.lib.fakeSha256
+                # then you'll get an error message
+                # giving you the correct hash.
+                sha256 = "sha256:0pa8j757kvb82n1hn2npvv3yam0s1l3mgd7130kz7pas2gkwwy5n";
+              };
+            };
+          };
+          # AsyK 1.5.3 had a different dependency set then the 1.5.5 ,
+          # that was current on 2023-10-24
+          # and we have to tell nix about that.
+          r_dependency_overrides = {
+            AsyK = old: ["ICV" "KernSmooth" "OSCV" "decon" "kedd" "kerdiest" "ks" "locfit" "sm"];
+          };
+
+          # AsyK needs the package kedd and kerdiest which had been removed prior to 2023-10-24
+          # this introduces / overwrites packages at the lowest level
+          # e.g. as if they had been defined in generated/cran.nix
+          # but that means you can specify R dependencies
+          # as a list of strings, and they're automatically
+          # converted to the packages of your date.
+          # also your definition always wins, independend of _version.
+          additional_packages = {
+            # alternative: completely redifine the package
+            # "AsyK_1.5.3" = {
+            #   src = builtins.fetchurl {
+            #     url = "https://cran.r-project.org/src/contrib/Archive/AsyK/AsyK_1.5.3.tar.gz";
+            #     sha256 = "sha256:0pa8j757kvb82n1hn2npvv3yam0s1l3mgd7130kz7pas2gkwwy5n";
+            #   };
+            #   r = ["ICV" "KernSmooth" "OSCV" "decon" "kedd" "kerdiest" "ks" "locfit" "sm"];
+            # };
+            # no duplicate names please
+            "kedd_1.0.3" = {
+              src = pkgs.fetchurl {
+                sha256 = "38760abd8c8e8f69ad85ca7992803060acc44ce68358de1763bd2415fdf83c9f";
+                url = "https://cran.r-project.org/src/contrib/Archive/kedd/kedd_1.0.3.tar.gz";
+              };
+            };
+            "kerdiest_1.2" = {
+              src = pkgs.fetchurl {
+                sha256 = "16xj2br520ls8vw5qksxq9hqlpxlwmxccfk5balwgk5n2yhjs6r3";
+                url = "https://cran.r-project.org/src/contrib/Archive/kerdiest/kerdiest_1.2.tar.gz";
+              };
+              # there is no automatic extraction for R dependencies.
+              # read DESCRIPTION from your target package.
+              r = ["date" "chron" "evir"];
+            };
+            # an example how to use packages from github.
+            "dplyr_999" = {
+              # just make up a version...
+              src = pkgs.fetchFromGitHub {
+                owner = "tidyverse";
+                repo = "dplyr";
+                rev = "b4ebddb09c98d4bcded4973a9c7a5020aa5e627a";
+                sha256 = "sha256-u9/mLx2iTC3Jwp37/y5XY7owe2M6IgLfhGd4DOtX6sU=";
+              };
+              # no need to filter builtins.
+              r = ["cli" "generics" "glue" "lifecycle" "magrittr" "methods" "pillar" "R6" "rlang" "tibble" "tidyselect" "utils" "vctrs"];
+            };
+          };
+        };
+
+      # debug_set = R_by_date {
+      #   date = "2023-04-26";
+      #   r_pkg_names = [
+      #     "loon"
+      #   ];
+      # };
     };
 }

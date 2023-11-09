@@ -40,7 +40,7 @@ The excluded packgages (and other supplementary information) can be seen in
    to have matching glibc version
    
 ## Example
-```
+```nix
 {
   inputs = {
     nixR.url = "github:TyberiusPrime/nixR/1.0";
@@ -49,6 +49,89 @@ The excluded packgages (and other supplementary information) can be seen in
 	  defaultPackage = nixR."2022-04-27" ["dpylr" "ggplot2"];
   };
 }
+```
+
+
+## I want to change something about an existing package / use a different package version / add in a package from github:
+
+NixR does provide the necessary override options.
+
+Here's a documented example:
+
+```nix
+# assumes you have pkgs = import nixpkgs {};
+R_by_date {
+  date = "2023-10-24";
+  r_pkg_names = ["AsyK"];
+  # this overrides package attributes,
+  # right before the actual derivation is constructed.
+  # just like nixpkgs.
+  packageOverrideAttrs = {
+    #  we're going to use an old version of AsyK (picked at random)
+    AsyK = old: {
+      version = "1.5.3";
+      src = builtins.fetchurl {
+        url = "https://cran.r-project.org/src/contrib/Archive/AsyK/AsyK_1.5.3.tar.gz";
+        # you can use pkgs.lib.fakeSha256
+        # then you'll get an error message
+        # giving you the correct hash.
+        sha256 = "sha256:0pa8j757kvb82n1hn2npvv3yam0s1l3mgd7130kz7pas2gkwwy5n";
+      };
+    };
+  };
+  # AsyK 1.5.3 had a different dependency set then the 1.5.5 ,
+  # that was current on 2023-10-24
+  # and we have to tell nix about that.
+  r_dependency_overrides = {
+    AsyK = old: ["ICV" "KernSmooth" "OSCV" "decon" "kedd" "kerdiest" "ks" "locfit" "sm"];
+  };
+
+  # AsyK needs the package kedd and kerdiest which had been removed prior to 2023-10-24
+  # this introduces / overwrites packages at the lowest level
+  # e.g. as if they had been defined in generated/cran.nix
+  # but that means you can specify R dependencies
+  # as a list of strings, and they're automatically
+  # converted to the packages of your date.
+  # also your definition always wins, independend of _version.
+  additional_packages = {
+    # alternative: completely redifine the package
+    # "AsyK_1.5.3" = {
+    #   src = builtins.fetchurl {
+    #     url = "https://cran.r-project.org/src/contrib/Archive/AsyK/AsyK_1.5.3.tar.gz";
+    #     sha256 = "sha256:0pa8j757kvb82n1hn2npvv3yam0s1l3mgd7130kz7pas2gkwwy5n";
+    #   };
+    #   r = ["ICV" "KernSmooth" "OSCV" "decon" "kedd" "kerdiest" "ks" "locfit" "sm"];
+    # };
+    # no duplicate names please
+    "kedd_1.0.3" = {
+      src = pkgs.fetchurl {
+        sha256 = "38760abd8c8e8f69ad85ca7992803060acc44ce68358de1763bd2415fdf83c9f";
+        url = "https://cran.r-project.org/src/contrib/Archive/kedd/kedd_1.0.3.tar.gz";
+      };
+    };
+    "kerdiest_1.2" = {
+      src = pkgs.fetchurl {
+        sha256 = "16xj2br520ls8vw5qksxq9hqlpxlwmxccfk5balwgk5n2yhjs6r3";
+        url = "https://cran.r-project.org/src/contrib/Archive/kerdiest/kerdiest_1.2.tar.gz";
+      };
+      # there is no automatic extraction for R dependencies.
+      # read DESCRIPTION from your target package.
+      r = ["date" "chron" "evir"];
+    };
+    # an example how to use packages from Github.
+    "dplyr_999" = {
+      # just make up a version...
+      src = pkgs.fetchFromGitHub {
+        owner = "tidyverse";
+        repo = "dplyr";
+        rev = "b4ebddb09c98d4bcded4973a9c7a5020aa5e627a";
+        sha256 = "sha256-u9/mLx2iTC3Jwp37/y5XY7owe2M6IgLfhGd4DOtX6sU=";
+      };
+      # no need to filter builtins.
+      r = ["cli" "generics" "glue" "lifecycle" "magrittr" "methods" "pillar" "R6" "rlang" "tibble" "tidyselect" "utils" "vctrs"];
+    };
+  };
+};
 ```
 
 

@@ -700,6 +700,19 @@ fn assemble(config: &Config) -> Result<()> {
         &overview_md_path,
         itertools::Itertools::intersperse(hro_chain, "\n"),
     )?;
+    let mut bip_lines = vec!["[\n".to_string()];
+    bip_lines.extend(
+        config
+            .build_in_packages()
+            .iter()
+            .map(|x| format!("\"{}\"\n", x)),
+    );
+    bip_lines.push("]\n".to_string());
+
+    write_from_string_iter(
+        &config.nix_output_path.join("build_in_packages.nix"),
+        bip_lines.iter().map(|x| x.as_ref()),
+    )?;
 
     info!("pretty printing");
     //nix_pretty_print(&nix_packages_cran_path)?;
