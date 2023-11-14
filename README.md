@@ -93,6 +93,8 @@ R_by_date {
   # as a list of strings, and they're automatically
   # converted to the packages of your date.
   # also your definition always wins, independend of _version.
+  # (Note that they do not get automatically added to r_pkg_names,
+  # that's up to you).
   additional_packages = {
     # alternative: completely redifine the package
     # "AsyK_1.5.3" = {
