@@ -79,7 +79,7 @@ R_by_date {
       };
     };
   };
-  # AsyK 1.5.3 had a different dependency set then the 1.5.5 ,
+  # AsyK 1.5.3 had a different dependency set then the 1.5.5,
   # that was current on 2023-10-24
   # and we have to tell nix about that.
   r_dependency_overrides = {
@@ -94,7 +94,8 @@ R_by_date {
   # converted to the packages of your date.
   # also your definition always wins, independend of _version.
   additional_packages = {
-    # alternative: completely redifine the package
+    # alternative: completely redifine the AsyK package
+    # then you don't have to do the split packageOverrideAttrs / r_dependency_overrides overrides. They are more convient though
     # "AsyK_1.5.3" = {
     #   src = builtins.fetchurl {
     #     url = "https://cran.r-project.org/src/contrib/Archive/AsyK/AsyK_1.5.3.tar.gz";
@@ -102,7 +103,7 @@ R_by_date {
     #   };
     #   r = ["ICV" "KernSmooth" "OSCV" "decon" "kedd" "kerdiest" "ks" "locfit" "sm"];
     # };
-    # no duplicate names please
+    # no duplicate names please (this is checked)
     "kedd_1.0.3" = {
       src = pkgs.fetchurl {
         sha256 = "38760abd8c8e8f69ad85ca7992803060acc44ce68358de1763bd2415fdf83c9f";

@@ -153,10 +153,11 @@ impl Config {
 
     pub fn aborted(&self) -> bool {
         self._aborted.load(std::sync::atomic::Ordering::Relaxed)
-    }   
+    }
 
     pub fn abort(&self) {
-        self._aborted.store(true, std::sync::atomic::Ordering::Relaxed)
+        self._aborted
+            .store(true, std::sync::atomic::Ordering::Relaxed)
     }
 
     pub fn date_path(&self) -> PathBuf {
@@ -274,7 +275,8 @@ impl Config {
         pkg: &str,
         version: &Version,
         r_deps: &[String],
-    ) -> Option<HashMap<String, String>> {
+        removed_r_deps: &Vec<String>,
+    ) -> Result<Option<HashMap<String, String>>> {
         //this really needs a fully recursive query to be 100% sucessful.
         //But it's a lot of work to save some repetition in overrides/derivation_args
         let dv = self._get_derivation_args(pkg, version);
@@ -289,15 +291,39 @@ impl Config {
             extra_dv.insert("doCheck".to_string(), "false".to_string());
         };
 
+        //we need to remove removed_r_deps from the DESCRIPTION
+
+        if !removed_r_deps.is_empty() {
+            if let Some(dvx) = &dv {
+                if dvx.contains_key("preBuild") {
+                    bail!("For reasons of lazyness, you can not mix preBuild and remove_r_dependencies. Use postPatch instead of preBuild.");
+                }  
+            }
+            let mut pre_build = "".to_string();
+            pre_build.push_str("\n''\n");
+            for removed in removed_r_deps {
+                pre_build.push_str(&format!(
+                    r"sed - '/^Imports:/s/\b{}, \|\, {}\b//g' {}/DESCRIPTION\n",
+                    removed, removed, pkg
+                ));
+            }
+            pre_build.push_str("'';");
+            extra_dv.insert("preBuild".to_string(), pre_build);
+        }
+
         let mut dv = if !extra_dv.is_empty() && dv.is_none() {
             Some(HashMap::new())
         } else {
             dv
         };
+        if !removed_r_deps.is_empty() {
+            //no need to leave it in
+            dv.as_mut().unwrap().remove("remove_r_dependencies");
+        }
         for (k, v) in extra_dv.into_iter() {
             dv.as_mut().unwrap().insert(k, v);
         }
-        dv
+        Ok(dv)
     }
 
     pub fn _get_derivation_args(
@@ -711,13 +737,49 @@ impl PackageInfoWithSource {
         format!("{}_{}", &self.name, &self.version)
     }
 
-    pub fn r_deps(&self, ignored_packages: &HashSet<String>) -> Result<Vec<String>> {
+    pub fn get_removed_r_dependencies(&self, config: &Config) -> Result<Vec<String>> {
+        let mut res = Vec::new();
+        if let Some(derivation_args) =
+            //we use the non-modified one here.
+            config._get_derivation_args(&self.name, &self.parsed_version()?)
+        {
+            if let Some(remove_r_dependencies) = derivation_args.get("remove_r_dependencies") {
+                if !(remove_r_dependencies.starts_with('[') && remove_r_dependencies.ends_with(']'))
+                {
+                    bail!("remove_r_dependencies must be a list of quoted strings: [\"pkg\"]. Problem in {} {}", self.name, self.version)
+                }
+
+                let to_kick: Result<Vec<String>> = remove_r_dependencies
+                    .trim_matches(|x| x == '[' || x == ']')
+                    .split(' ')
+                    //make sure they're quoted strings
+                    .map(|x| {
+                        if x.starts_with('"') && x.ends_with('"') {
+                                Ok(x)
+                            } else {
+                                bail!("remove_r_dependencies must be a list of quoted strings: [\"pkg\"]. Problem in . {} {}", self.name, self.version)
+                            }
+                    })
+                    //remove quotes
+                    //apply only to ok values
+                    .map(|x| x.map(|y| y.trim_matches('"').to_string()))
+                    .collect();
+                let to_kick = to_kick?;
+                res.extend(to_kick.into_iter());
+            }
+        }
+        Ok(res)
+    }
+
+    pub fn r_deps(&self, config: &Config) -> Result<Vec<String>> {
+        let ignored_packages: &HashSet<String> = config.build_in_packages();
+        let remove_r_dependencies = self.get_removed_r_dependencies(config)?;
         let mut res = Vec::new();
         for what in ["Depends", "Imports", "LinkingTo"] {
             for entry in parse_r_dependencies(self.desc.get(what))
                 .with_context(|| format!("parsing {}", &what))?
             {
-                if !ignored_packages.contains(&entry) {
+                if !ignored_packages.contains(&entry) & !remove_r_dependencies.contains(&entry) {
                     res.push(entry);
                 }
             }

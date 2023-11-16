@@ -39,6 +39,7 @@
     "4.2.3"
     "4.3.0"
     "4.3.1"
+    "4.3.2"
   ];
 in
   builtins.listToAttrs (

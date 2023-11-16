@@ -183,3 +183,4 @@ cplexAPI = "unfree, cplex not in nixpkgs"
 "INSPEcT::2023-10-25" = "Error: object 'read.xls' is not exported by 'namespace:gdata"
 
 #"Rhdf5lib_1.24.0" = "We need __func__ or __FUNCTION__ to test function names! compile error"
+"rolog::2023-11-01" = "uses swiProlog which in nixos 23.05 uses openssl 1.1 which is EOL"

@@ -315,6 +315,23 @@ fn filter_unsuitable_packages(
         .collect()
 }
 
+fn pretty_repo_name(repo_text: &str) -> String {
+    if repo_text == "cran" {
+        return "CRAN".to_string();
+    } else {
+        if repo_text.starts_with("bioconductor_data_annotation") {
+            return "Bioconductor annotation".to_string();
+        } else if repo_text.starts_with("bioconductor_data_experiment") {
+            return "Bioconductor experiment".to_string();
+        }
+        if repo_text.starts_with("bioconductor") {
+            return "Bioconductor".to_string();
+        } else {
+            panic!("Could not pretty print repo name {}", repo_text)
+        }
+    }
+}
+
 fn assemble(config: &Config) -> Result<()> {
     let r_releases = retrieval::fetch_r_release_dates(config)?;
     let bioc_releases = retrieval::bioconductor_fetch_releases(config, BIOCONDUCTOR_URL)?;
@@ -342,11 +359,12 @@ fn assemble(config: &Config) -> Result<()> {
     let mut all_the_packages: HashMap<String, PackageInfoWithSource> = HashMap::new();
     let nix_r_by_date_path = config.nix_output_path.join("r_by_date.nix");
     let mut r_by_date: HashMap<String, NixValue> = HashMap::new();
-    let mut human_readable_overview: Vec<String> = Vec::new();
+    let mut human_readable_overview: Vec<Vec<String>> = Vec::new();
 
     let broken_packages: HashMap<String, String> = HashMap::new();
     let blacklist = config.get_output_blacklist()?;
     let extra_dates = config.extra_dates()?;
+    let mut repo_names_in_order: Option<Vec<String>> = None;
 
     for bioc_release in bioc_releases.iter() {
         if bioc_release.element.version < min_version {
@@ -367,8 +385,20 @@ fn assemble(config: &Config) -> Result<()> {
         //note that the dates are right exclusive, so we want to query the one before...
         let mut dates = Vec::new();
         if !extra_dates.contains_key(&bioc_release.start_date) {
-            dates.push((bioc_release.start_date, format!("Initial release date")));
+            dates.push((
+                bioc_release.start_date,
+                format!("Initial release date. Often missing experimental packages"),
+            ));
         }
+        //one week plus date
+        let one_week_after_release = bioc_release.start_date + chrono::Duration::days(7);
+        if one_week_after_release < bioc_release.end_date {
+            dates.push((
+                one_week_after_release,
+                format!("Release +1week. Experimental packages should now be included."),
+            ));
+        }
+
         if bioc_release.element.is_finished
             && !extra_dates.contains_key(&bioc_release.end_date.pred())
         {
@@ -406,6 +436,7 @@ fn assemble(config: &Config) -> Result<()> {
             info!("\tnixpkgs version: {}", nixpks_version);
             let hits: Vec<u32> = interval_set.query(&date)?;
             info!("\tpkg count: {}", hits.len());
+            let mut count_by_repo: HashMap<_, usize> = HashMap::new();
             let mut days_packages = HashMap::new();
             //collect all of them
             for ii in &hits {
@@ -432,6 +463,22 @@ fn assemble(config: &Config) -> Result<()> {
                 days_packages.insert(
                     p.element.name.to_string(),
                     NixValue::Str(p.element.version.to_string()),
+                );
+                *count_by_repo
+                    .entry(p.element.source.to_string())
+                    .or_insert(0) += 1;
+            }
+            let count_by_repo: Vec<(String, usize)> =
+                itertools::sorted(count_by_repo.into_iter()).collect();
+            for (k, v) in &count_by_repo {
+                info!("\t\tFrom {}: {}", k, v);
+            }
+            if let None = repo_names_in_order {
+                repo_names_in_order = Some(
+                    count_by_repo
+                        .iter()
+                        .map(|(k, _)| pretty_repo_name(k))
+                        .collect(),
                 );
             }
 
@@ -495,7 +542,7 @@ fn assemble(config: &Config) -> Result<()> {
                 for ii in &hits {
                     let p = &packages[*ii as usize];
                     if !already_removed.contains(&p.element.name) {
-                        for rdep in p.element.r_deps(config.build_in_packages())?.iter() {
+                        for rdep in p.element.r_deps(config)?.iter() {
                             if !days_packages.contains_key(rdep) {
                                 /* warn!(
                                     "Filtering {} because of missing dependency {}",
@@ -515,17 +562,20 @@ fn assemble(config: &Config) -> Result<()> {
                 }
             }
 
-            human_readable_overview.push(format!(
-                "{} | {} | {} | {}| {} | [{}](filtered_{}.md) | {}",
-                date,
-                r_version.element,
-                bioc_release.element.version,
-                nixpks_version,
-                days_packages.len(),
-                filter_reasons.len(),
-                date,
-                date_reason,
-            ));
+            let mut hro_entry = Vec::new();
+            hro_entry.push(date.to_string());
+            hro_entry.push(r_version.element.to_string());
+            hro_entry.push(bioc_release.element.version.to_string());
+            hro_entry.push(nixpks_version.to_string());
+            //count packages by source
+            for (k, v) in count_by_repo {
+                hro_entry.push(v.to_string());
+            }
+
+            hro_entry.push(format!("[{}](filtered_{}.md)", filter_reasons.len(), date));
+            hro_entry.push(date_reason.to_string());
+
+            human_readable_overview.push(hro_entry);
 
             let mut r_by_date_entry: HashMap<String, NixValue> = HashMap::new();
             r_by_date_entry.insert(
@@ -564,10 +614,13 @@ fn assemble(config: &Config) -> Result<()> {
     let mut out_packages_bioc_data_experiment: HashMap<String, NixValue> = HashMap::new();
 
     for (tag, package) in all_the_packages.iter() {
-        let r_deps = package.r_deps(config.build_in_packages())?;
-        let derivation_args =
-            config.get_derivation_args(&package.name, &package.parsed_version()?, &r_deps);
-
+        let mut r_deps = package.r_deps(config)?;
+        let derivation_args = config.get_derivation_args(
+            &package.name,
+            &package.parsed_version()?,
+            &r_deps,
+            &package.get_removed_r_dependencies(config)?,
+        )?;
         let non_r_deps = {
             let do_ignore = match &derivation_args {
                 Some(dv) => match dv.get("IgnoreSystemRequirement") {
@@ -591,9 +644,7 @@ fn assemble(config: &Config) -> Result<()> {
         };
         let mut this_out: HashMap<_, NixValue> = HashMap::new();
         this_out.insert("s", package.sha256.clone().into());
-        if !r_deps.is_empty() {
-            this_out.insert("r", r_deps.into());
-        }
+
         if !non_r_deps.is_empty() {
             this_out.insert("b", non_r_deps.into_iter().map(NixValue::Literal).collect());
         }
@@ -601,7 +652,7 @@ fn assemble(config: &Config) -> Result<()> {
             this_out.insert("c", NixValue::Bool(true));
         }
 
-        if let Some(derivation_args) = derivation_args {
+        if let Some(mut derivation_args) = derivation_args {
             this_out.insert(
                 "d",
                 derivation_args
@@ -609,6 +660,10 @@ fn assemble(config: &Config) -> Result<()> {
                     .map(|(k, v)| (k, NixValue::Literal(v)))
                     .collect(),
             );
+        }
+
+        if !r_deps.is_empty() {
+            this_out.insert("r", r_deps.into());
         }
 
         match package.source {
@@ -686,20 +741,37 @@ fn assemble(config: &Config) -> Result<()> {
     );
 
     let overview_md_path = config.nix_output_path.join("readme.md");
-    let hro_header = [
-        ("| Date | R | Bioconductor | Nixpkgs | # Packages | # Missing | Comment |"),
-        ("| ---- | - | ------------ | ------- | ---------- | --------- | ------- |"),
+    let mut hro_header = vec![
+        "Date".to_string(),
+        "R".to_string(),
+        "Bioconductor".to_string(),
+        "Nixpkgs".to_string(),
     ];
-    human_readable_overview.sort_by(|a, b| b.cmp(a));
-    let hro_chain = hro_header
-        .iter()
-        .map(|x| x.as_ref())
-        .chain(human_readable_overview.iter().map(|x| x.as_ref()));
+    for k in repo_names_in_order.unwrap() {
+        hro_header.push(format!("# {}", k.to_string()));
+    }
+    hro_header.push("# Missing".to_string());
+    hro_header.push("Comment".to_string());
+    let mut hro_header_str = "| ".to_string();
+    hro_header_str.push_str(hro_header.join(" | ").as_str());
+    hro_header_str.push_str(" |");
+    let hro_header_sep = regex::Regex::new(r"[^ |]")
+        .unwrap()
+        .replace_all(&hro_header_str, "-")
+        .to_string();
+    hro_header_str.push('\n');
+    hro_header_str.push_str(&hro_header_sep);
+    hro_header_str.push('\n');
 
-    write_from_string_iter(
-        &overview_md_path,
-        itertools::Itertools::intersperse(hro_chain, "\n"),
-    )?;
+    human_readable_overview.sort_by(|a, b| b[0].cmp(&a[0]));
+    let human_readable_overview_str = human_readable_overview
+        .iter()
+        .map(|x| x.join(" | "))
+        .collect::<Vec<String>>()
+        .join("\n");
+    hro_header_str.push_str(&human_readable_overview_str);
+
+    write_from_string_iter(&overview_md_path, [hro_header_str.as_ref()].into_iter())?;
     let mut bip_lines = vec!["[\n".to_string()];
     bip_lines.extend(
         config

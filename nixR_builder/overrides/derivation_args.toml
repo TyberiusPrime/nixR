@@ -1507,6 +1507,12 @@ HOME = '"$TMPDIR"'
 HOME = '"$TMPDIR"'
 add_r_dependencies = '["rstantools"]'
 
+
+[ConsensusClusterPlus]
+# ALL is from the experiment package set 
+# and only necessary for the documentation
+# remove_r_dependencies = '["ALL"]' # note this is done in Rust
+
 [qmix]
 add_r_dependencies = '["rstantools"]'
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 WHAT=bioc_software
-#WHAT=cran
-BUILD_DATE=2022-11-02_$WHAT
+WHAT=cran
+BUILD_DATE=2023-11-01_$WHAT
 echo "building $BUILD_DATE set"
 echo "output in $BUILD_DATE.txt"
 nix build --cores 24 --max-jobs 4 --keep-going .#$BUILD_DATE --show-trace 2>$BUILD_DATE.txt
@@ -24,3 +24,6 @@ echo "done"
 #
 # tested 2023-10-25_cran
 # tested 2023-10-25_bioc_software
+#
+# testing 2023-11-01_cran
+# testing 2023-11-01_bioc_software
