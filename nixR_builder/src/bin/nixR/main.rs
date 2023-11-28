@@ -754,13 +754,17 @@ fn assemble(config: &Config) -> Result<()> {
     hro_header.push("Comment".to_string());
     let mut hro_header_str = "| ".to_string();
     hro_header_str.push_str(hro_header.join(" | ").as_str());
-    hro_header_str.push_str(" |");
+    hro_header_str.push_str(" |\n |");
+    for _ in 0..hro_header.len() {
+        hro_header_str.push_str(" --- |");
+    }
+    /* hro_header_str.push_str(" |");
     let hro_header_sep = regex::Regex::new(r"[^ |]")
         .unwrap()
         .replace_all(&hro_header_str, "-")
         .to_string();
     hro_header_str.push('\n');
-    hro_header_str.push_str(&hro_header_sep);
+    hro_header_str.push_str(&hro_header_sep); */
     hro_header_str.push('\n');
 
     human_readable_overview.sort_by(|a, b| b[0].cmp(&a[0]));
