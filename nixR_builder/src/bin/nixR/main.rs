@@ -568,8 +568,15 @@ fn assemble(config: &Config) -> Result<()> {
             hro_entry.push(bioc_release.element.version.to_string());
             hro_entry.push(nixpks_version.to_string());
             //count packages by source
-            for (k, v) in count_by_repo {
-                hro_entry.push(v.to_string());
+            for k in repo_names_in_order.as_ref().unwrap() {
+                hro_entry.push(
+                    count_by_repo
+                        .iter()
+                        .find(|(kk, _)| *k == pretty_repo_name(kk))
+                        .map(|x| x.1)
+                        .unwrap_or(0)
+                        .to_string(),
+                );
             }
 
             hro_entry.push(format!("[{}](filtered_{}.md)", filter_reasons.len(), date));
@@ -768,6 +775,11 @@ fn assemble(config: &Config) -> Result<()> {
     hro_header_str.push('\n');
 
     human_readable_overview.sort_by(|a, b| b[0].cmp(&a[0]));
+    let observed_lengths: HashSet<usize> =
+        human_readable_overview.iter().map(|x| x.len()).collect();
+    if observed_lengths.len() != 1 {
+        bail!("inconsistent lengths in human readable overview");
+    }
     let human_readable_overview_str = human_readable_overview
         .iter()
         .map(|x| x.join(" | "))
