@@ -9,6 +9,7 @@ use crate::{
 use anyhow::{anyhow, bail, Context, Result};
 use chrono::NaiveDate;
 use flate2::read::GzDecoder;
+use itertools::Itertools;
 use lazy_regex::{lazy_regex, Regex};
 /// fetch the data
 #[allow(unused_imports)]
@@ -23,7 +24,6 @@ use std::{
     collections::HashSet,
     path::{Path, PathBuf},
 };
-use itertools::Itertools;
 
 pub static PACKAGE_REGEXPS: Lazy<Regex> = lazy_regex!(
     //misnomer, doesn't capture date
@@ -822,6 +822,7 @@ fn cran_fetch_current(config: &Config, base_url: &str) -> Result<Vec<String>> {
         &config.date_path().join("cran/packages.json"),
         &PACKAGE_REGEXPS,
         |x| Ok(x[1].to_string()),
+        Some(config.get_accepted_empty_archives()?)
     )?;
     // the cran file listing contains *multiple* entries for one package
     // the older ones *should* be in the archive...
@@ -865,6 +866,7 @@ fn download_regexs_and_cache_json<
     output_path: &PathBuf,
     search_re: &regex::Regex,
     group_extract: F,
+    accepted_empty: Option<HashSet<String>>,
 ) -> Result<Vec<T>> {
     cache_json(output_path, || {
         let input_html = ureq::get(url).call()?.into_string()?;
@@ -874,8 +876,22 @@ fn download_regexs_and_cache_json<
             .collect();
         let hits = hits?;
         if hits.is_empty() {
-            println!("{}", &input_html);
-            return Err(anyhow!("No hits found"));
+            let complain = if let Some(accepted_empty) = &accepted_empty {
+                if accepted_empty.contains(url) {
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            };
+            if complain {
+                println!("{}", &input_html);
+                return Err(anyhow!("No hits found at this url {}", url));
+            }
+            else {
+                info!("Accepting empty archive for {}", url);
+            }
         }
 
         Ok(hits)
@@ -914,6 +930,7 @@ fn fetch_archive<
             &out_path.join("archives.json"),
             search_re_archive_entries,
             &extract_func_archive_entries,
+            None,
         )?;
         // not the list of currently available packages,but everything archived...
         // and with a 'last changed on date'
@@ -995,6 +1012,7 @@ fn fetch_archive<
                     &archive_dir.join(archived_package_name),
                     search_re_packages,
                     &extract_func_packages,
+                    None,
                 )
             })
             .collect();
@@ -1213,7 +1231,8 @@ pub fn get_nixpkgs_releases() -> Result<Vec<DateRangePlus<Version>>> {
     ))
 }
 
-pub fn symlink_duplicates(dir: &Path, config: &Config) -> Result<()> { // todo: remove?
+pub fn symlink_duplicates(dir: &Path, config: &Config) -> Result<()> {
+    // todo: remove?
     //find all .tar.gz  in dir
     let mut files = std::fs::read_dir(&dir)
         .unwrap()

@@ -270,6 +270,15 @@ impl Config {
         Ok(blacklist)
     }
 
+    pub fn get_accepted_empty_archives(&self) -> Result<HashSet<String>> {
+        let toml: Result<HashMap<String, String>> = load_toml(
+            &self.override_path.join("accepted_empty_cran_archives.toml"),
+            false,
+        );
+        let toml = toml.context("Failed to parse accepted_empty_cran_archives.toml")?;
+        Ok(toml.keys().map(|x| x.to_string()).collect())
+    }
+
     pub fn get_derivation_args(
         &self,
         pkg: &str,
@@ -297,7 +306,7 @@ impl Config {
             if let Some(dvx) = &dv {
                 if dvx.contains_key("preBuild") {
                     bail!("For reasons of lazyness, you can not mix preBuild and remove_r_dependencies. Use postPatch instead of preBuild.");
-                }  
+                }
             }
             let mut pre_build = "".to_string();
             pre_build.push_str("\n''\n");

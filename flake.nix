@@ -396,11 +396,11 @@
     // {
       # for debugging why these sets are not buildng
       debug_set = let
-        pkgs = nix-pkgs."23.5";
+        pkgs = nix-pkgs."22.5";
       in
         R_by_date {
-          date = "2023-10-24";
-          r_pkg_names = ["CATALYST"];
+          date = "2020-11-04";
+          r_pkg_names = ["openssl"];
         };
 
       # debug_set = R_by_date {
