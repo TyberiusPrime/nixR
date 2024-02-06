@@ -8,7 +8,7 @@
 # ["pkg_version"] - this version of this package
 # ["pkg_versionStart..versionStop"] - the versions start, stop, and all inbetween (so left&right inclusive)
 
-# the most specif one wins
+# the most specific one wins
 # so first 'single version',
 # then 'range of versions', (if you have overlaps, it's going to be nondeterministic!)
 # then the no-version one
@@ -19,8 +19,9 @@
 PKGCONFIG_CFLAGS = '"-I${pkgs.openssl.dev}/include"'
 PKGCONFIG_LIBS = '"-Wl,-rpath,${pkgs.openssl.out}/lib -L${pkgs.openssl.out}/lib -lssl -lcrypto"'
 RPATH = "''${pkgs.openssl.out}/lib''"
-add_nativeBuildInputs = "[pkgconfig gettext]"
+add_nativeBuildInputs = "[pkgconfig gettext bash]"
 add_buildInputs = "[gettext]"
+postPatch = "''patchShebangs configure''"
 preConfigure = """''
 substituteInPlace configure --replace 'PKG_LIBS="''${PKG_LIBS_VERSIONED}"' 'PKG_LIB="''${PKG_LIBS_VERSIONED}"';
 ''"""
