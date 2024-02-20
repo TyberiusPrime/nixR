@@ -355,7 +355,10 @@
       r_wrapper;
   in
     # date is a function taking a list of R package names - e.g. ["httr"]
-    {R_by_date = R_by_date;}
+    {
+      R_by_date = R_by_date;
+      nix-pkgs = nix-pkgs;
+    }
     // (lib.mapAttrs (k: v: r_pkg_names:
       R_by_date {
         date = k;
