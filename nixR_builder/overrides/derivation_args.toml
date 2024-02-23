@@ -1938,6 +1938,13 @@ patchShebangs configure tools/*.sh src/libK/travis-ci/common/*.sh src/libK/travi
 add_nativeBuildInputs = '[which coreutils-full]'
 patches = "[ ../nix/patches/rlibkriging_0.7.0.patch ]"
 
+["rlibkriging_0.8-0.."]
+postPatch = """''
+patchShebangs configure tools/*.sh src/libK/travis-ci/common/*.sh src/libK/travis-ci/linux-macos/*.sh src/libK/travis-ci/r-linux-macos/*.sh
+''"""
+add_nativeBuildInputs = '[which coreutils-full zlib hdf5.dev]'
+#patches = "[ ../nix/patches/rlibkriging_0.7.0.patch ]"
+
 
 [rlibkriging]
 postPatch = "''patchShebangs configure tools/*.sh src/libK/travis-ci/common/*.sh src/libK/travis-ci/linux-macos/*.sh src/libK/travis-ci/r-linux-macos/*.sh ''"
@@ -1980,6 +1987,12 @@ postPatch = "''patchShebangs configure''"
 [rswipl]
 add_nativeBuildInputs = '[cmake pandoc libarchive expat lzma zstd lz4 bzip2 zlib pkgconfig]'
 ZLIB_INCLUDE_DIR= "''${pkgs.zlib}/include''"
+
+["rswipl_9.1.17.1.."]
+add_nativeBuildInputs = '[cmake pandoc libarchive expat lzma zstd lz4 bzip2 zlib pkgconfig]'
+ZLIB_INCLUDE_DIR= "''${pkgs.zlib.dev}/include''"
+ZLIB_LIBRARY= "''${pkgs.zlib}/lib''"
+
 
 [npsp]  # TODO: Check...
 add_nativeBuildInputs = '[gfortran]'
@@ -2195,3 +2208,31 @@ patches = "[../nix/patches/MPO.db_0.99.patch]"
 
 ["HDO.db"]
 patches = "[../nix/patches/HDO.db_0.99.patch]"
+
+["Colossus_0.9.3.."]
+postPatch = "''patchShebangs configure''"
+
+
+[connections]
+HOME = '"$TMPDIR"'
+
+[sphereTessellation]
+add_nativeBuildInputs = "[pkgconfig cgal]"
+CGAL_DIR='"${pkgs.cgal}/lib/"'
+add_buildInputs = "[cgal]"
+
+[RITCH]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[distinct]
+add_r_dependencies = '["RcppParallel"]'
+
+[FLAMES]
+postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
+
+[cfTools]
+HOME = '"$TMPDIR"'
+
+["INSPEcT_1.31.0.."]
+HOME = '"$TMPDIR"'

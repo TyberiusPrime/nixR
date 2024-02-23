@@ -185,3 +185,13 @@ cplexAPI = "unfree, cplex not in nixpkgs"
 #"Rhdf5lib_1.24.0" = "We need __func__ or __FUNCTION__ to test function names! compile error"
 "rolog::2023-11-01" = "uses swiProlog which in nixos 23.05 uses openssl 1.1 which is EOL"
 
+"ebmstate_0.1.3" = "undefined type name Sint'"
+"NetLogoR::2023-11-01" = "class \".quickPlottables\" is not exported by 'namespace:quickPlot'"
+"coursekata_0.14.1" = "Cannot load glue from the private library"
+"sits_1.4." = "could not resolve host: fonts.gstatic.com"
+"rsofun_4.4" = " Cannot open module file 'md_plant_pmodel.mod' for reading at (1): No such file or directory"
+
+"distinct_1.14.0" = "error in evaluating the argument 'x' in selecting a method for function 'query': Invalid Cache: sqlite file"
+"cfTools_1.2.0" = "error in evaluating the argument 'x' in selecting a method for function 'query': Invalid Cache: sqlite file"
+"INSPEcT::2023-11-01" = "Error: object 'read.xls' is not exported by 'namespace:gdata"
+#"INSPEcT::2023-11-10" = "Error: object 'read.xls' is not exported by 'namespace:gdata"

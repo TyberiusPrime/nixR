@@ -33,3 +33,4 @@
 "BioPlex_1.4.0" = "missing file on bioconductor"
 
 "CardinalWorkflows_1.29.0" = "404 from bioconductor 3.16"
+"MASS_7.3-60.1" = "Was released in 2023-07, requires an R 4.4.0 that has not yet been released as of 2024-02, then replaced by MASS_73.3-60.0.1. in 2024-01"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 WHAT=bioc_software
-WHAT=cran
+#WHAT=cran
 BUILD_DATE=2023-11-01_$WHAT
 echo "building $BUILD_DATE set"
 echo "output in $BUILD_DATE.txt"

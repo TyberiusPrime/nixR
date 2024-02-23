@@ -399,11 +399,11 @@
     // {
       # for debugging why these sets are not buildng
       debug_set = let
-        pkgs = nix-pkgs."22.5";
+        pkgs = nix-pkgs."23.11";
       in
         R_by_date {
-          date = "2020-11-04";
-          r_pkg_names = ["openssl"];
+          date = "2023-11-01";
+          r_pkg_names = ["ggplot2"];
         };
 
       # debug_set = R_by_date {
