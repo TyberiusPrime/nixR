@@ -1402,7 +1402,7 @@ HOME = '"$TMPDIR"'
 HOME = '"$TMPDIR"'
 
 
-[affxparser]
+["affxparser_1.66.0"]
 # the one in bioconductor does not rebuild it's fusion.o files,
 # IDK how they built it in the first place...
 src = """fetchFromGitHub {
@@ -1442,10 +1442,15 @@ add_nativeBuildInputs = "[pkgconfig zlib]"
 add_buildInputs = "[zlib]"
 patches = "[../nix/patches/Rbwa_1.2.0.patch]"
 
-["Rbwa_1.4.0.."]
+["Rbwa_1.4.0..=1.8.0"]
 add_nativeBuildInputs = "[pkgconfig zlib]"
 add_buildInputs = "[zlib]"
 patches = "[../nix/patches/Rbwa_1.4.0.patch]"
+
+["Rbwa_1.8.0.."]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+patches = "[../nix/patches/Rbwa_1.8.0.patch]"
 
 [float]
 add_nativeBuildInputs = "[(pkgs.lapack or pkgs.liblapack)]"
@@ -1706,6 +1711,13 @@ HOME = '"$TMPDIR"'
 
 ["signatureSearch_1.8.0..1.12.0"]
 # blacklisted on 2021-10-27 (1.8.0)
+["signatureSearch_1.18.0"]
+doCheck = "false" # wants to talk to experimentHub
+HOME = '"$TMPDIR"'
+preConfigure = """''
+mkdir /tmp/home
+''"""
+
 
 preConfigure = """''
 mkdir /tmp/home
@@ -2249,10 +2261,13 @@ patches = "[../nix/patches/zlib_1.0.3.patch]"
 MAKE='"${pkgs.gnumake}/bin/make"'
 
 
-[Rarr]
+["Rarr_..=1.4.0"]
 add_nativeBuildInputs = "[zlib]"
 PKG_CPPFLAGS='"-I${pkgs.zlib.dev}/include"'
 
+["Rarr_1.4.0.."]
+add_nativeBuildInputs = "[zlib]"
+postPatch = """''substituteInPlace src/Makevars.in --replace "@CPPFLAGS@" "@CPPFLAGS@ -I${pkgs.zlib.dev}/include"''"""
 
 
 [SpliceWiz]
@@ -2451,4 +2466,29 @@ add_nativeBuildInputs = "[pkgconfig cgal]"
 CGAL_DIR='"${pkgs.cgal}/lib/"'
 add_buildInputs = "[cgal]"
 
+
+[CTexploreR]
+HOME = '"$TMPDIR"'
+preBuild = """''
+mkdir $HOME/.cache/R/ExperimentHub -p
+''"""
+
+[LACE]
+HOME = '"$TMPDIR"'
+
+["RBioFormats_1.4.0"]
+preInstall= """''
+	ls /build
+	#mkdir /build/RBioFormats/inst/java -p
+	cp $jarSource /build/RBioFormats/inst/java/
+	''"""
+jarSource= """
+	pkgs.fetchurl{
+        url="https://downloads.openmicroscopy.org/bio-formats/7.3.0/artifacts/bioformats_package.jar";
+        sha256="sha256-K7LXvvPbvuuzwHuOWc/C2ufezUIEJ2A2VYA1L0N7aoU=";
+	}
+	"""
+
+[easyRNASeq]
+HOME = '"$TMPDIR"'
 

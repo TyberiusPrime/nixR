@@ -167,7 +167,7 @@ cplexAPI = "unfree, cplex not in nixpkgs"
 "CancerInSilico_2.18.0"= "Tests/catch.h:6524:45: error: size of array 'altStackMem' is not an integral constant-expression"
 "Travel_1.6.0" = "error: 'class Cache_block' has no member named 'get_size'"
 "signatureSearch::2023-04-25" = 'could not find function "refreshHub'
-"BioNAR_1.0.0" = "Tries to talk to erperimentHub, can't find the spot"
+"BioNAR_1.0.0" = "Tries to talk to experimentHub, can't find the spot"
 "RGN_1.0.0" = "Cannot open module file 'constantsmod.mod' for reading at (1): No such file or directory"
 "mongolite_2.7.2." = "unable to copy file 'kms/libstatkms.a'; reason: No such file or directory"
 "symengine_0.2.2" = "undefined symbol: basic_abs?"
@@ -215,4 +215,20 @@ cplexAPI = "unfree, cplex not in nixpkgs"
 "fluidsynth_1.0.0" = "Can't convince it to find fluidsynth.h"
 "vcfppR_0.4.5" = "can't find lzma"
 "yyjsonr_0.1.20" = "Cant find lz"
+"HilbertVis_1.62.0" = "error: format not a string literal and no format arguments"
+"Manor_1.76.0" = "error: format not a string literal and no format arguments"
+"SharedObject_1.18.0" = "format not a string literal and no format arguments"
+"cisPath_1.44.0" = "format not a string literal and no format arguments"
+"gpuMagic_1.20.0" = "format not a string literal and no format arguments"
+"rGADEM_2.52.0" =  "format not a string literal and no format arguments"
+"signatureSearch_1.18.0" = "talks to Hub"
+"easyRNASeq::2024-05-01" = "no existing definition for function 'type'"
+"oligo_1.68.0" = "format not a string literal and no format arguments"
+"MANOR_1.76.0" = "format not a string literal and no format arguments"
+"CTexploreR_1.0.0" = "talks to Hub"
+
+
+
+
+
 

@@ -1,7 +1,7 @@
 | Date | R | Bioconductor | Nixpkgs | # Bioconductor | # Bioconductor annotation | # Bioconductor experiment | # CRAN | # Missing | Comment |
  | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-2024-05-08 | 4.4.0 | 3.19 | 23.11 | 2195 | 915 | 427 | 20709 | [48](filtered_2024-05-08.md) | Release +1week. Experimental packages should now be included.
-2024-05-01 | 4.4.0 | 3.19 | 23.11 | 2192 | 915 | 6 | 20683 | [194](filtered_2024-05-01.md) | Initial release date. Often missing experimental packages
+2024-05-08 | 4.4.0 | 3.19 | 23.11 | 2195 | 915 | 427 | 20709 | [250](filtered_2024-05-08.md) | Release +1week. Experimental packages should now be included.
+2024-05-01 | 4.4.0 | 3.19 | 23.11 | 2192 | 915 | 6 | 20683 | [393](filtered_2024-05-01.md) | Initial release date. Often missing experimental packages
 2024-04-30 | 4.3.3 | 3.18 | 23.11 | 2216 | 909 | 420 | 20678 | [19236](filtered_2024-04-30.md) | Final date of this bioconductor release
 2023-11-01 | 4.3.2 | 3.18 | 23.5 | 2161 | 908 | 419 | 20152 | [153](filtered_2023-11-01.md) | Release +1week. Experimental packages should now be included.
 2023-10-25 | 4.3.1 | 3.18 | 23.5 | 2159 | 906 | 1 | 20147 | [273](filtered_2023-10-25.md) | Initial release date. Often missing experimental packages
