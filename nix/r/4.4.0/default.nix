@@ -22,7 +22,8 @@ stdenv.mkDerivation (finalAttrs: {
     inherit (finalAttrs) pname version;
   in fetchurl {
     url = "https://cran.r-project.org/src/base/R-${lib.versions.major version}/${pname}-${version}.tar.gz";
-    sha256 = "sha256-s/V2CsLu6AJxPw7vyyW0dyPZeAOO7o6ER2IJTIYMRSo=";
+    #sha256 = "sha256-s/V2CsLu6AJxPw7vyyW0dyPZeAOO7o6ER2IJTIYMRSo=";
+    sha256 = "sha256-rOQSX5uXbSxTvMX8owx14w1O3EAVhIWcutsIDnK18DA=";
   };
 
   dontUseImakeConfigure = true;

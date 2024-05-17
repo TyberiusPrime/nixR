@@ -7,6 +7,7 @@
 # [pkg] - all versions of this package
 # ["pkg_version"] - this version of this package
 # ["pkg_versionStart..versionStop"] - the versions start, stop, and all inbetween (so left&right inclusive)
+# ["pkg_versionStart..=versionStop"] - the versions start <= version < stop, so right exclusive, left inclusive
 
 # the most specific one wins
 # so first 'single version',
@@ -186,6 +187,17 @@ JARSOURCE = """
 patches = "[../nix/patches/h2o-3.42.0.2.patch]"
 
 
+["h2o_3.44.0.3"]
+JARSOURCE = """
+	pkgs.fetchurl{
+        url="https://s3.amazonaws.com/h2o-release/h2o/rel-3.44.0/2/Rjar/h2o.jar";
+		sha256 = "sha256-TUCk509r2q8T6QPmlw9JfV23IfSkxp7ewWuqxocNBqc=";
+	}
+	"""
+patches = "[../nix/patches/h2o-3.42.0.2.patch]"
+
+
+
 
 [string2path]
 postPatch = """''
@@ -193,6 +205,13 @@ postPatch = """''
 ''"""
 preConfigure= "''export NOT_CRAN=true\n''"
 CargoLockInSource = "''string2path/src/rust/Cargo.lock''"
+
+["string2path_0.1.6.."]
+postPatch = """''
+''"""
+preConfigure= "''export NOT_CRAN=true\n''"
+CargoLockInSource = "''string2path/src/rust/Cargo.lock''"
+
 
 #add_nativeBuildInputs =  "(importCargo { lockFile = \"./rust/Cargo.lock\"; inherit pkgs; }).cargoHome"
 
@@ -304,8 +323,17 @@ url = "https://apache.jfrog.io/artifactory/arrow/r/13.0.0/libarrow/bin/linux-ope
 sha256 = "sha256-sInTHhpqKCdWMq+f4C2p8f4gc206XK4ZpFjkIIeAvJ4=";
 }"""
 
-
-
+["arrow_15.0.1"]
+postPatch = """''
+	patchShebangs configure inst/build_arrow_static.sh
+	''"""
+NOT_CRAN="''true''"
+ARROW_R_DEV="''true''"
+add_nativeBuildInputs = "[cmake]"
+ARROW_DOWNLOADED_BINARIES = """pkgs.fetchurl {
+url = "https://apache.jfrog.io/artifactory/arrow/r/15.0.0/libarrow/bin/linux-openssl-3.0/arrow-15.0.0.zip";
+sha256 = "sha256-UuiB4CTdv+hADoEnOCgRpLTWmLi5ZPKvqtw/FN4l7Ac=";
+}"""
 
 
 
@@ -359,6 +387,12 @@ add_buildInputs = "[pkgs.sqlite.out pkgs.sqlite pkgs.geos]"
 
 ["RNifti_1.4.0"]
 patches = "[../nix/patches/Rnifti_1.4.0_zlib_objects.patch]"
+
+["RNifti_1.6.1"]
+patches = "[]"
+add_nativeBuildInputs = "[zlib]"
+add_buildInputs = "[zlib]"
+
 
 
 [tkrplot]
@@ -468,6 +502,13 @@ add_nativeBuildInputs = "[pkgconfig cgal]"
 CGAL_DIR='"${pkgs.cgal}/lib/"'
 add_buildInputs = "[cgal]"
 
+["RcppCGAL_5.6.3.."]
+add_nativeBuildInputs = "[pkgconfig cgal]"
+CGAL_DIR='"${pkgs.cgal}/lib/"'
+add_buildInputs = "[cgal]"
+postPatch = "''patchShebangs configure''"
+
+
 
 [BayesSAE]
 add_nativeBuildInputs = "[pkgconfig gsl_1]"
@@ -555,8 +596,8 @@ add_nativeBuildInputs = "[zlib]"
 add_buildInputs = "[zlib]"
 
 [unrtf]
-add_nativeBuildInputs = "[pkgconfig zlib bzip2 lzma pcre icu]"
-add_buildInputs = "[zlib bzip2 lzma pcre icu]"
+add_nativeBuildInputs = "[pkgconfig zlib bzip2 lzma pcre icu libdeflate]"
+add_buildInputs = "[zlib bzip2 lzma pcre icu libdeflate]"
 
 [SemiCompRisks]
 add_nativeBuildInputs = "[pkgconfig gsl_1]"
@@ -569,6 +610,10 @@ add_buildInputs = "[gsl]"
 [littler]
 add_nativeBuildInputs = "[pkgconfig bzip2 zlib lzma icu]"
 add_buildInputs = "[bzip2 zlib lzma icu]"
+
+["littler_0.3.20.."]
+add_nativeBuildInputs = "[pkgconfig bzip2 zlib lzma icu libdeflate]"
+add_buildInputs = "[bzip2 zlib lzma icu libdeflate]"
 
 
 [RVowpalWabbit]
@@ -584,6 +629,13 @@ add_nativeBuildInputs = "[pkgconfig zlib bzip2 icu lzma pcre jdk libzip ]"
 add_buildInputs = "[pkgconfig zlib bzip2 icu lzma pcre jdk libzip ]"
 JAVA_CPPFLAGS='"-I${pkgs.jdk}/include/"'
 JAVA_HOME='"${pkgs.jdk}"'
+
+["rJava_1.0-11.."]
+add_nativeBuildInputs = "[pkgconfig zlib bzip2 icu lzma pcre jdk libzip libdeflate]"
+add_buildInputs = "[pkgconfig zlib bzip2 icu lzma pcre jdk libzip libdeflate ]"
+JAVA_CPPFLAGS='"-I${pkgs.jdk}/include/"'
+JAVA_HOME='"${pkgs.jdk}"'
+
 
 [optbdmaeAT]
 add_nativeBuildInputs = "[freetype fontconfig xorg.xorgproto xorg.libX11 xorg.libXt xorg.libXft xorg.libXext xorg.libSM xorg.libICE tk]"
@@ -656,9 +708,18 @@ add_nativeBuildInputs = "[mecab]"
 [exifr]
 add_nativeBuildInputs = "[exiftool]"
 
+
 [registr]
+add_nativeBuildInputs = "[libdeflate]"
+
+["registr_..=2.1.0"]
 add_nativeBuildInputs = "[pkgconfig zlib bzip2 lzma icu]"
 add_buildInputs = "[zlib bzip2 lzma icu]"
+
+["registr_2.1.0.."]
+add_nativeBuildInputs = "[pkgconfig zlib bzip2 lzma icu libdeflate]"
+add_buildInputs = "[zlib bzip2 lzma icu libdeflate]"
+
 
 [trajeR]
 postPatch = """''substituteInPlace src/Makevars --replace "/usr/bin/strip" "strip"''"""
@@ -675,12 +736,21 @@ patches = "[../nix/patches/RKEELJARS_1.0.20.patch]"
 [spiR]
 patches = "[../nix/patches/spiR.patch]"
 
-["x13binary_1.1.57-2.."]
+["x13binary_1.1.57-2..=1.1.60"]
 patches = "[../nix/patches/x13binary_1.57.patch]"
 X13BINARY= """builtins.fetchurl{
 	url = "https://github.com/x13org/x13prebuilt/raw/master/v1.1.57/linux/64/x13ashtml";
 	sha256 = "0lpn41lvj4k38ld1w2v9q99gm4bs35ja2zygrndax12rk2a6qjf4";
 }"""
+
+["x13binary_1.1.60.."]
+#patches = "[../nix/patches/x13binary_1.60.patch]"
+X13BINARY= """builtins.fetchurl{
+	url = "https://github.com/x13org/x13prebuilt/raw/master/v1.1.57/linux/64/x13ashtml";
+	sha256 = "0lpn41lvj4k38ld1w2v9q99gm4bs35ja2zygrndax12rk2a6qjf4";
+}"""
+
+
 
 
 [googleformr]
@@ -1510,7 +1580,7 @@ add_r_dependencies = '["rstantools"]'
 
 
 [ConsensusClusterPlus]
-# ALL is from the experiment package set 
+# ALL is from the experiment package set
 # and only necessary for the documentation
 # remove_r_dependencies = '["ALL"]' # note this is done in Rust
 
@@ -1925,8 +1995,15 @@ add_nativeBuildInputs = '[pkgconfig]'
 [lazyNumbers]
 add_nativeBuildInputs = '[pkgconfig]'
 
-["pak_0.5.0.."]
+["pak_0.5.0..=0.7.2"]
 postPatch = "''patchShebangs configure''"
+
+["pak_0.7.2.."]
+postPatch = "''patchShebangs configure src/library/curl/configure src/library/pkgdepends/configure src/library/ps/configure''"
+add_nativeBuildInputs = '[curl pkgconfig]'
+add_buildInputs = '[curl]'
+PKG_CPPFLAGS='"-I${pkgs.curl}/include/"'
+
 
 [purrr]
 postPatch = "''patchShebangs configure''"
@@ -1993,6 +2070,12 @@ add_nativeBuildInputs = '[cmake pandoc libarchive expat lzma zstd lz4 bzip2 zlib
 ZLIB_INCLUDE_DIR= "''${pkgs.zlib.dev}/include''"
 ZLIB_LIBRARY= "''${pkgs.zlib}/lib''"
 
+["rswipl_9.3.3.1.."]
+add_nativeBuildInputs = '[cmake pandoc libarchive expat lzma zstd lz4 bzip2 zlib pkgconfig]'
+ZLIB_INCLUDE_DIR= "''${pkgs.zlib.dev}/include''"
+ZLIB_LIBRARY= "''${pkgs.zlib}/lib''"
+
+
 
 [npsp]  # TODO: Check...
 add_nativeBuildInputs = '[gfortran]'
@@ -2052,6 +2135,7 @@ postPatch = "''patchShebangs configure''"
 
 ["NetCDF_2.8-1.."]
 MAKE='${pkgs.gnumake}/bin/make'
+
 
 [caviarpd]
 CargoLockInSource = "''caviarpd/src/rust/Cargo.lock''"
@@ -2183,10 +2267,18 @@ HOME = '"$TMPDIR"'
 ["RNetCDF_2.8-1"]
 patches = "[../nix/patches/RNetCDF_2.8-1.patch]"
 
-[DOSE]
+["RNetCDF_2.9-2"]
+patches = "[../nix/patches/RNetCDF_2.8-1.patch]"
+
+["DOSE"]
 HOME = '"$TMPDIR"'
 doCheck = "false"
 patches = "[../nix/patches/DOSE_3.28.patch]"
+
+["DOSE_3.30.0.."]
+HOME = '"$TMPDIR"'
+doCheck = "false"
+patches = "[]"
 
 [GNOSIS]
 HOME = '"$TMPDIR"'
@@ -2236,3 +2328,127 @@ HOME = '"$TMPDIR"'
 
 ["INSPEcT_1.31.0.."]
 HOME = '"$TMPDIR"'
+
+
+[adbcpostgresql]
+add_nativeBuildInputs = "[pkgconfig postgresql]"
+
+[adbcsqlite]
+add_nativeBuildInputs = "[pkgconfig pkgs.sqlite.dev pkgs.sqlite]"
+add_buildInputs = "[pkgs.sqlite.out pkgs.sqlite]"
+
+
+[heck]
+postPatch = "''patchShebangs configure''"
+
+[httr2]
+postPatch = "''patchShebangs configure''"
+
+
+[b64]
+postPatch = "''patchShebangs configure''"
+
+[luajr]
+postPatch = "''patchShebangs configure''"
+
+[zoomerjoin]
+postPatch = "''patchShebangs configure''"
+
+
+[fluidsynth]
+add_nativeBuildInputs = "[pkgconfig fluidsynth.dev]"
+INCLUDE_DIR = "\"$pkgs.fluidsynth.dev}/include\""
+LIB_DIR = "\"${pkgs.fluidsynth}/lib\""
+
+[gamstransfer]
+add_nativeBuildInputs = "[pkgconfig zlib]"
+add_buildInputs = "[zlib]"
+
+[gasanalyzer]
+HOME = '"$TMPDIR"'
+
+
+[mapsf]
+add_nativeBuildInputs = "[pkgconfig openssl]"
+add_buildInputs= "[openssl]"
+PKG_CPPFLAGS='"-I${pkgs.openssl.dev}/include"'
+RPATH = "''${pkgs.openssl.out}/lib''"
+LD_LIBRARY_PATH = "''${pkgs.openssl.out}/lib''"
+PKGCONFIG_CFLAGS = '"-I${pkgs.openssl.dev}/include"'
+PKGCONFIG_LIBS = '"-Wl,-rpath,${pkgs.openssl.out}/lib -L${pkgs.openssl.out}/lib -lssl -lcrypto"'
+
+[eks]
+add_nativeBuildInputs = "[pkgconfig openssl]"
+add_buildInputs= "[openssl]"
+PKG_CPPFLAGS='"-I${pkgs.openssl.dev}/include"'
+RPATH = "''${pkgs.openssl.out}/lib''"
+LD_LIBRARY_PATH = "''${pkgs.openssl.out}/lib''"
+PKGCONFIG_CFLAGS = '"-I${pkgs.openssl.dev}/include"'
+PKGCONFIG_LIBS = '"-Wl,-rpath,${pkgs.openssl.out}/lib -L${pkgs.openssl.out}/lib -lssl -lcrypto"'
+
+[btb]
+add_nativeBuildInputs = "[pkgconfig openssl]"
+add_buildInputs= "[openssl]"
+PKG_CPPFLAGS='"-I${pkgs.openssl.dev}/include"'
+RPATH = "''${pkgs.openssl.out}/lib''"
+LD_LIBRARY_PATH = "''${pkgs.openssl.out}/lib''"
+PKGCONFIG_CFLAGS = '"-I${pkgs.openssl.dev}/include"'
+PKGCONFIG_LIBS = '"-Wl,-rpath,${pkgs.openssl.out}/lib -L${pkgs.openssl.out}/lib -lssl -lcrypto"'
+
+
+
+
+[smcryptoR]
+add_nativeBuildInputs = "[which]"
+CargoLockInSource = '"smcryptoR/src/smcrypto/Cargo.lock"'
+
+[timeless]
+add_nativeBuildInputs = "[rustc cargo]"
+CargoLockInSource = '"timeless/src/rust/Cargo.lock"'
+preConfigure= "''export NOT_CRAN=true\n''"
+postPatch = """''
+	substituteInPlace src/Makevars --replace "--release" "--release --offline"
+''"""
+
+[untrf]
+add_nativeBuildInputs = "[pkgconfig libdeflate]"
+add_BuildInputs = "[libdeflate]"
+
+[vcfppR]
+add_nativeBuildInputs = '[pkgconfig lzma]'
+add_BuildInputs = '[lzma]'
+PKG_CPPFLAGS='"-I${pkgs.lzma}/include"'
+PKGCONFIG_LIBS = '"-L${pkgs.lzma}/lib"'
+
+
+[yyjsonr]
+add_nativeBuildInputs = '[pkgconfig zlib]'
+PKG_CPPFLAGS='"-I${pkgs.zlib.dev}/include"'
+PKGCONFIG_LIBS = '"-L${pkgs.zlib}/lib"'
+
+["RcppCGAL_5.6.3"]
+CGAL_DOWNLOAD="0"
+CGAL_DIR="\"\"" # should force it to use the included one.
+postPatch = "''patchShebangs configure''"
+
+
+[Apollonius]
+add_nativeBuildInputs = '[pkgconfig]'
+
+[ratioOfQsprays]
+add_nativeBuildInputs = '[pkgconfig]'
+[rbaylevel]
+add_nativeBuildInputs = "[pkgconfig cgal]"
+CGAL_DIR='"${pkgs.cgal}/lib/"'
+add_buildInputs = "[cgal]"
+
+[bigrquerystorage]
+add_nativeBuildInputs = "[pkgconfig grpc which]"
+add_buildInputs = "[grpc]"
+
+[raybevel]
+add_nativeBuildInputs = "[pkgconfig cgal]"
+CGAL_DIR='"${pkgs.cgal}/lib/"'
+add_buildInputs = "[cgal]"
+
+

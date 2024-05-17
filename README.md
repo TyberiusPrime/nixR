@@ -158,7 +158,8 @@ R_by_date {
   end date of bioconductor releases are included automatically)
 - cargo run --release -- assemble to update the data and build ../generated
 - run the flake in the top level with
-  `nix build --cores <number> --max-jobs auto --keep-going .#<date>`
+  `nix build --cores <number> --max-jobs auto --keep-going .#<date>_<what>`
+  (date is in yyyy-mm-dd, what may be 'cran' or 'bioc_software')
 - possibly adjust the 'debug_set' in flake.nix to troublesome packages and keep
   running `nix build --cores <number> --max-jobs auto --keep-going .#debug_set`
   until you have fixed all build issues (or blacklisted enough packages)

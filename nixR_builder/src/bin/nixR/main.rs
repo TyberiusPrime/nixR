@@ -692,7 +692,7 @@ fn assemble(config: &Config) -> Result<()> {
             "#s = sha256; r=r packages; b=non r build inputs; c=compile, d=derivation arguments; \n".as_bytes(),
             "{pkgs, importCargo}:\nwith pkgs;\n".as_bytes(),
             "let gdal_2 = pkgs.gdal_2 or pkgs.gdal;\n".as_bytes(),
-            "g = builtins.tryEval(pkgs.gsl_1);\n".as_bytes(),
+            "g = builtins.tryEval(pkgs.gsl_1 or throw \"undefined\");\n".as_bytes(),
             "gsl_1 = if g.success then g.value else pkgs.gsl;\n".as_bytes(),
             "\tin\n".as_bytes(),
             NixValue::AttrSet(out_packages_cran).to_string().as_bytes(),

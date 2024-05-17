@@ -51,7 +51,7 @@ fn extract_date_relative_path(path: &PathBuf) -> Result<(PathBuf, String)> {
     }
 }
 type DerivationArgs =
-    HashMap<String, Vec<(Option<Version>, Option<Version>, HashMap<String, String>)>>;
+    HashMap<String, Vec<(Option<Version>, Option<Version>, bool, HashMap<String, String>)>>;
 
 #[derive(Debug)]
 pub struct Config {
@@ -66,7 +66,7 @@ pub struct Config {
     _aborted: std::sync::Arc<std::sync::atomic::AtomicBool>,
 }
 
-pub static PKG_AND_VERSION_RANGE_REGEXPS: Lazy<Regex> = lazy_regex!(r"^(.+)_(.+)?\.\.(.+)?$");
+pub static PKG_AND_VERSION_RANGE_REGEXPS: Lazy<Regex> = lazy_regex!(r"^(.+)_(.+)?\.\.(=?)(.+)?$");
 
 fn load_derivation_args(override_path: &Path) -> Result<DerivationArgs> {
     let input: HashMap<String, HashMap<String, String>> =
@@ -76,7 +76,7 @@ fn load_derivation_args(override_path: &Path) -> Result<DerivationArgs> {
     let mut out = HashMap::new();
 
     for (k, v) in input.into_iter() {
-        let (pkg, start, stop) = if k.contains("..") {
+        let (pkg, start, stop, right_inclusive) = if k.contains("..") {
             let parsed = PKG_AND_VERSION_RANGE_REGEXPS.captures_iter(&k).next();
             let parsed = parsed.with_context(||format!("Could not parse derivation_args version target statement '{}'. Syntax is pkg_<start_version>..<stop_version>. Versions can be empty, so ff you want to match all version, use 'pkgs_..'", k))?;
             let pkg = &parsed[1];
@@ -87,26 +87,30 @@ fn load_derivation_args(override_path: &Path) -> Result<DerivationArgs> {
                 ),
                 None => None,
             };
-            let stop: Option<Version> = match parsed.get(3) {
+            let stop: Option<Version> = match parsed.get(4) {
                 Some(x) => Some(
                     Version::from_str(x.as_str())
                         .with_context(|| format!("Parsing stop of {}", k))?,
                 ),
                 None => None,
             };
-            (pkg.to_string(), start, stop)
+            let right_inclusive = match parsed.get(3) {
+                Some(x) => x.as_str() != "=",
+                None => false,
+            };
+            (pkg.to_string(), start, stop, right_inclusive)
         } else if k.contains('_')
         // single version
         {
             let (pkg, version) = k.split_once('_').unwrap();
             let version =
                 Version::from_str(version).with_context(|| format!("Parsing version of {}", k))?;
-            (pkg.to_string(), Some(version.clone()), Some(version))
+            (pkg.to_string(), Some(version.clone()), Some(version), true)
         } else {
-            (k.to_string(), None, None)
+            (k.to_string(), None, None, true)
         };
         let entry = out.entry(pkg).or_insert_with(Vec::new);
-        entry.push((start, stop, v));
+        entry.push((start, stop, right_inclusive, v));
     }
 
     Ok(out)
@@ -345,13 +349,20 @@ impl Config {
             Some(entries) => {
                 let (mut prio_out, mut out) = (10, None);
 
-                for (start_ver, stop_ver, dv) in entries.iter() {
+                for (start_ver, stop_ver, right_inclusive, dv) in entries.iter() {
                     let after_start = match start_ver {
                         Some(sv) => sv <= version,
                         None => true, // a left open interval.
                     };
                     let before_end = match stop_ver {
-                        Some(sv) => version <= sv,
+                        Some(sv) => {
+                            if *right_inclusive {
+                                version <= sv
+                            }
+                            else {
+                                version < sv
+                            }
+                        }
                         None => true, //a right open interval
                     };
 

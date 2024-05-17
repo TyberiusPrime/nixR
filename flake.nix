@@ -22,6 +22,7 @@
     nixpkgs_22_05.url = "github:NixOS/nixpkgs/22.05";
     nixpkgs_22_11.url = "github:NixOS/nixpkgs/22.11";
     nixpkgs_23_05.url = "github:NixOS/nixpkgs/23.05";
+    nixpkgs_23_11.url = "github:NixOS/nixpkgs/23.11";
     import-cargo.url = "github:edolstra/import-cargo";
     # import-cargo.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -40,6 +41,7 @@
     nixpkgs_22_05,
     nixpkgs_22_11,
     nixpkgs_23_05,
+    nixpkgs_23_11,
     import-cargo,
   }: let
     lib = nixpkgs_22_05.lib;
@@ -96,6 +98,16 @@
         ];
       };
       "23.5" = import nixpkgs_23_05 {inherit system;};
+      "23.11" = import nixpkgs_23_11 {
+        inherit system;
+        overlays = [
+          ( # gdal 3.6.0 was redacted, and rgdal checks for that.
+            self: super: {
+              pkgconfig = super.pkg-config; # renamed, and accessing pkgconfig is an *error*
+            }
+          )
+        ];
+      };
     };
     Rs =
       import ./nix/r/default.nix {
@@ -402,7 +414,7 @@
         pkgs = nix-pkgs."23.11";
       in
         R_by_date {
-          date = "2023-11-01";
+          date = "2024-05-01";
           r_pkg_names = ["ggplot2"];
         };
 

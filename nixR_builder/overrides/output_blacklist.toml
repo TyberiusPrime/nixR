@@ -195,3 +195,24 @@ cplexAPI = "unfree, cplex not in nixpkgs"
 "cfTools_1.2.0" = "error in evaluating the argument 'x' in selecting a method for function 'query': Invalid Cache: sqlite file"
 "INSPEcT::2023-11-01" = "Error: object 'read.xls' is not exported by 'namespace:gdata"
 #"INSPEcT::2023-11-10" = "Error: object 'read.xls' is not exported by 'namespace:gdata"
+
+"prqlr_0.8.0" = "Tries to contact github, \"couldn't find remote ref refs/heads/master\""
+
+"NGCHM_1.0.2" = "tries to call & embedd hostname"
+"One4All_0.4" = "Tries to retrieve data from aws during installation"
+
+"filters_0.3.1" = "Error: `target` must be a character vector containing no `NA` values."
+#"hdf5r::2024-05-01" = "
+"ipeaplot_0.3.1" = "Tries to write into extrafontdb package path!"
+"vcrpart_1.0-4" = "error: too few arguments to function 'dgemv_'"
+"sits_1.4.2-1" = "could not resolve host: fonts.gstatic.com"
+"Rdisop_1.64.0" = "error: format not a string literal and no format arguments"
+'hdf5r::2024-05-01' = "'The version of hdf5 installed on your system is not sufficient. Please ensure that at least version 1.8.13 is installed'. We do have 1.14.3 though."
+'vol2birdR::2024-05-01' = "'The version of hdf5 installed on your system is not sufficient. Please ensure that at least version 1.8.13 is installed'. We do have 1.14.3 though."
+"rswipl_9.3.3.1" = "Cmake can't find ZLIB"
+
+"raybevel_0.1.2" = "CGAL compliation trouble"
+"fluidsynth_1.0.0" = "Can't convince it to find fluidsynth.h"
+"vcfppR_0.4.5" = "can't find lzma"
+"yyjsonr_0.1.20" = "Cant find lz"
+

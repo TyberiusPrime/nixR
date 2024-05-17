@@ -3,3 +3,4 @@ nixR_builder/cache/*
 nixR_builder/target/*
 result
 dump/*
+nixR_builder/whatever*
