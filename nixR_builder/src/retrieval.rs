@@ -869,7 +869,10 @@ fn download_regexs_and_cache_json<
     accepted_empty: Option<HashSet<String>>,
 ) -> Result<Vec<T>> {
     cache_json(output_path, || {
-        let input_html = ureq::get(url).call()?.into_string()?;
+        //let input_html = ureq::get(url).call()?.into_string()?;
+        let input_bytes= fetch_url_to_vec(url)?;
+        let input_html = std::str::from_utf8(&input_bytes)?;
+        
         let hits: Result<Vec<T>> = search_re
             .captures_iter(&input_html)
             .map(&group_extract)

@@ -210,7 +210,6 @@ cplexAPI = "unfree, cplex not in nixpkgs"
 'hdf5r::2024-05-01' = "'The version of hdf5 installed on your system is not sufficient. Please ensure that at least version 1.8.13 is installed'. We do have 1.14.3 though."
 'vol2birdR::2024-05-01' = "'The version of hdf5 installed on your system is not sufficient. Please ensure that at least version 1.8.13 is installed'. We do have 1.14.3 though."
 "rswipl_9.3.3.1" = "Cmake can't find ZLIB"
-
 "raybevel_0.1.2" = "CGAL compliation trouble"
 "fluidsynth_1.0.0" = "Can't convince it to find fluidsynth.h"
 "vcfppR_0.4.5" = "can't find lzma"
@@ -227,6 +226,9 @@ cplexAPI = "unfree, cplex not in nixpkgs"
 "MANOR_1.76.0" = "format not a string literal and no format arguments"
 "CTexploreR_1.0.0" = "talks to Hub"
 
+"easyRNASeq::2024-05-10" = "no existing definition for function 'type'"
+"hdf5r_1.3.10" = "'The version of hdf5 installed on your system is not sufficient. Please ensure that at least version 1.8.13 is installed'. We do have 1.14.3 though."
+"easyRNASeq::2024-05-10" = "no existing definition for function 'type'"
 
 
 
