@@ -43,10 +43,10 @@ The excluded packgages (and other supplementary information) can be seen in
 ```nix
 {
   inputs = {
-    nixR.url = "github:TyberiusPrime/nixR/1.0";
+    nixR.url = "github:TyberiusPrime/nixR";
   };
   outputs = {self, nixR} : {
-	  defaultPackage = nixR."2022-04-27" ["dpylr" "ggplot2"];
+	  defaultPackage = nixR."2022-04-27" ["dplyr" "ggplot2"];
   };
 }
 ```
