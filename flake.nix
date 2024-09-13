@@ -103,22 +103,12 @@
       "23.11" = import nixpkgs_23_11 {
         inherit system;
         overlays = [
-          ( # gdal 3.6.0 was redacted, and rgdal checks for that.
-            self: super: {
-              pkgconfig = super.pkg-config; # renamed, and accessing pkgconfig is an *error*
-            }
-          )
         ];
       };
 
       "24.05" = import nixpkgs_24_05 {
         inherit system;
         overlays = [
-          ( # gdal 3.6.0 was redacted, and rgdal checks for that.
-            self: super: {
-              pkgconfig = super.pkg-config; # renamed, and accessing pkgconfig is an *error*
-            }
-          )
         ];
       };
     };
@@ -181,11 +171,17 @@
           pkgs = _entry.pkgs // additional_packages_name_to_version;
         };
 
-      pkgs = builtins.trace ("nixpkgs version: " + entry.nixpkgs.lib.version) (
-        if nix_pkgs_pkgs != null
-        then nix_pkgs_pkgs
-        else entry.nixpkgs
-      );
+      pkgs =
+        builtins.trace ("nixpkgs version: " + entry.nixpkgs.lib.version)
+        (
+          if nix_pkgs_pkgs != null
+          then nix_pkgs_pkgs
+          else entry.nixpkgs
+        )
+        .extend (final: prev: {
+          pkgconfig = prev.pkg-config or prev.pkgconfig;
+          pkg-config = prev.pkg-config or prev.pkgconfig;
+        });
 
       package_info_cran = import generated/cran.nix {
         inherit pkgs;
