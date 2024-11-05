@@ -190,7 +190,7 @@ impl Config {
         for ep in self.yesterday_or_earlier_path() {
             match minimum_date_to_accept {
                 Some(mdta) => {
-                    dbg!(&ep);
+                    //dbg!(&ep);
                     let found_date = ep.split("/").last().unwrap();
                     let found_date = NaiveDate::parse_from_str(found_date, "%Y-%m-%d")
                         .expect("found path not dateish");

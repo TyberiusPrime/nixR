@@ -423,8 +423,8 @@
         pkgs = nix-pkgs."23.11";
       in
         R_by_date {
-          date = "2024-05-01";
-          r_pkg_names = ["ggplot2"];
+          date = "2024-05-10";
+          r_pkg_names = ["MAGeCKFlute"];
         };
 
       # debug_set = R_by_date {

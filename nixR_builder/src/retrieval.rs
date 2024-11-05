@@ -725,6 +725,8 @@ fn download_hash_and_desc(
             crate::helpers::write_from_bytes(&tf, &v)?;
             ex::fs::rename(tf, cache_path)?;
             info!("downloaded {}", &url);
+            //delay one second to prevent 429 from bioconductor. maybe
+            std::thread::sleep(std::time::Duration::from_secs(1));
             v
         }
     } else {

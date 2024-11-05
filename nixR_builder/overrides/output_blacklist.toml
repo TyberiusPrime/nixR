@@ -25,7 +25,7 @@ Rsymphony = "can't find SYMPHONY in nixpkgs"
 elbird = "no libkiwi in nixpkgs, and libwiki compilation needs LFS, and well, that appears broken in fetchgit"
 
 SCATE = "loads SCATEData on build, which fails with experimenthub 'can't fail sensible if offline" # patchme
-MAGeCKFlute = "loads demap on build, which needs experimenthub" # patchme
+#MAGeCKFlute = "loads depmap on build, which needs experimenthub" # patchme
 crisprScore = "loads crisprScoreData on build, which needs experimenthub" # patchme
 
 "Rbwa_1.0.0" = "can't find kthread.o. I think kthread.h is missing, and the org github repo is gone"
