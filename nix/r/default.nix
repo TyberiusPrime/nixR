@@ -40,7 +40,8 @@
     "4.3.0"
     "4.3.1"
     "4.3.2"
-    "4.4.0" # todo: autodiscover
+    "4.4.0"
+    "4.4.1" # todo: autodiscover
   ];
 in
   builtins.listToAttrs (
