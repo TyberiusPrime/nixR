@@ -16,7 +16,7 @@ assert (!blas.isILP64) && (!lapack.isILP64);
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "R";
-  version = "4.4.0";
+  version = "4.4.1";
 
   src = let
     inherit (finalAttrs) pname version;
