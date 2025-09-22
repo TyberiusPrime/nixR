@@ -420,11 +420,11 @@
     // {
       # for debugging why these sets are not buildng
       debug_set = let
-        pkgs = nix-pkgs."23.11";
+        pkgs = nix-pkgs."24.11";
       in
         R_by_date {
-          date = "2024-05-10";
-          r_pkg_names = ["MAGeCKFlute"];
+          date = "2024-10-30";
+          r_pkg_names = ["edgeR"];
         };
 
       # debug_set = R_by_date {
