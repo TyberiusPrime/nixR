@@ -307,7 +307,7 @@
               urls = [
                 "mirror://bioc/${bc_version}/data/experiment/src/contrib/${name_version}.tar.gz"
                 "http://bioconductor.org/packages/${bc_version}/data/experiment/src/contrib/${name_version}.tar.gz"
-                #"http://bioconductor.org/packages/${bc_version}{}/bioc/src/contrib/Archive/${v.pname}/${tag}.tar.gz"
+                #"http://bioconductor.org/packages/${bc_version}{}/bioc/src/contrib/Archive/${v.pname}/${tag}.tar.gz" # I believe bioconductor has no archives for experiments. Though they do update packages...
               ];
             };
             repo = "bioc_data_experiment";

@@ -1,0 +1,25 @@
+warning: Git tree '/clara/ffs/e/20220921_AG_Finkernagel_nixR/nixR' is dirty
+trace: nixpkgs version: 23.11pre-git
+trace: bioconductor version: 3.19
+error: builder for '/nix/store/5xxlk70h58ckwrhknm763r6sh2b3mpkn-geneLenDataBase_1.39.0.tar.gz.drv' failed with exit code 1;
+       last 10 log lines:
+       >   0 10888    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+       > curl: (22) The requested URL returned error: 404
+       >
+       > trying http://bioconductor.org/packages/3.19/data/experiment/src/contrib/Archive/geneLenDataBase/geneLenDataBase_1.39.0-3.19.tar.gz
+       >   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+       >                                  Dload  Upload   Total   Spent    Left  Speed
+       > 100   167  100   167    0     0  13430      0 --:--:-- --:--:-- --:--:-- 13916
+       >   0 10888    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+       > curl: (22) The requested URL returned error: 404
+       > error: cannot download geneLenDataBase_1.39.0.tar.gz from any mirror
+       For full logs, run 'nix log /nix/store/5xxlk70h58ckwrhknm763r6sh2b3mpkn-geneLenDataBase_1.39.0.tar.gz.drv'.
+error: 1 dependencies of derivation '/nix/store/yd0bkdss2m6r6crb0h4dhndj2cw6assj-r-geneLenDataBase-1.39.0-3.19.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/4vfkvgbxlflrjgkgmfxndldakivxn5gy-r-goseq-1.56.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/f9pzi4aifhmn4vp73q3gnmq19818n5wf-r-ChAMP-2.34.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/7p1c0zqdxjcngrpcwazg7x7yriih7dbk-r-Damsel-1.0.2.drv' failed to build
+error: 2 dependencies of derivation '/nix/store/ypwz0f37asfkmpbvz596y0pmv156jmz8-r-SMITE-1.32.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/icswngwzvhnw4h8mkdv40jlsjz8rz1p7-r-ideal-1.28.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/66ibdxrrwp1wi4fnnc4ndq26kl92ym44-r-mosdef-1.0.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/k9glangjfgvwdl9j3235jqszm15sgk4b-r-rgsepd-1.36.0.drv' failed to build
+error: 7 dependencies of derivation '/nix/store/x86cdrl34kmhcs762ab3qsj6k4fy991x-R-4.4.1-wrapper.drv' failed to build

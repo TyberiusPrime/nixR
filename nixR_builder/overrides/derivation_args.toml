@@ -228,6 +228,18 @@ postPatch = """
 """
 CargoLockInSource = "''salso/src/rustlib/Cargo.lock''"
 
+
+["salso_0.3.42"]
+postPatch = """
+	''
+		substituteInPlace tools/cargo.R --replace "env <- c(env, CARGO_HOME=n(cargo_home))" ""
+		substituteInPlace src/rust/Cargo.lock --replace "ae99dfd12e4" "ae99dfd12e4a127e05a15fa2ef6814cf8032127a"
+''
+"""
+CargoLockInSource = "''src/rustlib/Cargo.lock''"
+
+
+
 [ymd]
 # postPatch = """''
 # 'substituteInPlace configure --replace "env <- c(env, CARGO_HOME=n(cargo_home))" ""''
@@ -335,6 +347,18 @@ url = "https://apache.jfrog.io/artifactory/arrow/r/15.0.0/libarrow/bin/linux-ope
 sha256 = "sha256-UuiB4CTdv+hADoEnOCgRpLTWmLi5ZPKvqtw/FN4l7Ac=";
 }"""
 
+["arrow_17.0.0.1"]
+postPatch = """''
+	patchShebangs configure inst/build_arrow_static.sh
+	''"""
+NOT_CRAN="''true''"
+ARROW_R_DEV="''true''"
+add_nativeBuildInputs = "[cmake]"
+ARROW_DOWNLOADED_BINARIES = """pkgs.fetchurl {
+url = "https://apache.jfrog.io/artifactory/arrow/r/17.0.0/libarrow/bin/linux-openssl-3.0/arrow-17.0.0.zip";
+sha256 = "sha256-ivCsaSqKNk3qApc3hl3g/NJR8xBV8xlcUuWqtnuf72w=";
+}"""
+
 
 
 
@@ -388,7 +412,7 @@ add_buildInputs = "[pkgs.sqlite.out pkgs.sqlite pkgs.geos]"
 ["RNifti_1.4.0"]
 patches = "[../nix/patches/Rnifti_1.4.0_zlib_objects.patch]"
 
-["RNifti_1.6.1"]
+["RNifti_1.6.1.."]
 patches = "[]"
 add_nativeBuildInputs = "[zlib]"
 add_buildInputs = "[zlib]"
@@ -2491,4 +2515,29 @@ jarSource= """
 
 [easyRNASeq]
 HOME = '"$TMPDIR"'
+
+
+["pingr_2.0.4.."]
+postPatch = """''
+	patchShebangs configure 
+	''"""
+
+["pogos_1.24.0.."]
+add_nativeBuildInputs = '[pkgconfig python3]'
+add_buildInputs = '[python3]'
+python3='"${pkgs.python3}/bin/python3"'
+HOME = '"$TMPDIR"'
+
+
+
+["tenXplore"]
+add_nativeBuildInputs = '[pkgconfig python3]'
+add_buildInputs = '[python3]'
+python3='"${pkgs.python3}/bin/python3"'
+
+
+
+[rawDiag]
+add_nativeBuildInputs = "[mono which]"
+
 

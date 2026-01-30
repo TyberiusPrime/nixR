@@ -128,7 +128,7 @@ cplexAPI = "unfree, cplex not in nixpkgs"
 "bcv::2023-04-26"= "fortran build issue. Todo"
 "cgalMeshes_2.0.0"= "Can not make it find boost."
 "IP_0.1" = "can't convince it to find stringprep.ph"
-"xtensor_0.14.1-0" = "can't find xtensor-r/rcontainer.hpp." 
+"xtensor_0.14.1-0" = "can't find xtensor-r/rcontainer.hpp."
 "geostatsp_1.8.6" = "geostatsp/libs/geostatsp.so: undefined symbol: GET_SLOT"
 "rswipl_9.1.8" = "Cmake can't find ZLIB"
 "rhdf5filters_1.12.0" = "can't make it find it's own zstd.h"
@@ -230,6 +230,11 @@ cplexAPI = "unfree, cplex not in nixpkgs"
 "hdf5r_1.3.10" = "'The version of hdf5 installed on your system is not sufficient. Please ensure that at least version 1.8.13 is installed'. We do have 1.14.3 though."
 "easyRNASeq::2024-05-10" = "no existing definition for function 'type'"
 
+"VariantExperiment::2024-10-29" = "no existing definition for function 'gdsfn'"
+"hdf5r::2024-10-29" = "The version of hdf5 installed on your system is not sufficient."
+"tenXplore::2024-10-29" = """won't find python?, Fixable?""""
+"pogos::2024-10-29" = """won't find python?, Fixable?""""
+"geneLenDatabase::2024-10-29" = "Was archived/updated, but bioconductor does not keep the old file around, or at least the URL schema is different to that for software."
 
 
 

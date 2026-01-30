@@ -1,0 +1,4 @@
+warning: Git tree '/clara/ffs/e/20220921_AG_Finkernagel_nixR/nixR' is dirty
+trace: nixpkgs version: 23.11pre-git
+trace: bioconductor version: 3.20
+error: opening directory '/nix/store/c42b7wq7kzdhv7hzn9wsmpaasb5nyb6v-affyPLM_1.82.0.tar.gz': Too many open files

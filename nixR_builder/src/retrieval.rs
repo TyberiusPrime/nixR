@@ -56,7 +56,6 @@ pub fn update_cran(
         if config.aborted() {
             bail!("update_cran aborted after cran_fetch_archive");
         }
-
         info!("entering package fetching");
 
         let infos = fetch_package_infos(
@@ -68,6 +67,15 @@ pub fn update_cran(
             false,
             &Repo::Cran,
         )?;
+        let mut seen: HashMap<String, &PackageInfo> = HashMap::new();
+        for entry in infos.iter() {
+            if seen.contains_key(&entry.tag()) {
+                panic!("doublicate entry seen in cran?! (early check) {:#?} vs {:#?}\nbase url: {}. Try checking the archives for multiple files containing the same tag {}", 
+            &entry, seen.get(&entry.tag()).unwrap(), base_url, entry.tag());
+            } else {
+                seen.insert(entry.tag(), entry);
+            }
+        }
         info!("Loaded information on {} packages", infos.len());
         Ok(infos)
     })?;

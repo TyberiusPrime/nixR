@@ -1,0 +1,63 @@
+warning: Git tree '/clara/ffs/e/20220921_AG_Finkernagel_nixR/nixR' is dirty
+trace: nixpkgs version: 23.11pre-git
+trace: bioconductor version: 3.20
+trace: warning: calling makeSetupHook without passing a name is deprecated.
+error: builder for '/nix/store/da6bql122vhp2as99jr6cjsqbsp2k5v5-r-salso-Cargo.lock.drv' failed with exit code 2;
+       last 2 log lines:
+       > /nix/store/xpidksbd07in3nd4sjx79ybwwy81b338-gnutar-1.35/bin/tar: salso/src/rustlib/Cargo.lock: Not found in archive
+       > /nix/store/xpidksbd07in3nd4sjx79ybwwy81b338-gnutar-1.35/bin/tar: Exiting with failure status due to previous errors
+       For full logs, run 'nix log /nix/store/da6bql122vhp2as99jr6cjsqbsp2k5v5-r-salso-Cargo.lock.drv'.
+
+       … while evaluating the attribute 'buildCommand' of the derivation 'cargo-vendor-dir'
+
+       at /nix/store/j8han9cf3g8vba52yhiklaa6a500pcbv-source/pkgs/stdenv/generic/make-derivation.nix:348:7:
+
+          347|     // (optionalAttrs (attrs ? name || (attrs ? pname && attrs ? version)) {
+          348|       name =
+             |       ^
+          349|         let
+
+       … while evaluating the attribute 'text' of the derivation 'make-cargo-home'
+
+       at /nix/store/j8han9cf3g8vba52yhiklaa6a500pcbv-source/pkgs/stdenv/generic/make-derivation.nix:348:7:
+
+          347|     // (optionalAttrs (attrs ? name || (attrs ? pname && attrs ? version)) {
+          348|       name =
+             |       ^
+          349|         let
+
+       … while evaluating the attribute 'buildCommand' of the derivation 'hook'
+
+       at /nix/store/j8han9cf3g8vba52yhiklaa6a500pcbv-source/pkgs/stdenv/generic/make-derivation.nix:348:7:
+
+          347|     // (optionalAttrs (attrs ? name || (attrs ? pname && attrs ? version)) {
+          348|       name =
+             |       ^
+          349|         let
+
+       … while evaluating the attribute 'nativeBuildInputs' of the derivation 'r-salso-0.3.42'
+
+       at /nix/store/j8han9cf3g8vba52yhiklaa6a500pcbv-source/pkgs/stdenv/generic/make-derivation.nix:348:7:
+
+          347|     // (optionalAttrs (attrs ? name || (attrs ? pname && attrs ? version)) {
+          348|       name =
+             |       ^
+          349|         let
+
+       … while evaluating the attribute 'buildInputs' of the derivation 'r-AntMAN-1.1.0'
+
+       at /nix/store/j8han9cf3g8vba52yhiklaa6a500pcbv-source/pkgs/stdenv/generic/make-derivation.nix:348:7:
+
+          347|     // (optionalAttrs (attrs ? name || (attrs ? pname && attrs ? version)) {
+          348|       name =
+             |       ^
+          349|         let
+
+       … while evaluating the attribute 'nativeBuildInputs' of the derivation 'R-4.4.1-wrapper'
+
+       at /nix/store/14yapsjqwc56nhlb4s33ppw1d243dqxl-source/nix/r/wrapper.nix:21:5:
+
+           20|     # that will then exceed the space allocated to env + args
+           21|     name = R.name + "-wrapper";
+             |     ^
+           22|     system = system;

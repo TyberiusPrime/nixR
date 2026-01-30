@@ -372,7 +372,11 @@ fn assemble(config: &Config) -> Result<()> {
         }
 
         let bioc_packages = bioc_release.get_packages(config, &manual_date_overrides)?;
+        //so there were never any windows only packages in the first place.
+        //either way we should filter them below.
+        /* let len_before = bioc_packages.len();
         let bioc_packages = filter_unsuitable_packages(bioc_packages);
+        assert!(len_before== bioc_packages.len()); */
 
         let (packages, mut interval_set) = assemble_packages_during_bioconductor_release(
             bioc_release,
@@ -441,6 +445,9 @@ fn assemble(config: &Config) -> Result<()> {
             //collect all of them
             for ii in &hits {
                 let p = &packages[*ii as usize];
+                if p.element.name== "TCGAbiolinksGUI.data" {
+                    dbg!(&p);
+                }
                 #[allow(clippy::single_match)]
                 match all_the_packages.insert(p.element.tag(), p.element.clone()) {
                     #[allow(clippy::single_match)]
@@ -505,6 +512,14 @@ fn assemble(config: &Config) -> Result<()> {
                         continue;
                     }
                 }
+                if p.element.desc.get("OS_type").map(|x| (&**x)) == Some("windows") {
+                    filter_reasons.push(format!(
+                            "{}\tWindows only",
+                            p.element.tag(),
+                        ));
+                        days_packages.remove(&p.element.name);
+                    continue;
+                }
 
                 for q in [
                     &p.element.tag(),
@@ -544,10 +559,17 @@ fn assemble(config: &Config) -> Result<()> {
                     if !already_removed.contains(&p.element.name) {
                         for rdep in p.element.r_deps(config)?.iter() {
                             if !days_packages.contains_key(rdep) {
-                                /* warn!(
+                                if p.element.name == "TCGAbiolinks" {
+                                    for k in days_packages.iter() {
+                                        if k.0.contains("TCGAbiolinks") {
+                                            dbg!(k.0);
+                                        }
+                                    }
+                                warn!(
                                     "Filtering {} because of missing dependency {}",
                                     p.element.name, rdep
-                                ); */
+                                );
+                                }
                                 filter_reasons.push(format!(
                                     "{}\tMissing (filtered) dependency: {}",
                                     p.element.tag(),
@@ -707,6 +729,7 @@ fn assemble(config: &Config) -> Result<()> {
             "let gdal_2 = pkgs.gdal_2 or pkgs.gdal;\n".as_bytes(),
             "g = builtins.tryEval(pkgs.gsl_1 or throw \"undefined\");\n".as_bytes(),
             "gsl_1 = if g.success then g.value else pkgs.gsl;\n".as_bytes(),
+            "lzma = pkgs.lzma or pkgz.xz\n".as_bytes(),
             "\tin\n".as_bytes(),
 
             NixValue::AttrSet(out_packages_bioc_software)
