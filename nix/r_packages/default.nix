@@ -2,13 +2,16 @@
   stdenv,
   flock,
   R,
-  xvfb_run,
+  xvfb_run ? null,
+  xvfb-run ? null,
   utillinux,
   pkgs,
   importCargo,
 }:
+
 #{ name, version, buildInputs ? [ ], additional_buildInputs ? [ ], patches ? [ ]
 package_info: let
+  xvfbrun = if xvfb-run != null then xvfb-run else xvfb_run;
   # needed for xvfb-run server number spread
   aThousandLocks = stdenv.mkDerivation {
     name = "AThousandXvfbLocks-0.0.1";
@@ -53,7 +56,7 @@ in
         [R]
         ++ (
           if requireX
-          then [xvfb_run flock]
+          then [xvfbrun flock]
           else []
         )
         ++ buildInputs # that's the r packages...
@@ -127,7 +130,7 @@ in
           # one shell script per level, or you go mad with escaping between
           # flock -> xvbf-run -> (xvfb | R)
           printf "#!%s\n" `${pkgs.which}/bin/which bash` > /build/run.sh
-          printf "%s" "${pkgs.xvfb_run}/bin/xvfb-run -f /build/.Xauthority -e /build/xvfb-error -s \"-screen 0, 1024x768x24 +extension GLK\" -n $SN /build/run_r.sh" > /build/run.sh
+          printf "%s" "${xvfbrun}/bin/xvfb-run -f /build/.Xauthority -e /build/xvfb-error -s \"-screen 0, 1024x768x24 +extension GLK\" -n $SN /build/run_r.sh" > /build/run.sh
 
           printf "#!%s\n" `${pkgs.which}/bin/which bash` > /build/run_r.sh
           printf "%s" "R CMD INSTALL $installFlags --configure-args=\"$configureFlags\" -l $out/library ." >>/build/run_r.sh
