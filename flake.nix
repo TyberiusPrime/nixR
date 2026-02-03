@@ -24,6 +24,9 @@
     nixpkgs_23_05.url = "github:NixOS/nixpkgs/23.05";
     nixpkgs_23_11.url = "github:NixOS/nixpkgs/23.11";
     nixpkgs_24_05.url = "github:NixOS/nixpkgs/24.05";
+    nixpkgs_24_11.url = "github:NixOS/nixpkgs/24.11";
+    nixpkgs_25_05.url = "github:NixOS/nixpkgs/25.05";
+    nixpkgs_25_11.url = "github:NixOS/nixpkgs/25.11";
     import-cargo.url = "github:edolstra/import-cargo";
     # import-cargo.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -44,6 +47,9 @@
     nixpkgs_23_05,
     nixpkgs_23_11,
     nixpkgs_24_05,
+    nixpkgs_24_11,
+    nixpkgs_25_05,
+    nixpkgs_25_11,
     import-cargo,
   }: let
     lib = nixpkgs_22_05.lib;
@@ -107,6 +113,22 @@
       };
 
       "24.05" = import nixpkgs_24_05 {
+        inherit system;
+        overlays = [
+        ];
+      };
+      "24.11" = import nixpkgs_24_11 {
+        inherit system;
+        overlays = [
+        ];
+      };
+      "25.05" = import nixpkgs_25_05 {
+        inherit system;
+        overlays = [
+        ];
+      };
+
+      "25.11" = import nixpkgs_25_11 {
         inherit system;
         overlays = [
         ];
