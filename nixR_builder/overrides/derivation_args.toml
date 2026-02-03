@@ -218,8 +218,20 @@ CargoLockInSource = "''string2path/src/rust/Cargo.lock''"
 ["salso_..0.2.22"]
 CargoLockInSource = "''salso/src/rustlib/Cargo.lock''"
 
-["salso_0.3.27.."]
+["salso_0.3.27"]
 CargoLockInSource = "''salso/src/rust/Cargo.lock''"
+
+# Can't get this to work 
+# ["salso_0.3.57.."]
+# CargoLockInSource = "''salso/src/rust/Cargo.lock''"
+# postPatch = """''
+# 		substituteInPlace tools/cargo.R --replace "env <- c(env, CARGO_HOME=n(cargo_home))" ""
+# 	substituteInPlace src/rust/Cargo.toml --replace "f3a39e1" "f3a39e12f924030698e9fc99fdec19ac7530de26"
+# 	substituteInPlace src/rust/Cargo.toml --replace "f019a94" "f019a946c28ac575273526ce6ea7573ab27cb554"
+# 	substituteInPlace src/rust/Cargo.lock --replace "f3a39e1" "f3a39e12f924030698e9fc99fdec19ac7530de26"
+# 	substituteInPlace src/rust/Cargo.lock --replace "f019a94" "f019a946c28ac575273526ce6ea7573ab27cb554"
+# ''"""
+
 
 
 [salso]
@@ -907,7 +919,7 @@ add_buildInputs = "[jags (pkgs.lapack or pkgs.liblapack)]"
 
 
 
-["V8"]
+["V8_..6.0.0"]
 add_nativeBuildInputs = "[pkgconfig v8]"
 add_buildInputs = "[pkgconfig v8]"
 postPatch = """''

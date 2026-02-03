@@ -1,0 +1,556 @@
+warning: Git tree '/clara/ffs/e/20220921_AG_Finkernagel_nixR/nixR' is dirty
+trace: nixpkgs version: 24.11pre-git
+trace: bioconductor version: 3.22
+trace: evaluation warning: calling makeSetupHook without passing a name is deprecated.
+trace: evaluation warning: calling makeSetupHook without passing a name is deprecated.
+trace: evaluation warning: calling makeSetupHook without passing a name is deprecated.
+trace: evaluation warning: swiProlog has been renamed to swi-prolog
+trace: evaluation warning: calling makeSetupHook without passing a name is deprecated.
+trace: evaluation warning: calling makeSetupHook without passing a name is deprecated.
+trace: evaluation warning: calling makeSetupHook without passing a name is deprecated.
+error: builder for '/nix/store/j4x0yfwzbi6w9iaj3hl0m05fk3bwr7fp-r-ECOSolveR-0.5.5.drv' failed with exit code 1;
+       last 10 log lines:
+       > /nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin/ar: external/amd/libamd.a: file format not recognized
+       > make[1]: *** [Makefile:26: amd_l*.o] Error 1
+       > make[1]: *** Waiting for unfinished jobs....
+       > /nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin/ranlib libamd.a
+       > make[2]: Leaving directory '/build/ECOSolveR/src/ecos/external/amd'
+       > /nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin/ar -x external/amd/libamd.a
+       > make[1]: Leaving directory '/build/ECOSolveR/src/ecos'
+       > make: *** [Makevars:15: ecos.ts] Error 2
+       > ERROR: compilation failed for package 'ECOSolveR'
+       > * removing '/nix/store/qr7qzcgf98lw2190ykzd2qkqr2w0vam9-r-ECOSolveR-0.5.5/library/ECOSolveR'
+       For full logs, run 'nix log /nix/store/j4x0yfwzbi6w9iaj3hl0m05fk3bwr7fp-r-ECOSolveR-0.5.5.drv'.
+error: builder for '/nix/store/7rnq858j6fq911ryq6fd2r69yrfk8sbi-r-RNetCDF-2.11-1.drv' failed with exit code 1;
+       last 10 log lines:
+       > WINDOWS="FALSE" \
+       >         MAKE="make -j 24" \
+       >         R_HOME="/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R" \
+       >         R_ARCH="" \
+       >         /nix/store/0irlcqx2n3qm6b1pc9rsd2i8qpvcccaj-bash-5.2p37/bin/bash ../tools/make-recursive.sh
+       > make -j 24 -f /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/etc//Makeconf -f /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/share/make/shlib.mk -f Makefile.common OBJECTS= attribute.o common.o convert.o dataset.o dimension.o group.o init.o type.o udunits.o variable.o SHLIB=RNetCDF$(SHLIB_EXT) RNetCDF_all
+       > ../tools/make-recursive.sh: line 61: make -j 24: command not found
+       > make: *** [Makefile:14: all] Error 127
+       > ERROR: compilation failed for package 'RNetCDF'
+       > * removing '/nix/store/73yr56rv2yzji83wqkmqqmlxhxym392w-r-RNetCDF-2.11-1/library/RNetCDF'
+       For full logs, run 'nix log /nix/store/7rnq858j6fq911ryq6fd2r69yrfk8sbi-r-RNetCDF-2.11-1.drv'.
+error: builder for '/nix/store/5430s5c3jjqdm01f6n5kbsjgywqhyb39-r-MPCR-1.1.4.drv' failed with exit code 1;
+       last 10 log lines:
+       > Installing CMake from source
+       > CMake not found. Installing CMake from source...
+       > ./configure: line 18: wget: not found
+       > tar (child): cmake-3.28.1.tar.gz: Cannot open: No such file or directory
+       > tar (child): Error is not recoverable: exiting now
+       > tar: Child returned status 2
+       > tar: Error is not recoverable: exiting now
+       > ./configure: cd: line 24: can't cd to cmake-3.28.1: No such file or directory
+       > ERROR: configuration failed for package 'MPCR'
+       > * removing '/nix/store/jk81035w59p5r0srrk5704bj2xlb4rfl-r-MPCR-1.1.4/library/MPCR'
+       For full logs, run 'nix log /nix/store/5430s5c3jjqdm01f6n5kbsjgywqhyb39-r-MPCR-1.1.4.drv'.
+error: builder for '/nix/store/qpixfbxrazzh629nknk8s3cyjrb3fmm6-r-RcppCGAL-6.1.drv' failed with exit code 1;
+       last 10 log lines:
+       >
+       > Error in file(file, ifelse(append, "a", "w")) :
+       >   cannot open the connection
+       > Calls: source_file -> eval -> eval -> .cgal.cerr.remover -> cat -> file
+       > In addition: Warning message:
+       > In file(file, ifelse(append, "a", "w")) :
+       >   cannot open file 'inst/include/CGAL/cmake/CGAL/CGALConfig.cmake': Permission denied
+       > Execution halted
+       > ERROR: configuration failed for package 'RcppCGAL'
+       > * removing '/nix/store/26v377vjvwscv64wmp59i4pqw1svyax6-r-RcppCGAL-6.1/library/RcppCGAL'
+       For full logs, run 'nix log /nix/store/qpixfbxrazzh629nknk8s3cyjrb3fmm6-r-RcppCGAL-6.1.drv'.
+error: 1 dependencies of derivation '/nix/store/ng0vdb3rsd9gpiyvwssvvfm9184k6gxx-r-interpolation-0.1.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/ifk5x14ifr2djxqlvg7shz1z3a53712n-r-approxOT-1.2.drv' failed to build
+error: builder for '/nix/store/5s7ycv179jq1r2m4kl966rpqdzxc1bwa-r-Rmpi-0.7-3.3.drv' failed with exit code 1;
+       last 10 log lines:
+       > Running phase: buildPhase
+       > Running phase: installPhase
+       > /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin/R CMD INSTALL --no-multiarch --built-timestamp=0 --configure-args=--with-Rmpi-type=OPENMPI --with-Rmpi-include=/nix/store/ya0d4qa0jxjw1wlyifr3lzl1aw9y4zg8-openmpi-5.0.5/include --with-Rmpi-libpath=/nix/store/ya0d4qa0jxjw1wlyifr3lzl1aw9y4zg8-openmpi-5.0.5/lib -l /nix/store/bz190gw3v6jsw0c484qskyrs260bzjvv-r-Rmpi-0.7-3.3/library .
+       > * installing *source* package 'Rmpi' ...
+       > ** this is package 'Rmpi' version '0.7-3.3'
+       > ** package 'Rmpi' successfully unpacked and MD5 sums checked
+       > ** using staged installation
+       > configure: error: Value of --with-Rmpi-include does not contain mpi.h
+       > ERROR: configuration failed for package 'Rmpi'
+       > * removing '/nix/store/bz190gw3v6jsw0c484qskyrs260bzjvv-r-Rmpi-0.7-3.3/library/Rmpi'
+       For full logs, run 'nix log /nix/store/5s7ycv179jq1r2m4kl966rpqdzxc1bwa-r-Rmpi-0.7-3.3.drv'.
+error: 1 dependencies of derivation '/nix/store/hnrc7vjqgbzwvr0d731x595hs6agc5wl-r-bigGP-0.1.9.drv' failed to build
+error: builder for '/nix/store/kmcgccaml4xzinimjrbygkj57kli6k5x-r-SSLASSO-1.2-2.drv' failed with exit code 1;
+       last 10 log lines:
+       > SSL_gaussian.c:133:23: error: expected expression before 'int'
+       >   133 |   int *e2 = Calloc(p, int);
+       >       |                       ^~~
+       > SSL_gaussian.c:140:34: error: expected expression before 'double'
+       >   140 |   double *thresholds = Calloc(L, double);
+       >       |                                  ^~~~~~
+       > make: *** [/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/etc/Makeconf:202: SSL_gaussian.o] Error 1
+       > make: *** Waiting for unfinished jobs....
+       > ERROR: compilation failed for package 'SSLASSO'
+       > * removing '/nix/store/r2hnx5jlfvdyx39jfmzxq9rw0f4hmgi2-r-SSLASSO-1.2-2/library/SSLASSO'
+       For full logs, run 'nix log /nix/store/kmcgccaml4xzinimjrbygkj57kli6k5x-r-SSLASSO-1.2-2.drv'.
+error: builder for '/nix/store/yaf7bxx08s836ayz2by6w8vqz1ax7isi-r-SQLFormatteR-0.0.2.drv' failed with exit code 1;
+       last 10 log lines:
+       > Running phase: installPhase
+       > /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin/R CMD INSTALL --no-multiarch --built-timestamp=0 --configure-args= -l /nix/store/7qk3183p2mvr17b77z9piy7w7hrlh9cv-r-SQLFormatteR-0.0.2/library .
+       > * installing *source* package 'SQLFormatteR' ...
+       > ** this is package 'SQLFormatteR' version '0.0.2'
+       > ** package 'SQLFormatteR' successfully unpacked and MD5 sums checked
+       > ** using staged installation
+       > sh: ./configure: not found
+       > Warning in system(cmd) : error in running command
+       > ERROR: configuration failed for package 'SQLFormatteR'
+       > * removing '/nix/store/7qk3183p2mvr17b77z9piy7w7hrlh9cv-r-SQLFormatteR-0.0.2/library/SQLFormatteR'
+       For full logs, run 'nix log /nix/store/yaf7bxx08s836ayz2by6w8vqz1ax7isi-r-SQLFormatteR-0.0.2.drv'.
+error: builder for '/nix/store/zws0b974r2qg758m2ay5iarc4kr5smx1-r-baseline-1.3-7.drv' failed with exit code 1;
+       last 10 log lines:
+       > using C compiler: 'gcc (GCC) 13.3.0'
+       > using Fortran compiler: 'GNU Fortran (GCC) 13.3.0'
+       > /nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin/cc -std=gnu2x -I"/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/include" -DNDEBUG       -fpic  -g -O2  -c baselineMethods.c -o baselineMethods.o
+       > /nix/store/hl93m494hj1clnf485d4km0z4d1w7xd2-gfortran-wrapper-13.3.0/bin/gfortran  -fpic  -g -O2  -c s2band.f -o s2band.o
+       > /nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin/cc -std=gnu2x -shared -L/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/lib -o baseline.so baselineMethods.o s2band.o -L/nix/store/p2a6x92n2gwljav85zz3hzid1nk7iq0l-blas-3/lib -lblas -llapack -lgfortran -L/nix/store/ay9awjgi5rbk62zrv2c2a0gl05v4fy6i-gfortran-13.3.0-lib/lib -L/nix/store/qvpf8z2l2r024mq52skx9z8nicxd8wbd-binutils-wrapper-2.43.1/bin -L/nix/store/7171wfrd4rbnaxgmpvcv6aw9kq8kh1vj-gfortran-13.3.0/lib/gcc/x86_64-unknown-linux-gnu/13.3.0 -L/nix/store/7171wfrd4rbnaxgmpvcv6aw9kq8kh1vj-gfortran-13.3.0/lib -lgfortran -lm -lquadmath -L/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/lib -lR
+       > /nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin/ld: cannot find -llapack: No such file or directory
+       > collect2: error: ld returned 1 exit status
+       > make: *** [/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/share/make/shlib.mk:10: baseline.so] Error 1
+       > ERROR: compilation failed for package 'baseline'
+       > * removing '/nix/store/mi4xnc8ymf33n4fvzdmjfp7g8qzxlspz-r-baseline-1.3-7/library/baseline'
+       For full logs, run 'nix log /nix/store/zws0b974r2qg758m2ay5iarc4kr5smx1-r-baseline-1.3-7.drv'.
+error: builder for '/nix/store/ifj4i8q910ab4iv71al45cnyfslfmz2z-r-ciflyr-0.1.2.drv' failed with exit code 1;
+       last 10 log lines:
+       > Running phase: installPhase
+       > /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin/R CMD INSTALL --no-multiarch --built-timestamp=0 --configure-args= -l /nix/store/vnkgvdfnf6z25izb283n12pnmknwykk7-r-ciflyr-0.1.2/library .
+       > * installing *source* package 'ciflyr' ...
+       > ** this is package 'ciflyr' version '0.1.2'
+       > ** package 'ciflyr' successfully unpacked and MD5 sums checked
+       > ** using staged installation
+       > sh: ./configure: not found
+       > Warning in system(cmd) : error in running command
+       > ERROR: configuration failed for package 'ciflyr'
+       > * removing '/nix/store/vnkgvdfnf6z25izb283n12pnmknwykk7-r-ciflyr-0.1.2/library/ciflyr'
+       For full logs, run 'nix log /nix/store/ifj4i8q910ab4iv71al45cnyfslfmz2z-r-ciflyr-0.1.2.drv'.
+error: builder for '/nix/store/lgq42gnbjzfl0ci7bhjrql8qcfdq6h85-r-clarabel-0.11.1.drv' failed with exit code 1;
+       last 10 log lines:
+       > Running phase: installPhase
+       > /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin/R CMD INSTALL --no-multiarch --built-timestamp=0 --configure-args= -l /nix/store/vr86n6p2n5mn3nzvsv1vz7aasja8gakl-r-clarabel-0.11.1/library .
+       > * installing *source* package 'clarabel' ...
+       > ** this is package 'clarabel' version '0.11.1'
+       > ** package 'clarabel' successfully unpacked and MD5 sums checked
+       > ** using staged installation
+       > sh: ./configure: not found
+       > Warning in system(cmd) : error in running command
+       > ERROR: configuration failed for package 'clarabel'
+       > * removing '/nix/store/vr86n6p2n5mn3nzvsv1vz7aasja8gakl-r-clarabel-0.11.1/library/clarabel'
+       For full logs, run 'nix log /nix/store/lgq42gnbjzfl0ci7bhjrql8qcfdq6h85-r-clarabel-0.11.1.drv'.
+error: builder for '/nix/store/qn94wfflgwafwvpl7iv33jigfmlvhdwf-r-blosc-0.1.2.drv' failed with exit code 1;
+       last 10 log lines:
+       >      install.packages('blosc', type='source', configure.vars='LIB_DIR=-L/path/to/libs INCLUDE_DIR=-I/path/to/headers')
+       >
+       >   -----------------------------------------------------------------------
+       >
+       >
+       > configure: error: in '/build/blosc':
+       > configure: error: package dependency requirements 'blosc' could not be satisfied.
+       > See 'config.log' for more details
+       > ERROR: configuration failed for package 'blosc'
+       > * removing '/nix/store/6bnfbvh284vh6688v0mn080qfnqksl94-r-blosc-0.1.2/library/blosc'
+       For full logs, run 'nix log /nix/store/qn94wfflgwafwvpl7iv33jigfmlvhdwf-r-blosc-0.1.2.drv'.
+error: builder for '/nix/store/kdvx19fr6icad61myd822ll9lff0q1l7-r-cpp11qpdf-1.3.5.drv' failed with exit code 1;
+       last 10 log lines:
+       > /nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin/c++ -std=gnu++17 -I"/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/include" -DNDEBUG -Iinclude -Ilibqpdf                                                            -I'/nix/store/hrri876gj82wjqr1d21qn7mlmf8s8zib-r-cpp11-0.5.2/library/cpp11/include'    -fvisibility=hidden -fpic  -g -O2   -c libqpdf/Pl_Flate.cc -o libqpdf/Pl_Flate.o
+       > /nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin/c++ -std=gnu++17 -I"/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/include" -DNDEBUG -Iinclude -Ilibqpdf                                                            -I'/nix/store/hrri876gj82wjqr1d21qn7mlmf8s8zib-r-cpp11-0.5.2/library/cpp11/include'    -fvisibility=hidden -fpic  -g -O2   -c libqpdf/Pl_LZWDecoder.cc -o libqpdf/Pl_LZWDecoder.o
+       > libqpdf/Pl_Flate.cc:2:10: fatal error: zlib.h: No such file or directory
+       >     2 | #include <zlib.h>
+       >       |          ^~~~~~~~
+       > compilation terminated.
+       > make: *** [/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/etc/Makeconf:209: libqpdf/Pl_Flate.o] Error 1
+       > make: *** Waiting for unfinished jobs....
+       > ERROR: compilation failed for package 'cpp11qpdf'
+       > * removing '/nix/store/j895xxqmxkh6rc9lgwqhjv1jmzw2v3kr-r-cpp11qpdf-1.3.5/library/cpp11qpdf'
+       For full logs, run 'nix log /nix/store/kdvx19fr6icad61myd822ll9lff0q1l7-r-cpp11qpdf-1.3.5.drv'.
+error: builder for '/nix/store/gj2h0pkz6x14s75q7bdbvwkdshwalvlm-r-fastpng-0.1.7.drv' failed with exit code 1;
+       last 10 log lines:
+       > /nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin/cc -std=gnu2x -I"/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/include" -DNDEBUG  -I'/nix/store/sx6g76rnq7v6s0njf446l5qaxazzgsav-r-colorfast-1.0.1/library/colorfast/include'     -fpic  -g -O2  -c init.c -o init.o
+       > /nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin/cc -std=gnu2x -I"/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/include" -DNDEBUG  -I'/nix/store/sx6g76rnq7v6s0njf446l5qaxazzgsav-r-colorfast-1.0.1/library/colorfast/include'     -fpic  -g -O2  -c spng.c -o spng.o
+       > spng.c:21:18: fatal error: zlib.h: No such file or directory
+       >    21 |         #include <zlib.h>
+       >       |                  ^~~~~~~~
+       > compilation terminated.
+       > make: *** [/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/etc/Makeconf:202: spng.o] Error 1
+       > make: *** Waiting for unfinished jobs....
+       > ERROR: compilation failed for package 'fastpng'
+       > * removing '/nix/store/4m41wypavz5p421ahzbhl0h01n994nj6-r-fastpng-0.1.7/library/fastpng'
+       For full logs, run 'nix log /nix/store/gj2h0pkz6x14s75q7bdbvwkdshwalvlm-r-fastpng-0.1.7.drv'.
+error: builder for '/nix/store/16nh9c49sxzbab9kzak76dbsz56ynk4y-r-flint-0.1.2.drv' failed with exit code 1;
+       last 10 log lines:
+       > checking for pkg-config... no
+       > checking for pkgconf... no
+       > configure: using R_FLINT_CPPFLAGS=""
+       > configure: using R_FLINT_CFLAGS=""
+       > configure: using R_FLINT_LDFLAGS=""
+       > configure: using R_FLINT_LIBS="-lflint -lmpfr -lgmp"
+       > checking for __gmpz_init in -lgmp... no
+       > configure: error: failed to link GNU MP library, see https://gmplib.org/
+       > ERROR: configuration failed for package 'flint'
+       > * removing '/nix/store/bzqm9a1jk0i3q3b9qqp4y0r8c3m1cmff-r-flint-0.1.2/library/flint'
+       For full logs, run 'nix log /nix/store/16nh9c49sxzbab9kzak76dbsz56ynk4y-r-flint-0.1.2.drv'.
+error: builder for '/nix/store/ks77ib7h7245vmjdwwgbs6akv80x8h51-r-gadjid-0.1.0.drv' failed with exit code 1;
+       last 10 log lines:
+       > Running phase: installPhase
+       > /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin/R CMD INSTALL --no-multiarch --built-timestamp=0 --configure-args= -l /nix/store/kac6630s33yvhhg97gy3pbwp93339g27-r-gadjid-0.1.0/library .
+       > * installing *source* package 'gadjid' ...
+       > ** this is package 'gadjid' version '0.1.0'
+       > ** package 'gadjid' successfully unpacked and MD5 sums checked
+       > ** using staged installation
+       > sh: ./configure: not found
+       > Warning in system(cmd) : error in running command
+       > ERROR: configuration failed for package 'gadjid'
+       > * removing '/nix/store/kac6630s33yvhhg97gy3pbwp93339g27-r-gadjid-0.1.0/library/gadjid'
+       For full logs, run 'nix log /nix/store/ks77ib7h7245vmjdwwgbs6akv80x8h51-r-gadjid-0.1.0.drv'.
+error: builder for '/nix/store/rqjcki8zcp282rfkwy6cf32m8rgw53z6-r-gpuR-2.0.6.drv' failed with exit code 1;
+       last 10 log lines:
+       > /nix/store/x3hq0bxyn3lvzz5mwrpa2v5s99glq74n-r-RcppEigen-0.3.4.0.2/library/RcppEigen/include/Eigen/src/Core/Assign.h:66:28:   required from 'Derived& Eigen::MatrixBase<Derived>::operator=(const Eigen::DenseBase<OtherDerived>&) [with OtherDerived = Eigen::Matrix<double, -1, 1>; Derived = Eigen::Block<Eigen::Ref<Eigen::Matrix<double, -1, -1>, 0, Eigen::OuterStride<> >, -1, 1, true>]'
+       > ../inst/include/gpuR/dynEigenMat.hpp:192:30:   required from 'void dynEigenMat<T>::setCol(SEXP, int) [with T = double; SEXP = SEXPREC*]'
+       > ../inst/include/gpuR/dynEigenMat.hpp:383:16:   required from here
+       > /nix/store/x3hq0bxyn3lvzz5mwrpa2v5s99glq74n-r-RcppEigen-0.3.4.0.2/library/RcppEigen/include/Eigen/src/Core/CoreEvaluators.h:1071:54: warning: ignoring attributes on template argument 'Eigen::internal::packet_traits<double>::type' {aka '__m128d'} [8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wignored-attributes-Wignored-attributes8;;]
+       > /nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin/c++ -std=gnu++17 -shared -L/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/lib -o gpuR.so RcppExports.o chol.o context.o custom_math.o device.o gpuEigenPtr.o gpuMatrix_igemm.o norm.o platform.o set_row_order.o solve.o synchronize.o trunc_gpuMat.o utils-vcl.o utils.o vclPtr.o vienna_blas1.o vienna_blas2.o vienna_blas3.o vienna_eigen.o vienna_qr.o vienna_stats.o vienna_svd.o -lOpenCL -L/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/lib -lR
+       > /nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin/ld: cannot find -lOpenCL: No such file or directory
+       > collect2: error: ld returned 1 exit status
+       > make: *** [/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/share/make/shlib.mk:10: gpuR.so] Error 1
+       > ERROR: compilation failed for package 'gpuR'
+       > * removing '/nix/store/j7kqy1rfz8hdn1naw3f60j7yhax3qgk3-r-gpuR-2.0.6/library/gpuR'
+       For full logs, run 'nix log /nix/store/rqjcki8zcp282rfkwy6cf32m8rgw53z6-r-gpuR-2.0.6.drv'.
+error: 1 dependencies of derivation '/nix/store/ixk95b0rafalcixs133x38p74xjj2adj-r-clrng-0.0.5.drv' failed to build
+error: builder for '/nix/store/p5jmlbpiqlj4crf8qchj318f5kyyvngj-r-hdf5r-1.3.12.drv' failed with exit code 1;
+       last 10 log lines:
+       > configure: WARNING: Unable to compile HDF5 test program
+       > checking for hdf5_hl.h... no
+       > checking for H5LTpath_valid in -lhdf5_hl... no
+       > configure: WARNING: Unable to compile HDF5_HL test program
+       > checking for main in -lhdf5_hl... no
+       > checking for matching HDF5 Fortran wrapper... no
+       > Found hdf5 with version:
+       > configure: error: The version of hdf5 installed on your system is not sufficient. Please ensure that at least version 1.8.13 is installed
+       > ERROR: configuration failed for package 'hdf5r'
+       > * removing '/nix/store/s3wdpwgkhi8kxz45df8412n0r3fxwsab-r-hdf5r-1.3.12/library/hdf5r'
+       For full logs, run 'nix log /nix/store/p5jmlbpiqlj4crf8qchj318f5kyyvngj-r-hdf5r-1.3.12.drv'.
+error: builder for '/nix/store/wxrfcj9yks03sf3bz4b3s5nmni7b10dz-r-highs-1.10.0-3.drv' failed with exit code 1;
+       last 10 log lines:
+       > which: no cmake4 in (/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin:/nix/store/20mggxpyrbcbs2vxdk3zr7wlgnblwk74-which-2.21/bin:/nix/store/xjlvb8x7z3f5rxxswa3c6ghay74a58jm-patchelf-0.15.0/bin:/nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin:/nix/store/xzfmarrq8x8s4ivpya24rrndqsq2ndiz-gcc-13.3.0/bin:/nix/store/26dy2y29fhissya64ygahwpidpvs3bm3-glibc-2.40-36-bin/bin:/nix/store/k48bha2fjqzarg52picsdfwlqx75aqbb-coreutils-9.5/bin:/nix/store/9bacph866qhmr2zfib1h49jixq5hhd01-binutils-wrapper-2.43.1/bin:/nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin:/nix/store/k48bha2fjqzarg52picsdfwlqx75aqbb-coreutils-9.5/bin:/nix/store/lfhmpajzgfmgl8xrdvp2r9hdi2rf17wy-findutils-4.10.0/bin:/nix/store/xrpvl6c1pyq7zazqnb41kgshmkr85da1-diffutils-3.10/bin:/nix/store/gvivnz7rb2gz1vy7d9mdxgzj9didz7w2-gnused-4.9/bin:/nix/store/14aswfz6pm8zvyyy927xzmi8x4rnvlc8-gnugrep-3.11/bin:/nix/store/45jb5s18799g8day8zjixrvknj4chp6r-gawk-5.3.1/bin:/nix/store/sdljgkhcmlflr785i4jffg1rvm294i1k-gnutar-1.35/bin:/nix/store/pg1n8f8zlwh4q4bsbnm9gwhx7cbix1m6-gzip-1.13/bin:/nix/store/y59bxw99pbld247dznzv352cqdhlybqi-bzip2-1.0.8-bin/bin:/nix/store/a08385589ajv3ahmp81nml9bh5dsi55n-gnumake-4.4.1/bin:/nix/store/0irlcqx2n3qm6b1pc9rsd2i8qpvcccaj-bash-5.2p37/bin:/nix/store/0knrdpnzi5s4igcvzw8yhkj8daq84a2v-patch-2.7.6/bin:/nix/store/g6rf9zyrz8hrgz4r7sd2hab3j1afxdkr-xz-5.6.3-bin/bin:/nix/store/83jpg0nha0gp1pggdvsk7zh6wn5lgm00-file-5.45/bin)
+       > which: no cmake3 in (/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin:/nix/store/20mggxpyrbcbs2vxdk3zr7wlgnblwk74-which-2.21/bin:/nix/store/xjlvb8x7z3f5rxxswa3c6ghay74a58jm-patchelf-0.15.0/bin:/nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin:/nix/store/xzfmarrq8x8s4ivpya24rrndqsq2ndiz-gcc-13.3.0/bin:/nix/store/26dy2y29fhissya64ygahwpidpvs3bm3-glibc-2.40-36-bin/bin:/nix/store/k48bha2fjqzarg52picsdfwlqx75aqbb-coreutils-9.5/bin:/nix/store/9bacph866qhmr2zfib1h49jixq5hhd01-binutils-wrapper-2.43.1/bin:/nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin:/nix/store/k48bha2fjqzarg52picsdfwlqx75aqbb-coreutils-9.5/bin:/nix/store/lfhmpajzgfmgl8xrdvp2r9hdi2rf17wy-findutils-4.10.0/bin:/nix/store/xrpvl6c1pyq7zazqnb41kgshmkr85da1-diffutils-3.10/bin:/nix/store/gvivnz7rb2gz1vy7d9mdxgzj9didz7w2-gnused-4.9/bin:/nix/store/14aswfz6pm8zvyyy927xzmi8x4rnvlc8-gnugrep-3.11/bin:/nix/store/45jb5s18799g8day8zjixrvknj4chp6r-gawk-5.3.1/bin:/nix/store/sdljgkhcmlflr785i4jffg1rvm294i1k-gnutar-1.35/bin:/nix/store/pg1n8f8zlwh4q4bsbnm9gwhx7cbix1m6-gzip-1.13/bin:/nix/store/y59bxw99pbld247dznzv352cqdhlybqi-bzip2-1.0.8-bin/bin:/nix/store/a08385589ajv3ahmp81nml9bh5dsi55n-gnumake-4.4.1/bin:/nix/store/0irlcqx2n3qm6b1pc9rsd2i8qpvcccaj-bash-5.2p37/bin:/nix/store/0knrdpnzi5s4igcvzw8yhkj8daq84a2v-patch-2.7.6/bin:/nix/store/g6rf9zyrz8hrgz4r7sd2hab3j1afxdkr-xz-5.6.3-bin/bin:/nix/store/83jpg0nha0gp1pggdvsk7zh6wn5lgm00-file-5.45/bin)
+       > which: no cmake2 in (/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin:/nix/store/20mggxpyrbcbs2vxdk3zr7wlgnblwk74-which-2.21/bin:/nix/store/xjlvb8x7z3f5rxxswa3c6ghay74a58jm-patchelf-0.15.0/bin:/nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin:/nix/store/xzfmarrq8x8s4ivpya24rrndqsq2ndiz-gcc-13.3.0/bin:/nix/store/26dy2y29fhissya64ygahwpidpvs3bm3-glibc-2.40-36-bin/bin:/nix/store/k48bha2fjqzarg52picsdfwlqx75aqbb-coreutils-9.5/bin:/nix/store/9bacph866qhmr2zfib1h49jixq5hhd01-binutils-wrapper-2.43.1/bin:/nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin:/nix/store/k48bha2fjqzarg52picsdfwlqx75aqbb-coreutils-9.5/bin:/nix/store/lfhmpajzgfmgl8xrdvp2r9hdi2rf17wy-findutils-4.10.0/bin:/nix/store/xrpvl6c1pyq7zazqnb41kgshmkr85da1-diffutils-3.10/bin:/nix/store/gvivnz7rb2gz1vy7d9mdxgzj9didz7w2-gnused-4.9/bin:/nix/store/14aswfz6pm8zvyyy927xzmi8x4rnvlc8-gnugrep-3.11/bin:/nix/store/45jb5s18799g8day8zjixrvknj4chp6r-gawk-5.3.1/bin:/nix/store/sdljgkhcmlflr785i4jffg1rvm294i1k-gnutar-1.35/bin:/nix/store/pg1n8f8zlwh4q4bsbnm9gwhx7cbix1m6-gzip-1.13/bin:/nix/store/y59bxw99pbld247dznzv352cqdhlybqi-bzip2-1.0.8-bin/bin:/nix/store/a08385589ajv3ahmp81nml9bh5dsi55n-gnumake-4.4.1/bin:/nix/store/0irlcqx2n3qm6b1pc9rsd2i8qpvcccaj-bash-5.2p37/bin:/nix/store/0knrdpnzi5s4igcvzw8yhkj8daq84a2v-patch-2.7.6/bin:/nix/store/g6rf9zyrz8hrgz4r7sd2hab3j1afxdkr-xz-5.6.3-bin/bin:/nix/store/83jpg0nha0gp1pggdvsk7zh6wn5lgm00-file-5.45/bin)
+       > which: no cmake in (/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin:/nix/store/20mggxpyrbcbs2vxdk3zr7wlgnblwk74-which-2.21/bin:/nix/store/xjlvb8x7z3f5rxxswa3c6ghay74a58jm-patchelf-0.15.0/bin:/nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin:/nix/store/xzfmarrq8x8s4ivpya24rrndqsq2ndiz-gcc-13.3.0/bin:/nix/store/26dy2y29fhissya64ygahwpidpvs3bm3-glibc-2.40-36-bin/bin:/nix/store/k48bha2fjqzarg52picsdfwlqx75aqbb-coreutils-9.5/bin:/nix/store/9bacph866qhmr2zfib1h49jixq5hhd01-binutils-wrapper-2.43.1/bin:/nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin:/nix/store/k48bha2fjqzarg52picsdfwlqx75aqbb-coreutils-9.5/bin:/nix/store/lfhmpajzgfmgl8xrdvp2r9hdi2rf17wy-findutils-4.10.0/bin:/nix/store/xrpvl6c1pyq7zazqnb41kgshmkr85da1-diffutils-3.10/bin:/nix/store/gvivnz7rb2gz1vy7d9mdxgzj9didz7w2-gnused-4.9/bin:/nix/store/14aswfz6pm8zvyyy927xzmi8x4rnvlc8-gnugrep-3.11/bin:/nix/store/45jb5s18799g8day8zjixrvknj4chp6r-gawk-5.3.1/bin:/nix/store/sdljgkhcmlflr785i4jffg1rvm294i1k-gnutar-1.35/bin:/nix/store/pg1n8f8zlwh4q4bsbnm9gwhx7cbix1m6-gzip-1.13/bin:/nix/store/y59bxw99pbld247dznzv352cqdhlybqi-bzip2-1.0.8-bin/bin:/nix/store/a08385589ajv3ahmp81nml9bh5dsi55n-gnumake-4.4.1/bin:/nix/store/0irlcqx2n3qm6b1pc9rsd2i8qpvcccaj-bash-5.2p37/bin:/nix/store/0knrdpnzi5s4igcvzw8yhkj8daq84a2v-patch-2.7.6/bin:/nix/store/g6rf9zyrz8hrgz4r7sd2hab3j1afxdkr-xz-5.6.3-bin/bin:/nix/store/83jpg0nha0gp1pggdvsk7zh6wn5lgm00-file-5.45/bin)
+       > which: no cmake in (/Applications/CMake.app/Contents/bin)
+       > Could not find 'cmake'!
+       > ls: cannot access '/build/highs/src/highslib': No such file or directory
+       > 'HiGHS' libraries could not be found!
+       > ERROR: configuration failed for package 'highs'
+       > * removing '/nix/store/9pydlc8q3l823ajd9fl9rv6kmvl5z4xp-r-highs-1.10.0-3/library/highs'
+       For full logs, run 'nix log /nix/store/wxrfcj9yks03sf3bz4b3s5nmni7b10dz-r-highs-1.10.0-3.drv'.
+error: builder for '/nix/store/yk73bc1a8hbm0x9390ainagl9f71rq2a-r-hypergeo2-0.2.0.drv' failed with exit code 1;
+       last 10 log lines:
+       > *** copying figures
+       > ** building package indices
+       > ** testing if installed package can be loaded from temporary location
+       > Error: package or namespace load failed for 'hypergeo2' in dyn.load(file, DLLpath = DLLpath, ...):
+       >  unable to load shared object '/nix/store/yv975v1j92qlsricmibna5jgibpwfrpp-r-hypergeo2-0.2.0/library/00LOCK-hypergeo2/00new/hypergeo2/libs/hypergeo2.so':
+       >   /nix/store/yv975v1j92qlsricmibna5jgibpwfrpp-r-hypergeo2-0.2.0/library/00LOCK-hypergeo2/00new/hypergeo2/libs/hypergeo2.so: undefined symbol: mpfr_set_si
+       > Error: loading failed
+       > Execution halted
+       > ERROR: loading failed
+       > * removing '/nix/store/yv975v1j92qlsricmibna5jgibpwfrpp-r-hypergeo2-0.2.0/library/hypergeo2'
+       For full logs, run 'nix log /nix/store/yk73bc1a8hbm0x9390ainagl9f71rq2a-r-hypergeo2-0.2.0.drv'.
+error: 1 dependencies of derivation '/nix/store/r9z4mpdwys8nyfxap7pmz5np6y2xrmzr-r-cbbinom-0.2.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/7gily6xq9ifhvp5cfny7lzk256qlyk8z-r-mos-0.1.3.drv' failed to build
+error: builder for '/nix/store/y998cpmp9ljzwi9a7p8b5h4naav7xk3r-r-ironseed-0.2.0.drv' failed with exit code 1;
+       last 10 log lines:
+       > Running phase: installPhase
+       > /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin/R CMD INSTALL --no-multiarch --built-timestamp=0 --configure-args= -l /nix/store/4js3bx8wr2iiachlfacz0pjzbsj6834y-r-ironseed-0.2.0/library .
+       > * installing *source* package 'ironseed' ...
+       > ** this is package 'ironseed' version '0.2.0'
+       > ** package 'ironseed' successfully unpacked and MD5 sums checked
+       > ** using staged installation
+       > sh: ./configure: not found
+       > Warning in system(cmd) : error in running command
+       > ERROR: configuration failed for package 'ironseed'
+       > * removing '/nix/store/4js3bx8wr2iiachlfacz0pjzbsj6834y-r-ironseed-0.2.0/library/ironseed'
+       For full logs, run 'nix log /nix/store/y998cpmp9ljzwi9a7p8b5h4naav7xk3r-r-ironseed-0.2.0.drv'.
+error: 1 dependencies of derivation '/nix/store/qsk8j4rb35x12zhb9ji0cvqbdaa75zxw-r-doMPI-0.2.2.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/h4axvzl23iy954bfhlgw8qh00pf75cdn-r-regRSM-0.5.drv' failed to build
+error: builder for '/nix/store/n4agybary5bjip1w3jrbgfwyjfr34b75-r-V8-8.0.1.drv' failed with exit code 1;
+       last 10 log lines:
+       > Alternatively, on Linux or MacOS you can set environment variable:
+       >     DOWNLOAD_STATIC_LIBV8=1
+       > to automatically download a static build of libv8 (recommended).
+       > To use a custom libv8, set V8_PKG_CFLAGS and V8_PKG_LIBS manually.
+       > ---------------------------[ ERROR MESSAGE ]----------------------------
+       > <stdin>:1:10: fatal error: v8.h: No such file or directory
+       > compilation terminated.
+       > ------------------------------------------------------------------------
+       > ERROR: configuration failed for package 'V8'
+       > * removing '/nix/store/ybbwxn3wj44k2b50ig21fdx809hfk8w4-r-V8-8.0.1/library/V8'
+       For full logs, run 'nix log /nix/store/n4agybary5bjip1w3jrbgfwyjfr34b75-r-V8-8.0.1.drv'.
+error: 1 dependencies of derivation '/nix/store/8v20j68nkykb6x3wj9y5484w4vlh6vk5-r-DOT-0.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/pdpb5xk9152brnh9plk02mlr8r3wxf4k-r-DiagrammeRsvg-0.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/msf8h3q39ws8m8bzz5h0axj9ly2jxr4l-r-badgen-1.0.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/8x7zxgd5m8dhhdf1jlvkha4ni0nrph11-r-daff-1.1.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/32xz6n0mj662b7lwdrcw4fgwxvbjaa3x-r-dagitty-0.3-4.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/261bls3z411d5sz9ysmzzcax0m0v4ly1-r-ical-0.1.6.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/9f9isk5pn6wdaajnmla5r9i2gy9yxfs8-r-js-1.2.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/qzd6zh3aa1n3hq6jkjq0hzbm005936v1-r-jsonld-2.2.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/46q0zbv12d8majshya96hbx9b3ch9pfv-r-jsonvalidate-1.5.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/ar97mqxrzq2vdypac9n3wpin8hdpj32s-r-juicyjuice-0.1.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/gm5mpmswsj3wyyqck85yr70lv7hi4pw3-r-katex-1.5.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/z1q2y2gahm4h1sdmrk71lql2q6r2x9pv-r-rjade-0.1.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/r7pg440s81gdgfrc1pcjr9yj2zv9nzbh-r-rless-0.1.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/bnmh86xxr98y2gr53wawmn3ar3xrmqy0-r-boilerplate-1.3.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/8ndr5isz58d2axkimpnqjxhspz1mwk5m-r-dagwood-0.1.4.drv' failed to build
+error: builder for '/nix/store/w55x7mplzm5g0x0p08azwby4m622rxql-r-SLmetrics-0.3-4.drv' failed with exit code 1;
+       last 10 log lines:
+       > checking for g++ option to enable C++11 features... none needed
+       > checking whether g++ supports C++23 features with -std=gnu++23... no
+       > configure: No compiler with C++23 support was found
+       > checking whether g++ supports C++20 features with -std=gnu++20... yes
+       > configure: Using C++20
+       > checking whether R CMD SHLIB can already compile programs using OpenMP... yes
+       > checking for library containing deflate... no
+       > configure: error: zlib required
+       > ERROR: configuration failed for package 'SLmetrics'
+       > * removing '/nix/store/fip45p6v9wiw6fk9j6r1q7sdhiaqlyrs-r-SLmetrics-0.3-4/library/SLmetrics'
+       For full logs, run 'nix log /nix/store/w55x7mplzm5g0x0p08azwby4m622rxql-r-SLmetrics-0.3-4.drv'.
+error: builder for '/nix/store/gyl9wfzq6p77wdkyyzdscqhfg9cdfvqs-r-libdeflate-1.24-7.drv' failed with exit code 1;
+       last 10 log lines:
+       > Running phase: installPhase
+       > /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin/R CMD INSTALL --no-multiarch --built-timestamp=0 --configure-args= -l /nix/store/9yilffzja6b2ms8xhpjyi5bj80fm2g5s-r-libdeflate-1.24-7/library .
+       > * installing *source* package 'libdeflate' ...
+       > ** this is package 'libdeflate' version '1.24-7'
+       > ** package 'libdeflate' successfully unpacked and MD5 sums checked
+       > ** using staged installation
+       > sh: ./configure: not found
+       > Warning in system(cmd) : error in running command
+       > ERROR: configuration failed for package 'libdeflate'
+       > * removing '/nix/store/9yilffzja6b2ms8xhpjyi5bj80fm2g5s-r-libdeflate-1.24-7/library/libdeflate'
+       For full logs, run 'nix log /nix/store/gyl9wfzq6p77wdkyyzdscqhfg9cdfvqs-r-libdeflate-1.24-7.drv'.
+error: builder for '/nix/store/0ff8g3i60pb9p38bvpfrb569v5c2l75v-r-libimath-3.1.9-5.drv' failed with exit code 1;
+       last 10 log lines:
+       > Running phase: installPhase
+       > /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin/R CMD INSTALL --no-multiarch --built-timestamp=0 --configure-args= -l /nix/store/6w4rpbcsfnr6aqx34vs50b9rxkgna6ly-r-libimath-3.1.9-5/library .
+       > * installing *source* package 'libimath' ...
+       > ** this is package 'libimath' version '3.1.9-5'
+       > ** package 'libimath' successfully unpacked and MD5 sums checked
+       > ** using staged installation
+       > sh: ./configure: not found
+       > Warning in system(cmd) : error in running command
+       > ERROR: configuration failed for package 'libimath'
+       > * removing '/nix/store/6w4rpbcsfnr6aqx34vs50b9rxkgna6ly-r-libimath-3.1.9-5/library/libimath'
+       For full logs, run 'nix log /nix/store/0ff8g3i60pb9p38bvpfrb569v5c2l75v-r-libimath-3.1.9-5.drv'.
+error: 2 dependencies of derivation '/nix/store/npghgk9nrpqbz1mjjwmh96kfxmcmj68w-r-libopenexr-3.4.0-5.drv' failed to build
+error: builder for '/nix/store/r2cj1pznzd1gfm39xqv8c06rfdxzj723-r-littler-0.3.21.drv' failed with exit code 1;
+       last 10 log lines:
+       > config.status: creating src/gitversion.h
+       > config.status: creating src/config.h
+       > ** libs
+       > using C compiler: 'gcc (GCC) 13.3.0'
+       > /nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin/cc -std=gnu2x -o r -g -O2 -I/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/include littler.c -Wl,--export-dynamic -fopenmp  -L/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/lib -lR -L/nix/store/xs9jwc3if4dp77ga0q9cjcspwp7r9yvf-pcre2-10.44/lib -lpcre2-8 -ldeflate -lzstd -llzma -lbz2 -lz -lrt -ldl -lm -licuuc -licui18n -L/nix/store/p2a6x92n2gwljav85zz3hzid1nk7iq0l-blas-3/lib -lblas -L/nix/store/9jmd2rzff70ljd0gfsjjzf86in36j757-lapack-3/lib -llapack -Wl,-rpath,/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/lib -Wl,-rpath,/nix/store/ay9awjgi5rbk62zrv2c2a0gl05v4fy6i-gfortran-13.3.0-lib/lib -Wl,-rpath,/nix/store/qvpf8z2l2r024mq52skx9z8nicxd8wbd-binutils-wrapper-2.43.1/bin -Wl,-rpath,/nix/store/7171wfrd4rbnaxgmpvcv6aw9kq8kh1vj-gfortran-13.3.0/lib/gcc/x86_64-unknown-linux-gnu/13.3.0 -Wl,-rpath,/nix/store/7171wfrd4rbnaxgmpvcv6aw9kq8kh1vj-gfortran-13.3.0/lib -Wl,-rpath,/nix/store/p2a6x92n2gwljav85zz3hzid1nk7iq0l-blas-3/lib -Wl,-rpath,/nix/store/9jmd2rzff70ljd0gfsjjzf86in36j757-lapack-3/lib -Wl,-rpath,/nix/store/9njfasirdd0pzgqw2lvmnlyfky7w74bs-tcl-8.6.13/lib -Wl,-rpath,/nix/store/mipwgc9mqbh61jgq3vrljrz7hgjm56y0-tk-8.6.13/lib -Wl,-rpath,/nix/store/3vhlpdyqkrwk9arf84iaxk935r71rxvx-openjdk-21.0.5+11/lib/openjdk/lib/server -Wl,-rpath,/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/lib -Wl,-rpath,/nix/store/ay9awjgi5rbk62zrv2c2a0gl05v4fy6i-gfortran-13.3.0-lib/lib -Wl,-rpath,/nix/store/qvpf8z2l2r024mq52skx9z8nicxd8wbd-binutils-wrapper-2.43.1/bin -Wl,-rpath,/nix/store/7171wfrd4rbnaxgmpvcv6aw9kq8kh1vj-gfortran-13.3.0/lib/gcc/x86_64-unknown-linux-gnu/13.3.0 -Wl,-rpath,/nix/store/7171wfrd4rbnaxgmpvcv6aw9kq8kh1vj-gfortran-13.3.0/lib -Wl,-rpath,/nix/store/p2a6x92n2gwljav85zz3hzid1nk7iq0l-blas-3/lib -Wl,-rpath,/nix/store/9jmd2rzff70ljd0gfsjjzf86in36j757-lapack-3/lib -Wl,-rpath,/nix/store/9njfasirdd0pzgqw2lvmnlyfky7w74bs-tcl-8.6.13/lib -Wl,-rpath,/nix/store/mipwgc9mqbh61jgq3vrljrz7hgjm56y0-tk-8.6.13/lib -Wl,-rpath,/nix/store/3vhlpdyqkrwk9arf84iaxk935r71rxvx-openjdk-21.0.5+11/lib/openjdk/lib/server -Wl,-rpath,/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/lib -Wl,-rpath,/nix/store/ay9awjgi5rbk62zrv2c2a0gl05v4fy6i-gfortran-13.3.0-lib/lib -Wl,-rpath,/nix/store/qvpf8z2l2r024mq52skx9z8nicxd8wbd-binutils-wrapper-2.43.1/bin -Wl,-rpath,/nix/store/7171wfrd4rbnaxgmpvcv6aw9kq8kh1vj-gfortran-13.3.0/lib/gcc/x86_64-unknown-linux-gnu/13.3.0 -Wl,-rpath,/nix/store/7171wfrd4rbnaxgmpvcv6aw9kq8kh1vj-gfortran-13.3.0/lib -Wl,-rpath,/nix/store/p2a6x92n2gwljav85zz3hzid1nk7iq0l-blas-3/lib -Wl,-rpath,/nix/store/9jmd2rzff70ljd0gfsjjzf86in36j757-lapack-3/lib -Wl,-rpath,/nix/store/9njfasirdd0pzgqw2lvmnlyfky7w74bs-tcl-8.6.13/lib -Wl,-rpath,/nix/store/mipwgc9mqbh61jgq3vrljrz7hgjm56y0-tk-8.6.13/lib -Wl,-rpath,/nix/store/3vhlpdyqkrwk9arf84iaxk935r71rxvx-openjdk-21.0.5+11/lib/openjdk/lib/server
+       > /nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin/ld: cannot find -lzstd: No such file or directory
+       > collect2: error: ld returned 1 exit status
+       > make: *** [Makevars:31: r] Error 1
+       > ERROR: compilation failed for package 'littler'
+       > * removing '/nix/store/pyw176i7fgg91ydrd1v85vx522p00hy2-r-littler-0.3.21/library/littler'
+       For full logs, run 'nix log /nix/store/r2cj1pznzd1gfm39xqv8c06rfdxzj723-r-littler-0.3.21.drv'.
+error: builder for '/nix/store/rh0f9r4lx92ihh9q2p5c8fqqpk6djbsv-r-minired-1.0.1.drv' failed with exit code 1;
+       last 10 log lines:
+       > 17: tryCatchList(expr, classes, parentenv, handlers)
+       > 18: tryCatch(expr, error = function(e) {    call <- conditionCall(e)    if (!is.null(call)) {        if (identical(call[[1L]], quote(doTryCatch)))             call <- sys.call(-4L)        dcall <- deparse(call, nlines = 1L)        prefix <- paste("Error in", dcall, ": ")        LONG <- 75L        sm <- strsplit(conditionMessage(e), "\n")[[1L]]        w <- 14L + nchar(dcall, type = "w") + nchar(sm[1L], type = "w")        if (is.na(w))             w <- 14L + nchar(dcall, type = "b") + nchar(sm[1L],                 type = "b")        if (w > LONG)             prefix <- paste0(prefix, "\n  ")    }    else prefix <- "Error : "    msg <- paste0(prefix, conditionMessage(e), "\n")    .Internal(seterrmessage(msg[1L]))    if (!silent && isTRUE(getOption("show.error.messages"))) {        cat(msg, file = outFile)        .Internal(printDeferredWarnings())    }    invisible(structure(msg, class = "try-error", condition = e))})
+       > 19: try(suppressPackageStartupMessages(library(pkg_name, lib.loc = lib,     character.only = TRUE, logical.return = TRUE)))
+       > 20: tools:::.test_load_package("minired", "/nix/store/ni6zrzci2vn5zv1ji394hjzwkf4xs7ls-r-minired-1.0.1/library")
+       > An irrecoverable exception occurred. R is aborting now ...
+       > ** testing if installed package keeps a record of temporary installation path
+       > Warning in file(con, "rb") :
+       >   cannot open file '/build/Rtmp8m6isL/file2a24ffeae9': No such file or directory
+       > Error in file(con, "rb") : cannot open the connection
+       > * removing '/nix/store/ni6zrzci2vn5zv1ji394hjzwkf4xs7ls-r-minired-1.0.1/library/minired'
+       For full logs, run 'nix log /nix/store/rh0f9r4lx92ihh9q2p5c8fqqpk6djbsv-r-minired-1.0.1.drv'.
+error: builder for '/nix/store/vgpdia6m6j0gm2iibh0k7r0j6x6ssk7q-r-nanoparquet-0.4.2.drv' failed with exit code 1;
+       last 10 log lines:
+       > Running phase: installPhase
+       > /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin/R CMD INSTALL --no-multiarch --built-timestamp=0 --configure-args= -l /nix/store/gmjxxq864hy06v05551g6mba6zxfzn6k-r-nanoparquet-0.4.2/library .
+       > * installing *source* package 'nanoparquet' ...
+       > ** this is package 'nanoparquet' version '0.4.2'
+       > ** package 'nanoparquet' successfully unpacked and MD5 sums checked
+       > ** using staged installation
+       > sh: ./configure: not found
+       > Warning in system(cmd) : error in running command
+       > ERROR: configuration failed for package 'nanoparquet'
+       > * removing '/nix/store/gmjxxq864hy06v05551g6mba6zxfzn6k-r-nanoparquet-0.4.2/library/nanoparquet'
+       For full logs, run 'nix log /nix/store/vgpdia6m6j0gm2iibh0k7r0j6x6ssk7q-r-nanoparquet-0.4.2.drv'.
+error: builder for '/nix/store/3q3x7shcamdvx6p4fqja3fg3sl5glgp9-r-adbcpostgresql-0.20.0.drv' failed with exit code 1;
+       last 10 log lines:
+       > /nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin/ld: cannot find -lpam: No such file or directory
+       > /nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin/ld: cannot find -lssl: No such file or directory
+       > /nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin/ld: cannot find -lcrypto: No such file or directory
+       > /nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin/ld: cannot find -lgssapi_krb5: No such file or directory
+       > /nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin/ld: cannot find -lz: No such file or directory
+       > /nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin/ld: cannot find -lreadline: No such file or directory
+       > collect2: error: ld returned 1 exit status
+       > make: *** [/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/share/make/shlib.mk:10: compile_test] Error 1
+       > ERROR: configuration failed for package 'adbcpostgresql'
+       > * removing '/nix/store/hrwz6gfibyig1vjs7p730pig5s85pg0k-r-adbcpostgresql-0.20.0/library/adbcpostgresql'
+       For full logs, run 'nix log /nix/store/3q3x7shcamdvx6p4fqja3fg3sl5glgp9-r-adbcpostgresql-0.20.0.drv'.
+error: builder for '/nix/store/15c8zfnxaa2bfzwv0w7gay2jdq8f5q0k-r-otelsdk-0.2.2.drv' failed with exit code 1;
+       last 10 log lines:
+       > Running phase: installPhase
+       > /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin/R CMD INSTALL --no-multiarch --built-timestamp=0 --configure-args= -l /nix/store/i937axz2igf2hi2zr2cwj5bzpkfprcw2-r-otelsdk-0.2.2/library .
+       > * installing *source* package 'otelsdk' ...
+       > ** this is package 'otelsdk' version '0.2.2'
+       > ** package 'otelsdk' successfully unpacked and MD5 sums checked
+       > ** using staged installation
+       > sh: ./configure: not found
+       > Warning in system(cmd) : error in running command
+       > ERROR: configuration failed for package 'otelsdk'
+       > * removing '/nix/store/i937axz2igf2hi2zr2cwj5bzpkfprcw2-r-otelsdk-0.2.2/library/otelsdk'
+       For full logs, run 'nix log /nix/store/15c8zfnxaa2bfzwv0w7gay2jdq8f5q0k-r-otelsdk-0.2.2.drv'.
+error: builder for '/nix/store/njm5r3llzzwaqh0iapanr1afry4yxlkz-r-pak-0.9.0.drv' failed with exit code 1;
+       last 10 log lines:
+       > Compiling keyring
+       > sh: ./configure: not found
+       > Warning in system(cmd) : error in running command
+       > ERROR: configuration failed for package 'keyring'
+       > Error in install_one(pkg, lib = lib) : FAILED
+       > Calls: install_embedded_main -> install_all -> install_one
+       > Execution halted
+       > installing via 'install.libs.R' to /nix/store/gcjf91gvpgwpidrp4sfg9cnqia9xnxxk-r-pak-0.9.0/library/00LOCK-pak/00new/pak
+       > Error in eval(ei, envir) : Compilation failed.
+       > * removing '/nix/store/gcjf91gvpgwpidrp4sfg9cnqia9xnxxk-r-pak-0.9.0/library/pak'
+       For full logs, run 'nix log /nix/store/njm5r3llzzwaqh0iapanr1afry4yxlkz-r-pak-0.9.0.drv'.
+error: builder for '/nix/store/69zb51asgvr6s638x4fsj8skqzyalf50-r-parseLatex-0.4.1.drv' failed with exit code 1;
+       last 10 log lines:
+       > ** libs
+       > using C compiler: 'gcc (GCC) 13.3.0'
+       > /nix/store/3ix5h74n7ar9950vwzp4dxmil70pmx0k-gcc-wrapper-13.3.0/bin/cc -std=gnu2x -I"/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/include" -DNDEBUG       -fpic  -g -O2  -c gramLatex.tab.c -o gramLatex.tab.o
+       > parser/gramLatex.y:35:10: fatal error: unicode/uchar.h: No such file or directory
+       >    35 | #include <unicode/uchar.h>
+       >       |          ^~~~~~~~~~~~~~~~~
+       > compilation terminated.
+       > make: *** [/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/etc/Makeconf:202: gramLatex.tab.o] Error 1
+       > ERROR: compilation failed for package 'parseLatex'
+       > * removing '/nix/store/amiykjwpg4zf7r9dd7wzixz4cy2paw75-r-parseLatex-0.4.1/library/parseLatex'
+       For full logs, run 'nix log /nix/store/69zb51asgvr6s638x4fsj8skqzyalf50-r-parseLatex-0.4.1.drv'.
+error: builder for '/nix/store/6zklzhyzr3v19drvkv2yrbv3nr1dqcmk-r-rJava-1.0-11.drv' failed with exit code 1;
+       last 10 log lines:
+       > gcc -o libjri.so Rengine.o jri.o Rcallbacks.o Rinit.o globals.o rjava.o rjstring.o  -shared -L/nix/store/3vhlpdyqkrwk9arf84iaxk935r71rxvx-openjdk-21.0.5+11/lib/openjdk/lib/server -ljvm -Wl,--export-dynamic -fopenmp  -L/nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/lib/R/lib -lR -L/nix/store/xs9jwc3if4dp77ga0q9cjcspwp7r9yvf-pcre2-10.44/lib -lpcre2-8 -ldeflate -lzstd -llzma -lbz2 -lz -lrt -ldl -lm -licuuc -licui18n
+       > /nix/store/va7kw1i822h95im4jacci19v0cqajfyf-binutils-2.43.1/bin/ld: cannot find -lzstd: No such file or directory
+       > collect2: error: ld returned 1 exit status
+       > make[2]: *** [Makefile.all:40: libjri.so] Error 1
+       > make[2]: Leaving directory '/build/rJava/jri/src'
+       > make[1]: *** [Makefile.all:19: src/JRI.jar] Error 2
+       > make[1]: Leaving directory '/build/rJava/jri'
+       > make: *** [Makevars:14: jri] Error 2
+       > ERROR: compilation failed for package 'rJava'
+       > * removing '/nix/store/530wa2m38zj1b3hzypgy8axjzl2b4vwm-r-rJava-1.0-11/library/rJava'
+       For full logs, run 'nix log /nix/store/6zklzhyzr3v19drvkv2yrbv3nr1dqcmk-r-rJava-1.0-11.drv'.
+error: 1 dependencies of derivation '/nix/store/zxf1wp2yqsknwxc90whpv8vxzfsvmjhp-r-AWR-1.11.189-1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/25pdnhqzb3396ac1lyw2scdf6aaa2fcl-r-BeastJar-10.5.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/gnscz6vcq7piaxlpv6192wmwp3h1mapj-r-CBSr-1.0.5.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/vg1qvz6xa3k2m1cyspgaymyljdafymfv-r-ChoR-0.0-4.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/nm03v19n5af80lxj898gga40hk0nmrs2-r-CirceR-1.3.3.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/lh0q1yfmfa14pbs1gh987iqkvk17bhsd-r-DatabaseConnectorJars-1.1.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/szz00zjn3c6xs0z230jzxwk5xnk9xdcg-r-GreedyExperimentalDesignJARs-1.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/dbarflgbk3zx6rfwlknalj3klmx7v95b-r-JavaGD-0.6-6.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/q0pzmffhvk2zmirm956pfjxwp14yz273-r-REPPlab-0.9.6.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/8w2fndykwxqk93j6dw2db7qk91yhakyp-r-RJDBC-0.2-10.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/i7dfsikvlhjhw82s99si4zp6838cncfq-r-RJDemetra-0.2.8.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/ky7isii4c2rnsd88mjzl9phv1wqik07n-r-RKEAjars-5.0-4.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/fxbs8v2wj0d2lr1bzi31dvv5x76s1yhp-r-RMOAjars-1.2.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/pfahqik2daqkyxvnd8q8mcxxfdg59g81-r-RWekajars-3.9.3-2.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/qhmf415zsqi3kyksh5cfk1k7k53lpg03-r-XLConnect-1.2.2.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/5j3x5yrx5kh4ksqkyzwrjnm9dal4bmhi-r-arulesNBMiner-0.1-8.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/f0lynyv43nvp5h67i7c1bcmpv0a61yfm-r-bartMachineJARs-1.2.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/np7dd8bl524pvnfz2sfihlh188bidx8m-r-boilerpipeR-1.3.2.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/akayk1sjnghzimg5vdr4sjbsll9pdnd5-r-coreNLP-0.4-3.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/gihh8xnnkfxcfzryh28xzy9k6241phrk-r-corehunter-3.2.3.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/mj9wqjyd04fpjs3blyj0pkp6mj61fira-r-dialrjars-9.0.14.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/a47gvxwwq0jsdsfmpqi83kaqmpznzcaq-r-glmulti-1.0.8.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/lc95199db46hda4a9578ixlc65wsh1xn-r-helloJavaWorld-0.0-9.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/2gldsq06s5nbnb9c6mhacahh2q3s4k42-r-hive-0.2-2.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/cgqb9p7vry9ywwgizycq4wvvrn4m0aq7-r-iplots-1.1-8.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/29sjd5nhh7j0pxk6j6bl3p0wid4s7f9l-r-mallet-1.3.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/g0i5x3wv36lbd23q7wbhi01xigml4804-r-openNLPdata-1.5.3-5.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/yj5y0fg14vj8ql8p3x1a10y6xsgcg4ib-r-rCBA-0.4.3.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/68qm6yx062v2ky6wgz31z75n0787d3lr-r-rChoiceDialogs-1.0.6.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/qxiw11gh1979j78603r01ag72nvha0i2-r-rGroovy-1.3.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/mnkvf830nckk7sj1bcqc5h3fifbyzhmv-r-rcdklibs-2.9.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/bjs20jhcykkwahibbdhl4mlcbdmvv9y1-r-rkafkajars-1.2.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/8fpvw747kw7khrysmmvnqidijfbxcfnv-r-rsubgroup-1.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/5ig0b1mnq0knwkpibmz4m8y8g14swbff-r-rviewgraph-1.4.2.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/2swy82qhs4pnpfd2l78fsdw4yjvvf6hd-r-scagnostics-0.2-6.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/y1z092nw4q2i5s77il8pgf2g79gya0s8-r-sdpdth-0.2.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/kg7bivcr7w7cwnfsd6hd3jrp5qzffvz5-r-sjdbc-1.6.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/zzw0rigl01v12ji04kc9ap38am4nq4i3-r-venneuler-1.1-4.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/bmjhiv7680z51k8apgybds6rdn0b2r13-r-wordnet-0.1-17.drv' failed to build
+error: 2 dependencies of derivation '/nix/store/w9wkswgv9xsh0i791xjiklh7r1bm0kkg-r-AWR.Kinesis-1.7.6.drv' failed to build
+error: 2 dependencies of derivation '/nix/store/26cmg71bzxpvygkfzbm5363yya8i14fi-r-JGR-1.9-2.drv' failed to build
+error: 2 dependencies of derivation '/nix/store/g2ds82di4c0l7jzd34d7ib1gcv7j3y4c-r-RH2-0.2.5.drv' failed to build
+error: 2 dependencies of derivation '/nix/store/zqjgdxzkls560p8s7lxambgai6crqbz0-r-RMOA-1.1.0.drv' failed to build
+error: 2 dependencies of derivation '/nix/store/fcmw9bhmhwazswm1adkqasjfypyriiyp-r-RWeka-0.4-46.drv' failed to build
+error: 2 dependencies of derivation '/nix/store/3qxw41hr4njq70za5wqglfh1v52rj4my-r-dialr-0.4.2.drv' failed to build
+error: 2 dependencies of derivation '/nix/store/wwhli3124pifw7vrg3ifv3y5si81v15k-r-openNLP-0.2-7.drv' failed to build
+error: 2 dependencies of derivation '/nix/store/0ma93qh2rlcbv33nnzzp0pzp31qf1h8w-r-rcdk-3.8.1.drv' failed to build
+error: 3 dependencies of derivation '/nix/store/mc5vbbfhhnpcffwxpci1pw0143zxpqch-r-DecorateR-0.1.2.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/xsbmv8ahr6xy57nqg9xkpmrjd0d2b9jg-r-JATSdecoder-1.2.1.drv' failed to build
+error: 2 dependencies of derivation '/nix/store/w405p6fx1kq8fn9ja6qx7r3z2hzaxh8k-r-RxnSim-1.0.4.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/jqjjkcb9pzqyb5zfam48y9h33vbh9r3b-r-slowraker-0.1.1.drv' failed to build
+error: 3 dependencies of derivation '/nix/store/28h12hcchkqlpw6sjwgylily9ilvqqnq-r-rapidraker-0.1.3.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/xw8k3s49c2pc1llljz6dq2civ6i150kd-r-FSelector-0.34.drv' failed to build
+error: builder for '/nix/store/8j6gm4pjm3hlpl12nyf3h4md7ndyjmfr-r-fluidsynth-1.0.2.drv' failed with exit code 1;
+       last 10 log lines:
+       > If fluidsynth is already installed, check that 'pkg-config' is in your
+       > PATH and PKG_CONFIG_PATH contains a fluidsynth.pc file. If pkg-config
+       > is unavailable you can set INCLUDE_DIR and LIB_DIR manually via:
+       > R CMD INSTALL --configure-vars='INCLUDE_DIR=... LIB_DIR=...'
+       > -------------------------- [ERROR MESSAGE] ---------------------------
+       > <stdin>:1:10: fatal error: fluidsynth.h: No such file or directory
+       > compilation terminated.
+       > --------------------------------------------------------------------
+       > ERROR: configuration failed for package 'fluidsynth'
+       > * removing '/nix/store/shgxksklwiik7a2248qqz6f2va5dkb3s-r-fluidsynth-1.0.2/library/fluidsynth'
+       For full logs, run 'nix log /nix/store/8j6gm4pjm3hlpl12nyf3h4md7ndyjmfr-r-fluidsynth-1.0.2.drv'.
+error: 1 dependencies of derivation '/nix/store/fv2gb9rigvk2zlr0aky36iacv2zvrpy3-r-RGCxGC-1.2.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/3lhx207ws1vn9vy3b2f3c1igc9xniym3-r-GTbasedIM-1.0.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/yvdrdlm9kdy5zmvk0ik36nzifq38icik-r-SqlRender-1.19.4.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/8p4wwl2f6379hn2xzfqifl444a7661gr-r-pensynth-0.8.1.drv' failed to build
+error: builder for '/nix/store/5cqdlmgh0ps4p32iai3g6r2hwlyi532d-r-datefixR-2.0.0.drv' failed with exit code 1;
+       last 10 log lines:
+       > Running phase: installPhase
+       > /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin/R CMD INSTALL --no-multiarch --built-timestamp=0 --configure-args= -l /nix/store/ai751pm344wg5wipf7qf73dghzfk0799-r-datefixR-2.0.0/library .
+       > * installing *source* package 'datefixR' ...
+       > ** this is package 'datefixR' version '2.0.0'
+       > ** package 'datefixR' successfully unpacked and MD5 sums checked
+       > ** using staged installation
+       > sh: ./configure: not found
+       > Warning in system(cmd) : error in running command
+       > ERROR: configuration failed for package 'datefixR'
+       > * removing '/nix/store/ai751pm344wg5wipf7qf73dghzfk0799-r-datefixR-2.0.0/library/datefixR'
+       For full logs, run 'nix log /nix/store/5cqdlmgh0ps4p32iai3g6r2hwlyi532d-r-datefixR-2.0.0.drv'.
+error: 1 dependencies of derivation '/nix/store/5b2r06c0qv2b39phz323kiyycjlwxghw-r-mwa-0.5.0.drv' failed to build
+error: builder for '/nix/store/swpwfr64kpmisn26jq3g8ldvdgmanchx-r-orbweaver-0.18.2.drv' failed with exit code 1;
+       last 10 log lines:
+       > Running phase: installPhase
+       > /nix/store/f2ij412yq80g5cdb7ji54qjsjbd9x2cd-R-4.5.1/bin/R CMD INSTALL --no-multiarch --built-timestamp=0 --configure-args= -l /nix/store/s5acg8c2knigqwwcf9ay80k1a6dqkdb8-r-orbweaver-0.18.2/library .
+       > * installing *source* package 'orbweaver' ...
+       > ** this is package 'orbweaver' version '0.18.2'
+       > ** package 'orbweaver' successfully unpacked and MD5 sums checked
+       > ** using staged installation
+       > sh: ./configure: not found
+       > Warning in system(cmd) : error in running command
+       > ERROR: configuration failed for package 'orbweaver'
+       > * removing '/nix/store/s5acg8c2knigqwwcf9ay80k1a6dqkdb8-r-orbweaver-0.18.2/library/orbweaver'
+       For full logs, run 'nix log /nix/store/swpwfr64kpmisn26jq3g8ldvdgmanchx-r-orbweaver-0.18.2.drv'.
+error: 1 dependencies of derivation '/nix/store/2i04angfk3j2lc0qwsni4kfvf7vwx221-r-JSconsole-0.1.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/n3gxmj5kp1swip4nl8zqxpdgs3mz9wcg-r-jsonNormalize-1.0.0.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/dsig7wlspx5cm60l98v8nsgpqln3plpb-r-matchingMarkets-1.0-4.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/znin1kzakd9vii0x1ic4yz214wmycm3f-r-NMRphasing-1.0.7.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/qacdf1gmr2s1lvy28lwkpwc69rwq90j8-r-ROI.plugin.clarabel-0.3.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/869rsyilg2xcvhfs6ycfq7srcqid7c24-r-ROI.plugin.ecos-1.0-2.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/vkjq23y1vwzhqjqqrd133gsmv5w8kqsp-r-ROI.plugin.highs-1.0-4.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/0v20h0ysqhi0dzhcsggb9z6kp178787c-r-holiglm-1.0.1.drv' failed to build
+error: 1 dependencies of derivation '/nix/store/pf0m9xv95ipf90782slislk2rf3xhvxg-r-moc.gapbk-0.1.3.drv' failed to build

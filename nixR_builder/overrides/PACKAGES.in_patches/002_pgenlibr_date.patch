@@ -1,0 +1,11 @@
+diff --git a/PACKAGES.in b/PACKAGES.in
+index d10a960..f7c2aa6 100644
+--- a/PACKAGES.in
++++ b/PACKAGES.in
+@@ -1,5 +1,5 @@
+ Package: pgenlibr
+-X-CRAN-Comment: Archived on 2026-02-0 as issues were not corrected in time.
++X-CRAN-Comment: Archived on 2026-02-05 as issues were not corrected in time.
+ X-CRAN-History: Archived on 2023-05-29 as issues were ignored on re-submission.
+   Unarchived on 2023-06-12.
+ 

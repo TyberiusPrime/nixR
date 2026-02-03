@@ -40,6 +40,7 @@
   #     --enable-R-static-lib conflicts with --enable-R-shlib and will be ignored
   static ? false,
   testers,
+  ...
 }:
 
 assert (!blas.isILP64) && (!lapack.isILP64);

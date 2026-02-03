@@ -70,7 +70,7 @@ pub fn update_cran(
         let mut seen: HashMap<String, &PackageInfo> = HashMap::new();
         for entry in infos.iter() {
             if seen.contains_key(&entry.tag()) {
-                panic!("doublicate entry seen in cran?! (early check) {:#?} vs {:#?}\nbase url: {}. Try checking the archives for multiple files containing the same tag {}", 
+                panic!("doublicate entry seen in cran?! (early check) {:#?} vs {:#?}\nbase url: {}. Try checking the archives for multiple files containing the same tag {}, then nuking the cran/date/*.jsons", 
             &entry, seen.get(&entry.tag()).unwrap(), base_url, entry.tag());
             } else {
                 seen.insert(entry.tag(), entry);
@@ -1141,7 +1141,9 @@ fn cran_fetch_final_archival_dates(
                         },
                     };
                     let date = NaiveDate::parse_from_str(date, "%Y-%m-%d")
-                        .expect("date was not actually %Y-%m-%d");
+                        .with_context(|| format!("Trying to parse '{date}', was not actually %Y-%m-%d.
+Check your PACKAGES.in near {package:?}. {url}",
+                        ))?;
                     let p = package
                         .take()
                         .ok_or_else(|| anyhow!("No package set but archived-date read"))

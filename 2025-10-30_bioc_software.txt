@@ -1,0 +1,3 @@
+warning: Git tree '/clara/ffs/e/20220921_AG_Finkernagel_nixR/nixR' is dirty
+trace: nixpkgs version: 24.11pre-git
+trace: bioconductor version: 3.22

@@ -445,9 +445,6 @@ fn assemble(config: &Config) -> Result<()> {
             //collect all of them
             for ii in &hits {
                 let p = &packages[*ii as usize];
-                if p.element.name== "TCGAbiolinksGUI.data" {
-                    dbg!(&p);
-                }
                 #[allow(clippy::single_match)]
                 match all_the_packages.insert(p.element.tag(), p.element.clone()) {
                     #[allow(clippy::single_match)]
@@ -716,6 +713,10 @@ fn assemble(config: &Config) -> Result<()> {
             "let gdal_2 = pkgs.gdal_2 or pkgs.gdal;\n".as_bytes(),
             "g = builtins.tryEval(pkgs.gsl_1 or throw \"undefined\");\n".as_bytes(),
             "gsl_1 = if g.success then g.value else pkgs.gsl;\n".as_bytes(),
+            //work around lzma throwing error 
+            "g_lzma = builtins.tryEval (pkgs.lzma or pkgz.xz);\n".as_bytes(),
+            "lzma = if g_lzma.success then g.value else pkgs.xz;\n".as_bytes(),
+
             "\tin\n".as_bytes(),
             NixValue::AttrSet(out_packages_cran).to_string().as_bytes(),
         ]
@@ -729,7 +730,9 @@ fn assemble(config: &Config) -> Result<()> {
             "let gdal_2 = pkgs.gdal_2 or pkgs.gdal;\n".as_bytes(),
             "g = builtins.tryEval(pkgs.gsl_1 or throw \"undefined\");\n".as_bytes(),
             "gsl_1 = if g.success then g.value else pkgs.gsl;\n".as_bytes(),
-            "lzma = pkgs.lzma or pkgz.xz\n".as_bytes(),
+            //work around lzma throwing error 
+            "g_lzma = builtins.tryEval (pkgs.lzma or pkgz.xz);\n".as_bytes(),
+            "lzma = if g_lzma.success then g.value else pkgs.xz;\n".as_bytes(),
             "\tin\n".as_bytes(),
 
             NixValue::AttrSet(out_packages_bioc_software)
