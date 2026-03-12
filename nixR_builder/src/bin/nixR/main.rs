@@ -714,7 +714,7 @@ fn assemble(config: &Config) -> Result<()> {
             "g = builtins.tryEval(pkgs.gsl_1 or throw \"undefined\");\n".as_bytes(),
             "gsl_1 = if g.success then g.value else pkgs.gsl;\n".as_bytes(),
             //work around lzma throwing error 
-            "g_lzma = builtins.tryEval (pkgs.lzma or pkgz.xz);\n".as_bytes(),
+            "g_lzma = builtins.tryEval (pkgs.lzma or pkgs.xz);\n".as_bytes(),
             "lzma = if g_lzma.success then g.value else pkgs.xz;\n".as_bytes(),
 
             "\tin\n".as_bytes(),
@@ -731,7 +731,7 @@ fn assemble(config: &Config) -> Result<()> {
             "g = builtins.tryEval(pkgs.gsl_1 or throw \"undefined\");\n".as_bytes(),
             "gsl_1 = if g.success then g.value else pkgs.gsl;\n".as_bytes(),
             //work around lzma throwing error 
-            "g_lzma = builtins.tryEval (pkgs.lzma or pkgz.xz);\n".as_bytes(),
+            "g_lzma = builtins.tryEval (pkgs.lzma or pkgs.xz);\n".as_bytes(),
             "lzma = if g_lzma.success then g.value else pkgs.xz;\n".as_bytes(),
             "\tin\n".as_bytes(),
 
