@@ -715,7 +715,7 @@ fn assemble(config: &Config) -> Result<()> {
             "gsl_1 = if g.success then g.value else pkgs.gsl;\n".as_bytes(),
             //work around lzma throwing error 
             "g_lzma = builtins.tryEval (pkgs.lzma or pkgs.xz);\n".as_bytes(),
-            "lzma = if g_lzma.success then g.value else pkgs.xz;\n".as_bytes(),
+            "lzma = if g_lzma.success then g_lzma.value else pkgs.xz;\n".as_bytes(),
 
             "\tin\n".as_bytes(),
             NixValue::AttrSet(out_packages_cran).to_string().as_bytes(),
@@ -732,7 +732,7 @@ fn assemble(config: &Config) -> Result<()> {
             "gsl_1 = if g.success then g.value else pkgs.gsl;\n".as_bytes(),
             //work around lzma throwing error 
             "g_lzma = builtins.tryEval (pkgs.lzma or pkgs.xz);\n".as_bytes(),
-            "lzma = if g_lzma.success then g.value else pkgs.xz;\n".as_bytes(),
+            "lzma = if g_lzma.success then g_lzma.value else pkgs.xz;\n".as_bytes(),
             "\tin\n".as_bytes(),
 
             NixValue::AttrSet(out_packages_bioc_software)
