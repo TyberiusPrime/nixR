@@ -221,7 +221,7 @@ CargoLockInSource = "''salso/src/rustlib/Cargo.lock''"
 ["salso_0.3.27"]
 CargoLockInSource = "''salso/src/rust/Cargo.lock''"
 
-# Can't get this to work 
+# Can't get this to work
 # ["salso_0.3.57.."]
 # CargoLockInSource = "''salso/src/rust/Cargo.lock''"
 # postPatch = """''
@@ -860,6 +860,29 @@ add_r_dependencies = '["CVXR"]'
 ["hdf5r"]
 add_nativeBuildInputs = "[pkgconfig hdf5.dev zlib.dev]"
 add_buildInputs = "[hdf5 zlib]"
+
+["hdf5r_1.3.12.."]
+add_nativeBuildInputs = "[pkgconfig hdf5.dev zlib.dev]"
+add_buildInputs = "[hdf5 zlib]"
+# nix splits this in a way that h5cc -showconfig doesn't find it's file.
+preConfigure = '''
+''
+  settings="$(find /nix/store/*hdf5* -name libhdf5.settings 2>/dev/null | head -n1)"
+  real_h5cc="$(command -v "''${H5CC:-h5cc}")"
+  mkdir -p "$TMPDIR/h5shim"
+  cat > "$TMPDIR/h5shim/h5cc" <<EOF
+#!/bin/sh
+for a in "\$@"; do
+  [ "\$a" = "-showconfig" ] && { cat "$settings"; exit 0; }
+done
+exec "$real_h5cc" "\$@"
+EOF
+  chmod +x "$TMPDIR/h5shim/h5cc"
+  export H5CC="$TMPDIR/h5shim/h5cc"
+  export PATH="$TMPDIR/h5shim:$PATH"
+''
+'''
+
 
 
 ["commonsMath_1.2.5"]
@@ -2531,7 +2554,7 @@ HOME = '"$TMPDIR"'
 
 ["pingr_2.0.4.."]
 postPatch = """''
-	patchShebangs configure 
+	patchShebangs configure
 	''"""
 
 ["pogos_1.24.0.."]

@@ -84,6 +84,14 @@ fn main() -> Result<()> {
         c.abort();
     })
     .expect("Error setting Ctrl-C handler");
+    if let Err(e) = inner_main(cmd) {
+        eprintln!("An error occured:\n{e:?}");
+        bail!("Error");
+    }
+    Ok(())
+}
+
+fn inner_main(cmd: &str) -> Result<()> {
     match cmd {
         "cran" => {
             retrieval::update_cran(&CONFIG.get().unwrap())?;

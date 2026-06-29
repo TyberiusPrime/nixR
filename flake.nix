@@ -445,8 +445,8 @@
         pkgs = nix-pkgs."24.11";
       in
         R_by_date {
-          date = "2024-10-30";
-          r_pkg_names = ["edgeR"];
+          date = "2025-10-30";
+          r_pkg_names = ["hdf5r"];
         };
 
       # debug_set = R_by_date {

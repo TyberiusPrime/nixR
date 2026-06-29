@@ -4,3 +4,4 @@ nixR_builder/target/*
 result
 dump/*
 nixR_builder/whatever*
+debug.txt

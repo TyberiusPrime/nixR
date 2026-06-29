@@ -1213,10 +1213,11 @@ pub fn apply_package_in_patches(package_in: String) -> Result<String> {
             .arg(input_file.path())
             .output()?;
         if !output.status.success() {
+            let str_message = String::from_utf8_lossy(&output.stderr);
             bail!(
                 "failed to apply patch {:?} to PACKAGES.in. Message: {:?}",
                 &patch,
-                output.stderr
+                str_message
             );
         }
         input_file.seek(std::io::SeekFrom::Start(0))?;
