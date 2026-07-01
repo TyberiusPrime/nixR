@@ -518,11 +518,8 @@ fn assemble(config: &Config) -> Result<()> {
                     }
                 }
                 if p.element.desc.get("OS_type").map(|x| (&**x)) == Some("windows") {
-                    filter_reasons.push(format!(
-                            "{}\tWindows only",
-                            p.element.tag(),
-                        ));
-                        days_packages.remove(&p.element.name);
+                    filter_reasons.push(format!("{}\tWindows only", p.element.tag(),));
+                    days_packages.remove(&p.element.name);
                     continue;
                 }
 
@@ -570,10 +567,10 @@ fn assemble(config: &Config) -> Result<()> {
                                             dbg!(k.0);
                                         }
                                     }
-                                warn!(
-                                    "Filtering {} because of missing dependency {}",
-                                    p.element.name, rdep
-                                );
+                                    warn!(
+                                        "Filtering {} because of missing dependency {}",
+                                        p.element.name, rdep
+                                    );
                                 }
                                 filter_reasons.push(format!(
                                     "{}\tMissing (filtered) dependency: {}",
@@ -724,6 +721,9 @@ fn assemble(config: &Config) -> Result<()> {
             //work around lzma throwing error 
             "g_lzma = builtins.tryEval (pkgs.lzma or pkgs.xz);\n".as_bytes(),
             "lzma = if g_lzma.success then g_lzma.value else pkgs.xz;\n".as_bytes(),
+            //workraound zeromq4 renaming
+            "g_zeromq4 = builtins.tryEval (pkgs.zeromq4 or pkgs.zeromq);\n".as_bytes(),
+            "zeromq4 = if g_lzma.success then g_lzma.value else pkgs.zeromq;\n".as_bytes(),
 
             "\tin\n".as_bytes(),
             NixValue::AttrSet(out_packages_cran).to_string().as_bytes(),
@@ -741,6 +741,10 @@ fn assemble(config: &Config) -> Result<()> {
             //work around lzma throwing error 
             "g_lzma = builtins.tryEval (pkgs.lzma or pkgs.xz);\n".as_bytes(),
             "lzma = if g_lzma.success then g_lzma.value else pkgs.xz;\n".as_bytes(),
+            //workraound zeromq4 renaming
+            "g_zeromq4 = builtins.tryEval (pkgs.zeromq4 or pkgs.zeromq);\n".as_bytes(),
+            "zeromq4 = if g_lzma.success then g_lzma.value else pkgs.zeromq;\n".as_bytes(),
+
             "\tin\n".as_bytes(),
 
             NixValue::AttrSet(out_packages_bioc_software)

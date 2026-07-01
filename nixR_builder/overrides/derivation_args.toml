@@ -250,6 +250,17 @@ postPatch = """
 """
 CargoLockInSource = "''src/rustlib/Cargo.lock''"
 
+# ["salso_0.3.78"]
+# postPatch = """
+# 	''
+# 		substituteInPlace tools/cargo.R --replace "env <- c(env, CARGO_HOME=n(cargo_home))" ""
+#         # these don't seem to take place early enough, since we still get an evaluatin failure
+#         'error: hash '792af17' has wrong length for hash algorithm 'sha1''
+# 		substituteInPlace src/rust/Cargo.toml --replace "792af17" "792af17f6d7ce02a421b6a16f5f0aad85baaab8e"
+# 		substituteInPlace src/rust/Cargo.lock --replace "792af17#792af17f6d7ce02a421b6a16f5f0aad85baaab8e" "792af17f6d7ce02a421b6a16f5f0aad85baaab8e"
+# ''
+# """
+# CargoLockInSource = "''salso/src/rust/Cargo.lock''"
 
 
 [ymd]
@@ -2499,8 +2510,8 @@ add_BuildInputs = "[libdeflate]"
 [vcfppR]
 add_nativeBuildInputs = '[pkgconfig lzma]'
 add_BuildInputs = '[lzma]'
-PKG_CPPFLAGS='"-I${pkgs.lzma}/include"'
-PKGCONFIG_LIBS = '"-L${pkgs.lzma}/lib"'
+PKG_CPPFLAGS='"-I${lzma}/include"'
+PKGCONFIG_LIBS = '"-L${lzma}/lib"'
 
 
 [yyjsonr]

@@ -1,16 +1,39 @@
-{}: let
-  defaultArgs = pkgs:
-    with pkgs;
-      {
-        # TODO: split docs into a separate output
-        texLive = texlive.combine {
-          inherit (texlive) scheme-small inconsolata helvetic texinfo fancyvrb cm-super rsfs;
-        };
-        withRecommendedPackages = false;
-        inherit (darwin.apple_sdk.frameworks) Cocoa Foundation;
-        inherit (darwin) libobjc cf-private;
+{ }:
+let
+  defaultArgs =
+    pkgs: with pkgs; {
+      # TODO: split docs into a separate output
+      texLive = texlive.combine {
+        inherit (texlive)
+          scheme-small
+          inconsolata
+          helvetic
+          texinfo
+          fancyvrb
+          cm-super
+          rsfs
+          ;
+      };
+      withRecommendedPackages = false;
+      inherit (darwin.apple_sdk.frameworks) Cocoa Foundation;
+      inherit (darwin) libobjc cf-private;
+    };
+  per_version_args =
+    version: pkgs:
+    if version == "4.5.3" then
+      # remove texLive, add texliveSmall
+      (builtins.removeAttrs (defaultArgs pkgs) [
+        "texLive"
+        "Cocoa"
+        "Foundation"
+        "libobjc"
+        "cf-private"
+      ])
+      // {
+        texliveSmall = pkgs.texliveSmall;
       }
-      ;
+    else
+      defaultArgs pkgs;
 
   versions = [
     "3.4.2"
@@ -41,16 +64,14 @@
     "4.3.1"
     "4.3.2"
     "4.4.0"
-    "4.4.1" # todo: autodiscover
-    "4.5.1" # todo: autodiscover
+    "4.4.1"
+    "4.5.1"
+    "4.5.3" # todo: autodiscover from paths?
   ];
 in
-  builtins.listToAttrs (
-    map (
-      k: {
-        name = k;
-        value = pkgs: with pkgs; callPackage ./${k}/default.nix (defaultArgs pkgs);
-      }
-    )
-    versions
-  )
+builtins.listToAttrs (
+  map (version: {
+    name = version;
+    value = pkgs: with pkgs; callPackage ./${version}/default.nix (per_version_args version pkgs);
+  }) versions
+)

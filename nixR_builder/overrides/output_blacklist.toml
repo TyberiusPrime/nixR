@@ -301,3 +301,10 @@ cplexAPI = "unfree, cplex not in nixpkgs"
 "V8_8.0.1" = "build failure, no follow-up done yet"
 
 
+"salso_0.3.78" = "Too short hash in cargo.toml. Must be fixed before evaluation?"
+
+"rpanel_1.1-6.3" = "Bwidget renamed. fixable, likely'"
+"caviarpd_0.3.22" = "hash '01661bf4' has wrong length for hash algorithm 'sha1'"
+"rolog_0.9.26" = "'swiProlog' has been renamed to/replaced by 'swi-prolog'"
+
+

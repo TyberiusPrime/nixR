@@ -27,6 +27,7 @@
     nixpkgs_24_11.url = "github:NixOS/nixpkgs/24.11";
     nixpkgs_25_05.url = "github:NixOS/nixpkgs/25.05";
     nixpkgs_25_11.url = "github:NixOS/nixpkgs/25.11";
+    #nixpkgs_26_05.url = "github:NixOS/nixpkgs/26.05";
     import-cargo.url = "github:edolstra/import-cargo";
     # import-cargo.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -442,10 +443,10 @@
     // {
       # for debugging why these sets are not buildng
       debug_set = let
-        pkgs = nix-pkgs."24.11";
+        pkgs = nix-pkgs."25.11";
       in
         R_by_date {
-          date = "2025-10-30";
+          date = "2026-04-28";
           r_pkg_names = ["hdf5r"];
         };
 
