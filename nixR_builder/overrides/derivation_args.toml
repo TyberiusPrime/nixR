@@ -867,7 +867,15 @@ add_buildInputs = "[hdf5 zlib]"
 # nix splits this in a way that h5cc -showconfig doesn't find it's file.
 preConfigure = '''
 ''
-  settings="$(find /nix/store/*hdf5* -name libhdf5.settings 2>/dev/null | head -n1)"
+settings="${hdf5}/lib/libhdf5.settings"
+# fallback if your split-output layout puts it in .dev, still scoped to *your* hdf5:
+[ -f "$settings" ] || settings="$(find "${hdf5}" "${hdf5.dev}" -name libhdf5.settings 2>/dev/null | head -n1)"
+
+# fail loud instead of silently building the wrong wrapper set:
+grep -q 'HDF5 Version: 1\.14\.' "$settings" || {
+  echo "hdf5r: wrong settings file: $settings"; grep -i 'HDF5 Version' "$settings"; exit 1
+}
+
   real_h5cc="$(command -v "''${H5CC:-h5cc}")"
   mkdir -p "$TMPDIR/h5shim"
   cat > "$TMPDIR/h5shim/h5cc" <<EOF
