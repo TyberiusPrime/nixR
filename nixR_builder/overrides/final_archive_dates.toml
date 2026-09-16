@@ -113,7 +113,7 @@
 "dclong.spt" = "2015-01-01" # earlier than earliest MRAN date
 "ddesolve" = "2015-01-01" # earlier than earliest MRAN date
 "ddR" = "2018-03-31" # from MRAN
-"DEA" = "2015-01-01" # earlier than earliest MRAN date
+#"DEA" = "2015-01-01" # earlier than earliest MRAN date
 "DeducerMMR" = "2015-01-01" # earlier than earliest MRAN date
 "delftfews" = "2015-01-01" # earlier than earliest MRAN date
 "Design" = "2015-01-01" # earlier than earliest MRAN date
@@ -278,7 +278,7 @@
 "maxLinear" = "2015-01-01" # earlier than earliest MRAN date
 "MCE" = "2015-01-01" # earlier than earliest MRAN date
 "mclust02" = "2015-01-01" # earlier than earliest MRAN date
-"MCMChybridGP" = "2022-04-06" # from MRAN
+#"MCMChybridGP" = "2022-04-06" # from MRAN
 "MCMCtGARCH" = "2015-01-01" # earlier than earliest MRAN date
 "MCMCtGARCHM" = "2015-01-01" # earlier than earliest MRAN date
 "MCMCtNARCH" = "2015-01-01" # earlier than earliest MRAN date
@@ -624,3 +624,11 @@ msaeRB = "2023-04-03"
 
 #BGGM="2024-02-22"
 #"optiscale"="2024-05-16"
+
+# I go by the last 'failed' check here.
+"RPresto" = "2026-08-24"
+"cognitoR" = "2026-08-31"
+"harmonydata" = "2026-08-26"
+"noctua" = "2026-08-31"
+"scryr" = "2026-08-27"
+"zoomGroupStats" = "2026-08-31"
